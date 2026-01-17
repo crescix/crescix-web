@@ -1,1 +1,3 @@
 # crescix-web
+Quem usa: Squad de Front-end.
+Conteúdo: O código do site, Paineis, Tailwind, React...
