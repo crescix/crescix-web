@@ -38,9 +38,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${plusJakartaSans.variable} ${plusJakartaSans.variable} antialiased dark`}
       >
+        <main className="min-h-screen w-full flex items-center justify-center bg-primary md:bg-secondary p-0 md:p-4">
         {children}
+        </main>
       </body>
     </html>
   );
