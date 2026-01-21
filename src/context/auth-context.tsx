@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { api } from "@/api/axios-instance";
+import { api } from "@/api/axios-config";
 import { AuthContextData, SignInCredentials, UserProfile, SignUpCredentials } from "@/types/auth";
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
