@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Plus_Jakarta_Sans, Poppins } from "next/font/google";
+import { Sidebar } from "@/components/layout/sidebar";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -35,12 +36,16 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  
   return (
     <html lang="en">
       <body
         className={`${plusJakartaSans.variable} ${plusJakartaSans.variable} antialiased dark`}
       >
-        <main className="min-h-screen w-full flex items-center justify-center bg-primary md:bg-secondary p-0 md:p-4">
+        
+        <main className="min-h-screen w-full flex flex-col items-center justify-center bg-primary md:bg-secondary p-0 md:p-4">
+        {/* TODO: configurar auth e header (não vai aparecer a SideBar na tela de login/cadastro) */}
+        <Sidebar />
         {children}
         </main>
       </body>
