@@ -62,7 +62,7 @@ export default function FluxoDeCaixa() {
                                 <span className="text-xs font-bold text-secondary uppercase tracking-[0.2em] mb-1">
                                     Saldo Líquido
                                 </span>
-                                <span className={`text-4xl font-black tracking-tighter ${saldo >= 0 ? "text-green-400" : "text-red-400"}`}>
+                                <span className={`text-3xl font-black tracking-tighter ${saldo >= 0 ? "text-green-400" : "text-red-400"}`}>
                                     R$ {saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                 </span>
                                 <div className={`h-1 w-24 mt-2 rounded-full ${saldo >= 0 ? "bg-green-400" : "bg-red-400"} opacity-50`} />
