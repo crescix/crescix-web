@@ -20,7 +20,7 @@ const menu: MenuItem[] = [
 {
 id: "negocio",
 label: "Meu Negócio",
-subItems: [{ label: "Dashboard", href: "/negocio" }], /*Caso o caminho ficar diferente alterar aqui*/
+subItems: [{ label: "Dashboard", href: "/dashboard" }], /*Caso o caminho ficar diferente alterar aqui*/
 },
 {
 id: "cadastro",
@@ -54,7 +54,7 @@ label: "Financeiro",
 subItems: [
     { label: "Contas a Pagar", href: "/financeiro/pagar" },
     { label: "Contas a Receber", href: "/financeiro/receber" },
-    { label: "Fluxo de Caixa", href: "/financeiro/fluxo-caixa" },
+    { label: "Fluxo de Caixa", href: "/financeiro/fluxo-de-caixa" },
 ],
 },
 ];
