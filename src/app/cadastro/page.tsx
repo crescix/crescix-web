@@ -8,8 +8,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { registerSchema, RegisterData } from "@/lib/validations/register";
-
+import { useAuth } from "@/context/auth-context";
+import { useEffect } from "react";
 export default function RegisterPage() {
+    const {signOut} = useAuth()
     const {
         register,
         handleSubmit,
@@ -30,6 +32,10 @@ export default function RegisterPage() {
     const onSubmit = (data: RegisterData) => {
         console.log("Dados formatados:", data);
     };
+
+    useEffect(() =>{
+        signOut()
+    },[])
 
     return (
         <div className="flex flex-col md:flex-row w-full max-w-[1000px] min-h-[650px] bg-white rounded-none md:rounded-3xl overflow-hidden shadow-2xl">

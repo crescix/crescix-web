@@ -25,6 +25,9 @@ import {
 } from "@/components/ui/chart"
 
 import { kpiData, salesChartData, productsChartData } from "@/lib/data/dashboard"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/context/auth-context"
 
 const chartConfig = {
   sales: {
@@ -54,6 +57,23 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export default function DashBoard() {
+
+  const { isAuthenticated, isAuthenticating } = useAuth()
+  const router = useRouter()
+
+  
+  useEffect(() => {
+    if (!isAuthenticating && !isAuthenticated) {
+      router.push("/login")
+    }
+  }, [isAuthenticated, isAuthenticating, router])
+
+  
+  if (isAuthenticating || !isAuthenticated) {
+    return null 
+  }
+
+
   const getIcon = (iconName: string) => {
     switch (iconName) {
       case "coins": return <Coins className="h-8 w-8 mb-2" />;

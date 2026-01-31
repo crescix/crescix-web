@@ -1,10 +1,33 @@
+"use client"
+
 import Image from "next/image";
 import Link from "next/link";
 import { Mail, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/context/auth-context";
+import { useEffect } from "react";
+
 
 export default function LoginPage() {
+    const { signOut } = useAuth();
+    useEffect(() =>{
+        signOut()
+    },[])
+
+
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        localStorage.setItem("@Crescix:token", "fake-token-123");
+        localStorage.setItem("@Crescix:user", JSON.stringify({ 
+            id: "1", 
+            name: "Admin Crescix", 
+            email: "admin@crescix.com" 
+        }));
+
+        window.location.href = "/dashboard";
+    };
     return (
 
         <div className="flex flex-col md:flex-row w-full max-w-[1000px] min-h-[600px] bg-white rounded-none md:rounded-3xl overflow-hidden shadow-2xl">
@@ -39,7 +62,7 @@ export default function LoginPage() {
                         </p>
                     </div>
 
-                    <form className="space-y-6">
+                    <form className="space-y-6" onSubmit={handleLogin}>
                         <div className="space-y-4">
                             <div className="relative">
                                 <Mail className="absolute left-0 bottom-2 h-5 w-5 text-primary md:text-gray-500" />
