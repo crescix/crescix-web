@@ -27,7 +27,7 @@ const menu: MenuItem[] = [
         id: "cadastro",
         label: "Cadastro",
         subItems: [
-            { label: "Fornecedores", href: "/cadastros/fornecedores" },
+            { label: "Fornecedores", href: "/fornecedores" },
             { label: "Clientes", href: "/cadastros/clientes" },
             { label: "Produtos", href: "/cadastros/produtos" },
         ],
