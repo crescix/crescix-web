@@ -42,7 +42,7 @@ export default function FornecedoresPage() {
 
   return (
     
-    <div className="min-h-screen w-full bg-secondary p-4 md:p-8 flex flex-col items-center">
+    <div className="w-full bg-secondary p-4 md:p-8 flex flex-col items-center ">
        <ModalExclusao
           isOpen={!!fornecedorParaExcluir}
           onOpenChange={(open) => !open && setFornecedorParaExcluir(null)}
