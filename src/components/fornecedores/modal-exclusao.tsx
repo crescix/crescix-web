@@ -1,22 +1,16 @@
 "use client";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { createPortal } from "react-dom";
+import { useEffect } from "react";
 import { Trash2, AlertTriangle, X } from "lucide-react";
-import { Fornecedor } from "@/lib/data/fornecedores"; // Importando a tipagem que criamos antes
+import { Button } from "@/components/ui/button";
+import { Fornecedor } from "@/lib/data/fornecedores";
 
 interface ModalExclusaoProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
-  fornecedor: Fornecedor | null; // O fornecedor selecionado
+  fornecedor: Fornecedor | null;
 }
 
 export function ModalExclusao({
@@ -25,77 +19,95 @@ export function ModalExclusao({
   onConfirm,
   fornecedor,
 }: ModalExclusaoProps) {
-  
-  // Se não houver fornecedor selecionado, não renderiza o conteúdo interno (proteção)
-  if (!fornecedor) return null;
+  if (!isOpen || !fornecedor) return null;
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-primary border-white/10 text-white ">
-        
-        {/* CABEÇALHO */}
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold flex items-center gap-2">
-            Confirmar Exclusão
-          </DialogTitle>
-          <DialogDescription className="text-white/60">
-            Esta ação é irreversível.
-          </DialogDescription>
-        </DialogHeader>
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onOpenChange(false);
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [onOpenChange]);
 
-        {/* ÁREA DE ALERTA (Vermelha) */}
-        <div className="flex items-start gap-3 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 my-2">
-          <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" />
-          <p className="text-sm font-medium">
-            Atenção: Você tem certeza que deseja excluir o fornecedor abaixo? 
-            Esta ação não poderá ser desfeita.
-          </p>
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 rounded-lg"
+      onClick={() => onOpenChange(false)}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-primary border border-white/10 text-white rounded-xl  max-w-md shadow-2xl overflow-hidden"
+      >
+        {/* Cabeçalho */}
+        <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
+          <div>
+            <h2 className="text-xl font-bold">Confirmar Exclusão</h2>
+            <p className="text-white/60 text-sm mt-1">Esta ação é irreversível.</p>
+          </div>
+          <button
+            onClick={() => onOpenChange(false)}
+            className="text-white/50 hover:text-white transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
-        {/* DADOS DO FORNECEDOR (Caixa Cinza/Glass) */}
-        <div className="space-y-3">
-            <span className="text-sm font-semibold text-white/80">Dados do Fornecedor</span>
-            <div className="bg-white/5 border border-white/10 rounded-lg p-4 space-y-3">
-                <div className="grid grid-cols-[100px_1fr] gap-2 items-center">
-                    <span className="text-xs font-bold text-white/50 uppercase">Razão Social:</span>
-                    <span className="text-sm text-white font-medium truncate">{fornecedor.razao_social}</span>
-                </div>
-                
-                <div className="grid grid-cols-[100px_1fr] gap-2 items-center">
-                    <span className="text-xs font-bold text-white/50 uppercase">CNPJ:</span>
-                    <span className="text-sm text-white font-medium">{fornecedor.cnpj}</span>
-                </div>
+        {/* Conteúdo */}
+        <div className="p-6">
+          <div className="flex gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-400">
+            <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+            <p className="text-sm font-medium">
+              Atenção: Você tem certeza que deseja excluir o fornecedor abaixo?
+              Esta ação não poderá ser desfeita.
+            </p>
+          </div>
 
-                <div className="grid grid-cols-[100px_1fr] gap-2 items-start">
-                    <span className="text-xs font-bold text-white/50 uppercase mt-0.5">Endereço:</span>
-                    <span className="text-sm text-white/80 leading-tight">{fornecedor.endereco}</span>
-                </div>
+          <div className="mt-6">
+            <p className="text-xs font-bold text-white/60 uppercase tracking-widest mb-4">
+              Dados do Fornecedor
+            </p>
+            <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-4">
+              <div className="grid grid-cols-[100px_1fr] gap-3">
+                <span className="text-xs text-white/50 font-bold uppercase">Razão Social</span>
+                <span className="text-white font-medium">{fornecedor.razao_social}</span>
+              </div>
+              <div className="grid grid-cols-[100px_1fr] gap-3">
+                <span className="text-xs text-white/50 font-bold uppercase">CNPJ</span>
+                <span className="text-white font-medium">{fornecedor.cnpj}</span>
+              </div>
+              <div className="grid grid-cols-[100px_1fr] gap-3">
+                <span className="text-xs text-white/50 font-bold uppercase">Endereço</span>
+                <span className="text-white/80 text-sm leading-snug">{fornecedor.endereco}</span>
+              </div>
             </div>
+          </div>
         </div>
 
-        {/* RODAPÉ COM AÇÕES */}
-        <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-4 gap-2 sm:gap-0">
+        <div className="border-t border-white/10 bg-white/5 px-6 py-5 flex   gap-3 sm:justify-end">
           <Button
             type="button"
             variant="ghost"
             onClick={() => onOpenChange(false)}
-            className="border border-white/10 text-white hover:bg-white/10 transition-colors"
+            className="border border-white/10 text-white hover:bg-white/10 sm:w-auto"
           >
             Cancelar
           </Button>
-          
+
           <Button
             type="button"
             variant="destructive"
-            onClick={onConfirm}
-            className="bg-red-500 hover:bg-red-600 text-white font-semibold shadow-[0_0_15px_rgba(239,68,68,0.4)]"
+            onClick={() => {
+              onConfirm();
+              onOpenChange(false);
+            }}
+            className=" sm:w-auto"
           >
             <Trash2 className="mr-2 h-4 w-4" />
             Sim, Excluir
           </Button>
-        </DialogFooter>
-
-      </DialogContent>
-    </Dialog>
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 }

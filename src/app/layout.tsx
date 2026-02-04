@@ -41,12 +41,13 @@ export default function RootLayout({
 }>) {
   
   return (
-    <html lang="en">
+    <html lang="pt-br">
       <body
         className={`${plusJakartaSans.variable} ${plusJakartaSans.variable} antialiased dark`}
       >
         <AuthProvider>
-        <main className="min-h-screen w-full flex flex-col items-center justify-center bg-primary md:bg-secondary p-0 md:p-4">
+         <main className="min-h-screen w-full  justify-center bg-primary md:bg-secondary p-0 md:p-4"> 
+      
 
         <Sidebar />
         {children}
