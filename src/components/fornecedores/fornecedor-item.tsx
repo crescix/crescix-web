@@ -3,6 +3,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Fornecedor } from "@/lib/data/fornecedores";
+import Link from "next/link";
 
 interface FornecedorRowProps {
     data: Fornecedor;
@@ -26,13 +27,15 @@ export function FornecedorItem({ data, onDelete }: FornecedorRowProps) {
 
             <TableCell className="text-right">
                 <div className="flex justify-end gap-2">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-400/10"
-                    >
-                        <Pencil className="h-4 w-4" />
-                    </Button>
+                    <Link href={'/fornecedores/editar/'}>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-400/10"
+                        >
+                            <Pencil className="h-4 w-4" />
+                        </Button>
+                    </Link>
 
                     <Button
                         variant="ghost"
