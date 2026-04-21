@@ -36,7 +36,7 @@ const menu: MenuItem[] = [
     subItems: [
       { label: "Fornecedores", href: "/fornecedores/cadastro" },
       { label: "Clientes", href: "/clientes/cadastro" },
-      { label: "Produtos", href: "/cadastro/produtos" },
+      { label: "Produtos", href: "/produtos/cadastro" },
     ],
   },
   {
