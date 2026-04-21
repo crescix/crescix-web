@@ -7,6 +7,12 @@ import { AuthContextData, SignInCredentials, UserProfile, SignUpCredentials } fr
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
+// ─── Usuários mock para testar sem backend ────────────────────────────────────
+const MOCK_USERS = [
+  { id: "1", name: "Thiago", email: "thiago@crescix.com", password: "123456" },
+  { id: "2", name: "Admin", email: "admin@crescix.com",   password: "admin123" },
+];
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(true);
@@ -16,33 +22,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const storedToken = localStorage.getItem("@Crescix:token");
-    const storedUser = localStorage.getItem("@Crescix:user");
+    const storedUser  = localStorage.getItem("@Crescix:user");
 
     if (storedToken && storedUser) {
       try {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
         api.defaults.headers.common["Authorization"] = `Bearer ${storedToken}`;
-      } catch (error) {
+      } catch {
         localStorage.clear();
       }
     }
-    
+
     setIsAuthenticating(false);
   }, []);
 
   async function signIn({ email, password }: SignInCredentials) {
-    const response = await api.post("/sessions", { email, password });
-    const { token, user: userData } = response.data;
+    // ── MOCK: simula autenticação sem backend ──────────────────────────────────
+    // Quando o backend estiver pronto, substitua este bloco por:
+    // const response = await api.post("/sessions", { email, password });
+    // const { token, user: userData } = response.data;
+
+    const mockUser = MOCK_USERS.find(
+      (u) => u.email === email && u.password === password
+    );
+
+    if (!mockUser) {
+      throw new Error("Email ou senha inválidos.");
+    }
+
+    const { password: _, ...userData } = mockUser;
+    const token = `mock-token-${userData.id}-${Date.now()}`;
+
+    // ─────────────────────────────────────────────────────────────────────────
 
     localStorage.setItem("@Crescix:token", token);
     localStorage.setItem("@Crescix:user", JSON.stringify(userData));
 
-    setUser(userData);
+    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    setUser(userData as UserProfile);
     router.push("/dashboard");
   }
 
   async function signUp(data: SignUpCredentials) {
-    await api.post("/users", data);
+    // ── MOCK: simula cadastro sem backend ──────────────────────────────────────
+    // Quando o backend estiver pronto, substitua por:
+    // await api.post("/users", data);
+    console.log("Mock signUp:", data);
+    // ─────────────────────────────────────────────────────────────────────────
     router.push("/login");
   }
 
@@ -58,8 +85,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated,
     isAuthenticating,
     signIn,
+    signOut,
     signUp,
-    signOut
   };
 
   return (
