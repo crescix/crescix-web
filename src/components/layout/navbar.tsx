@@ -18,10 +18,16 @@ type SubItem = {
   href: string;
 };
 
+type SubGroup = {
+  group: string;
+  items: SubItem[];
+};
+
 type MenuItem = {
   id: string;
   label: string;
-  subItems: SubItem[];
+  subGroups?: SubGroup[];
+  subItems?: SubItem[];
 };
 
 const menu: MenuItem[] = [
@@ -33,10 +39,27 @@ const menu: MenuItem[] = [
   {
     id: "cadastro",
     label: "Cadastros",
-    subItems: [
-      { label: "Fornecedores", href: "/fornecedores/cadastro" },
-      { label: "Clientes", href: "/clientes/cadastro" },
-      { label: "Produtos", href: "/produtos/cadastro" },
+    subGroups: [
+      {
+        group: "Fornecedores",
+        items: [
+          { label: "Cadastro", href: "/fornecedores/cadastro" },
+          { label: "Filtro", href: "/fornecedores/filtro" },
+        ],
+      },
+      {
+        group: "Clientes",
+        items: [
+          { label: "Cadastro", href: "/clientes/cadastro" },
+          { label: "Filtro", href: "/clientes/filtro-clientes" },
+        ],
+      },
+      {
+        group: "Produtos",
+        items: [
+          { label: "Cadastro", href: "/produtos/cadastro" },
+        ],
+      },
     ],
   },
   {
@@ -94,6 +117,7 @@ export function Navbar() {
                 />
               </div>
             </div>
+
             {/* Menu Desktop */}
             <nav className="hidden md:flex items-center gap-8 ml-12">
               {menu.map((item) => (
@@ -110,8 +134,32 @@ export function Navbar() {
                     />
                   </button>
 
-                  {/* Dropdown */}
-                  {openDropdown === item.id && (
+                  {/* Dropdown com subgrupos */}
+                  {openDropdown === item.id && item.subGroups && (
+                    <div className="absolute left-0 top-[52px] w-56 rounded-xl border border-zinc-200 bg-white py-2 shadow-xl animate-in fade-in slide-in-from-top-2">
+                      {item.subGroups.map((group, index) => (
+                        <div key={group.group}>
+                          {index > 0 && <div className="my-1 border-t border-zinc-100" />}
+                          <p className="px-5 pt-2 pb-1 text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                            {group.group}
+                          </p>
+                          {group.items.map((subItem) => (
+                            <Link
+                              key={subItem.href}
+                              href={subItem.href}
+                              className="block px-5 py-2 text-sm text-zinc-700 hover:bg-zinc-100 transition-colors"
+                              onClick={() => setOpenDropdown(null)}
+                            >
+                              {subItem.label}
+                            </Link>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Dropdown simples */}
+                  {openDropdown === item.id && item.subItems && (
                     <div className="absolute left-0 top-[52px] w-56 rounded-xl border border-zinc-200 bg-white py-2 shadow-xl animate-in fade-in slide-in-from-top-2">
                       {item.subItems.map((subItem) => (
                         <Link
@@ -186,18 +234,47 @@ export function Navbar() {
                   <p className="text-xs font-semibold tracking-widest text-zinc-500 mb-3 uppercase">
                     {item.label}
                   </p>
-                  <div className="space-y-1">
-                    {item.subItems.map((sub) => (
-                      <Link
-                        key={sub.href}
-                        href={sub.href}
-                        onClick={() => setMobileOpen(false)}
-                        className="block px-4 py-3 text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors"
-                      >
-                        {sub.label}
-                      </Link>
-                    ))}
-                  </div>
+
+                  {/* Mobile: subgrupos */}
+                  {item.subGroups && (
+                    <div className="space-y-4">
+                      {item.subGroups.map((group) => (
+                        <div key={group.group}>
+                          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1 px-4">
+                            {group.group}
+                          </p>
+                          <div className="space-y-1">
+                            {group.items.map((sub) => (
+                              <Link
+                                key={sub.href}
+                                href={sub.href}
+                                onClick={() => setMobileOpen(false)}
+                                className="block px-4 py-3 text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors"
+                              >
+                                {sub.label}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Mobile: itens simples */}
+                  {item.subItems && (
+                    <div className="space-y-1">
+                      {item.subItems.map((sub) => (
+                        <Link
+                          key={sub.href}
+                          href={sub.href}
+                          onClick={() => setMobileOpen(false)}
+                          className="block px-4 py-3 text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors"
+                        >
+                          {sub.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </nav>

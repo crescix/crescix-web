@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Package, Ruler, Tag, ChevronLeft, Save, X, Upload, ChevronDown } from "lucide-react";
+import { Package, Ruler, Tag, ChevronLeft, Save, X, Upload, ChevronDown, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 
 interface ListaPreco {
@@ -8,131 +8,80 @@ interface ListaPreco {
   preco: string;
 }
 
-// ─── Campo reutilizável ───────────────────────────────────────────────────────
-function Field({
-  label,
-  required,
-  error,
-  children,
-  className = "",
-}: {
-  label: string;
-  required?: boolean;
-  error?: string;
-  children: React.ReactNode;
-  className?: string;
+function Field({ label, required, error, children, className = "" }: {
+  label: string; required?: boolean; error?: string; children: React.ReactNode; className?: string;
 }) {
   return (
     <div className={`space-y-1.5 ${className}`}>
-      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
-        {label}
-        {required && <span className="text-rose-500 ml-1">*</span>}
+      <label className="block text-xs font-semibold text-white/50 uppercase tracking-wide">
+        {label}{required && <span className="text-red-400 ml-1">*</span>}
       </label>
       {children}
-      {error && <p className="text-xs text-rose-500 mt-1">{error}</p>}
+      {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
     </div>
   );
 }
 
-const inputClass =
-  "w-full px-3.5 py-2.5 text-sm bg-white border border-gray-200 rounded-xl text-gray-700 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all";
+const inputClass = "w-full px-3.5 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/50 transition-all";
+const selectClass = "w-full px-3.5 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-cyan-500/50 transition-all cursor-pointer";
 
-const selectClass =
-  "w-full px-3.5 py-2.5 text-sm bg-white border border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all cursor-pointer";
-
-// ─── Seção ────────────────────────────────────────────────────────────────────
-function Section({
-  icon: Icon,
-  title,
-  accent,
-  children,
-}: {
-  icon: React.ElementType;
-  title: string;
-  accent: string;
-  children: React.ReactNode;
+function Section({ icon: Icon, title, number, children }: {
+  icon: React.ElementType; title: string; number: number; children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
-        <div className={`rounded-xl p-2.5 ${accent}`}>
-          <Icon className="w-4 h-4" />
+    <div className="bg-primary rounded-2xl border border-white/10 overflow-hidden">
+      <div className="px-6 py-4 border-b border-white/10 flex items-center gap-3">
+        <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-bold flex items-center justify-center">
+          {number}
+        </span>
+        <div className="flex items-center gap-2">
+          <Icon className="w-4 h-4 text-white/50" />
+          <h3 className="text-sm font-bold text-white">{title}</h3>
         </div>
-        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-          {title}
-        </h3>
       </div>
       <div className="p-6">{children}</div>
     </div>
   );
 }
 
-// ─── Seção colapsável ─────────────────────────────────────────────────────────
-function CollapsibleSection({
-  icon: Icon,
-  title,
-  accent,
-  children,
-}: {
-  icon: React.ElementType;
-  title: string;
-  accent: string;
-  children: React.ReactNode;
+function CollapsibleSection({ icon: Icon, title, number, children }: {
+  icon: React.ElementType; title: string; number: number; children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="bg-primary rounded-2xl border border-white/10 overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full px-6 py-4 border-b border-gray-100 flex items-center justify-between hover:bg-gray-50 transition-colors"
+        className="w-full px-6 py-4 border-b border-white/10 flex items-center justify-between hover:bg-white/5 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div className={`rounded-xl p-2.5 ${accent}`}>
-            <Icon className="w-4 h-4" />
+          <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-bold flex items-center justify-center">
+            {number}
+          </span>
+          <div className="flex items-center gap-2">
+            <Icon className="w-4 h-4 text-white/50" />
+            <h3 className="text-sm font-bold text-white">{title}</h3>
           </div>
-          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-            {title}
-          </h3>
         </div>
-        <ChevronDown
-          className={`w-4 h-4 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`}
-        />
+        <ChevronDown className={`w-4 h-4 text-white/30 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && <div className="p-6">{children}</div>}
     </div>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 export default function CadastroProduto() {
   const [listasPreco, setListasPreco] = useState<ListaPreco[]>([]);
   const [imagem, setImagem] = useState<string | null>(null);
   const [modal, setModal] = useState(false);
 
   const [form, setForm] = useState({
-    nome: "",
-    sku: "",
-    formato: "simples",
-    tipo: "produto",
-    preco: "",
-    unidade: "un",
-    condicao: "novo",
-    marca: "",
-    producao: "",
-    validade: "",
-    freteGratis: "nao",
-    pesoLiquido: "",
-    pesoBruto: "",
-    largura: "",
-    altura: "",
-    profundidade: "",
-    volumes: "",
-    itensCaixa: "",
-    unidadeMedida: "cm",
-    gtin: "",
-    gtinTributario: "",
-    descricao: "",
+    nome: "", sku: "", formato: "simples", tipo: "produto", preco: "",
+    unidade: "un", condicao: "novo", marca: "", producao: "", validade: "",
+    freteGratis: "nao", pesoLiquido: "", pesoBruto: "", largura: "", altura: "",
+    profundidade: "", volumes: "", itensCaixa: "", unidadeMedida: "cm",
+    gtin: "", gtinTributario: "", descricao: "",
   });
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
@@ -170,66 +119,54 @@ export default function CadastroProduto() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-transparent py-4">
-      <div className="max-w-5xl mx-auto px-4 md:px-8 py-8 space-y-6">
+    <div className="w-full min-h-screen bg-secondary p-4 md:p-8 flex flex-col items-center">
+      <div className="w-full max-w-5xl space-y-6">
 
-        {/* Cabeçalho */}
+        {/* Header */}
         <div className="flex items-center gap-4">
-          <Link
-            href="/produtos"
-            className="p-2 rounded-xl text-black hover:bg-white hover:text-gray-600 border border-transparent hover:border-gray-200 transition-all"
-          >
+          <Link href="/produtos" className="p-2 rounded-xl text-white/50 hover:bg-white/10 border border-transparent hover:border-white/10 transition-all">
             <ChevronLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-gray-800 tracking-tight">
+            <p className="text-white/40 text-xs font-medium uppercase tracking-widest mb-1">
+              Cadastros / Produtos
+            </p>
+            <h1 className="text-3xl font-black text-white tracking-tighter">
               Cadastro de Produto
             </h1>
-            <p className="text-lg text-gray-800 mt-0.5">
-              Preencha os dados do novo produto
-            </p>
           </div>
         </div>
 
         <div className="space-y-5">
 
-          {/* DADOS PRINCIPAIS */}
-          <Section icon={Package} title="Dados do Produto" accent="bg-teal-50 text-teal-600">
+          {/* DADOS DO PRODUTO */}
+          <Section icon={Package} title="Dados do Produto" number={1}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
 
-              {/* Imagem + Nome lado a lado no topo */}
               <div className="lg:col-span-4 flex flex-col md:flex-row gap-5">
-                {/* Upload de imagem */}
                 <div className="shrink-0">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                  <label className="block text-xs font-semibold text-white/50 uppercase tracking-wide mb-1.5">
                     Imagem do Produto
                   </label>
-                  <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-200 rounded-xl w-40 h-40 bg-gray-50 hover:bg-teal-50 hover:border-teal-300 transition-all cursor-pointer group overflow-hidden relative">
+                  <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-white/10 rounded-xl w-40 h-40 bg-white/5 hover:bg-cyan-500/5 hover:border-cyan-500/30 transition-all cursor-pointer group overflow-hidden relative">
                     {imagem ? (
                       <img src={imagem} alt="Produto" className="w-full h-full object-cover" />
                     ) : (
                       <>
-                        <Upload className="w-5 h-5 text-gray-400 group-hover:text-teal-500 transition-colors" />
-                        <span className="text-xs text-gray-400 group-hover:text-teal-600 text-center px-2">
+                        <Upload className="w-5 h-5 text-white/20 group-hover:text-cyan-400 transition-colors" />
+                        <span className="text-xs text-white/30 group-hover:text-cyan-400 text-center px-2 transition-colors">
                           Clique para upload
                         </span>
-                        <span className="text-xs text-gray-300">PNG, JPG até 2MB</span>
+                        <span className="text-xs text-white/20">PNG, JPG até 2MB</span>
                       </>
                     )}
                     <input type="file" accept="image/*" onChange={handleImagem} className="hidden" />
                   </label>
                 </div>
-
-                {/* Nome */}
                 <div className="flex-1">
                   <Field label="Nome do Produto" required>
-                    <input
-                      name="nome"
-                      value={form.nome}
-                      onChange={handleChange}
-                      placeholder="Digite o nome do produto"
-                      className={inputClass}
-                    />
+                    <input name="nome" value={form.nome} onChange={handleChange}
+                      placeholder="Digite o nome do produto" className={inputClass} />
                   </Field>
                 </div>
               </div>
@@ -240,31 +177,27 @@ export default function CadastroProduto() {
 
               <Field label="Formato">
                 <select name="formato" value={form.formato} onChange={handleChange} className={selectClass}>
-                  <option value="simples">Simples</option>
-                  <option value="variacao">Variação</option>
+                  <option value="simples" className="bg-[#0f2f52]">Simples</option>
+                  <option value="variacao" className="bg-[#0f2f52]">Variação</option>
                 </select>
               </Field>
 
               <Field label="Tipo">
                 <select name="tipo" value={form.tipo} onChange={handleChange} className={selectClass}>
-                  <option value="produto">Produto</option>
-                  <option value="servico">Serviço</option>
+                  <option value="produto" className="bg-[#0f2f52]">Produto</option>
+                  <option value="servico" className="bg-[#0f2f52]">Serviço</option>
                 </select>
               </Field>
 
               <Field label="Condição">
                 <select name="condicao" value={form.condicao} onChange={handleChange} className={selectClass}>
-                  <option value="novo">Novo</option>
-                  <option value="usado">Usado</option>
+                  <option value="novo" className="bg-[#0f2f52]">Novo</option>
+                  <option value="usado" className="bg-[#0f2f52]">Usado</option>
                 </select>
               </Field>
 
               <Field label="Preço de Venda" required>
-                <input
-                  name="preco" value={form.preco} onChange={handleChange}
-                  placeholder="R$ 0,00"
-                  className={inputClass}
-                />
+                <input name="preco" value={form.preco} onChange={handleChange} placeholder="R$ 0,00" className={inputClass} />
               </Field>
 
               <Field label="Unidade">
@@ -273,8 +206,8 @@ export default function CadastroProduto() {
 
               <Field label="Frete Grátis">
                 <select name="freteGratis" value={form.freteGratis} onChange={handleChange} className={selectClass}>
-                  <option value="nao">Não</option>
-                  <option value="sim">Sim</option>
+                  <option value="nao" className="bg-[#0f2f52]">Não</option>
+                  <option value="sim" className="bg-[#0f2f52]">Sim</option>
                 </select>
               </Field>
 
@@ -286,7 +219,7 @@ export default function CadastroProduto() {
           </Section>
 
           {/* CARACTERÍSTICAS */}
-          <Section icon={Tag} title="Características" accent="bg-blue-50 text-blue-600">
+          <Section icon={Tag} title="Características" number={2}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
 
               <Field label="Marca">
@@ -295,9 +228,9 @@ export default function CadastroProduto() {
 
               <Field label="Produção">
                 <select name="producao" value={form.producao} onChange={handleChange} className={selectClass}>
-                  <option value="">Selecione...</option>
-                  <option value="propria">Própria</option>
-                  <option value="terceiros">Terceiros</option>
+                  <option value="" className="bg-[#0f2f52]">Selecione...</option>
+                  <option value="propria" className="bg-[#0f2f52]">Própria</option>
+                  <option value="terceiros" className="bg-[#0f2f52]">Terceiros</option>
                 </select>
               </Field>
 
@@ -313,7 +246,7 @@ export default function CadastroProduto() {
           </Section>
 
           {/* DIMENSÕES E PESO */}
-          <Section icon={Ruler} title="Dimensões e Peso" accent="bg-violet-50 text-violet-600">
+          <Section icon={Ruler} title="Dimensões e Peso" number={3}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
 
               <Field label="Peso Líquido">
@@ -326,8 +259,8 @@ export default function CadastroProduto() {
 
               <Field label="Unidade de Medida">
                 <select name="unidadeMedida" value={form.unidadeMedida} onChange={handleChange} className={selectClass}>
-                  <option value="cm">Centímetros</option>
-                  <option value="m">Metros</option>
+                  <option value="cm" className="bg-[#0f2f52]">Centímetros</option>
+                  <option value="m" className="bg-[#0f2f52]">Metros</option>
                 </select>
               </Field>
 
@@ -355,76 +288,53 @@ export default function CadastroProduto() {
           </Section>
 
           {/* LISTAS DE PREÇO — colapsável */}
-          <CollapsibleSection icon={Tag} title="Listas de Preço" accent="bg-amber-50 text-amber-600">
+          <CollapsibleSection icon={Tag} title="Listas de Preço" number={4}>
             <button
               type="button"
               onClick={adicionarListaPreco}
-              className="mb-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+              className="mb-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-sm text-white/70 transition-colors"
             >
               + Incluir lista
             </button>
-
             <div className="space-y-3">
               {listasPreco.map((item, index) => (
                 <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <input
-                    placeholder="Nome da lista"
-                    value={item.nome}
-                    onChange={(e) => atualizarLista(index, "nome", e.target.value)}
-                    className={inputClass}
-                  />
-                  <input
-                    type="number"
-                    placeholder="Preço da lista"
-                    value={item.preco}
-                    onChange={(e) => atualizarLista(index, "preco", e.target.value)}
-                    className={inputClass}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removerLista(index)}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-red-200 text-red-500 text-sm hover:bg-red-50 transition-colors"
-                  >
+                  <input placeholder="Nome da lista" value={item.nome}
+                    onChange={(e) => atualizarLista(index, "nome", e.target.value)} className={inputClass} />
+                  <input type="number" placeholder="Preço da lista" value={item.preco}
+                    onChange={(e) => atualizarLista(index, "preco", e.target.value)} className={inputClass} />
+                  <button type="button" onClick={() => removerLista(index)}
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 text-sm hover:bg-red-500/20 transition-colors">
                     <X className="w-4 h-4" /> Remover
                   </button>
                 </div>
               ))}
               {listasPreco.length === 0 && (
-                <p className="text-sm text-gray-400">Nenhuma lista adicionada.</p>
+                <p className="text-sm text-white/25">Nenhuma lista adicionada.</p>
               )}
             </div>
           </CollapsibleSection>
 
           {/* DESCRIÇÃO — colapsável */}
-          <CollapsibleSection icon={Package} title="Descrição Curta" accent="bg-emerald-50 text-emerald-600">
+          <CollapsibleSection icon={Package} title="Descrição Curta" number={5}>
             <textarea
-              name="descricao"
-              value={form.descricao}
-              onChange={handleChange}
-              placeholder="Digite a descrição curta do produto..."
-              rows={4}
-              className="w-full px-3.5 py-2.5 text-sm bg-white border border-gray-200 rounded-xl text-gray-700 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all resize-none"
+              name="descricao" value={form.descricao} onChange={handleChange}
+              placeholder="Digite a descrição curta do produto..." rows={4}
+              className="w-full px-3.5 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/50 transition-all resize-none"
             />
           </CollapsibleSection>
 
           {/* BOTÕES */}
           <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
             <Link href="/produtos">
-              <button
-                type="button"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl border border-red-500 text-sm font-medium text-black bg-white hover:bg-red-500 hover:text-white transition-colors"
-              >
-                <X className="w-4 h-4" />
-                Cancelar
+              <button type="button"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 text-sm font-semibold transition-all active:scale-95">
+                <X className="w-4 h-4" /> Cancelar
               </button>
             </Link>
-            <button
-              type="button"
-              onClick={salvarProduto}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-2.5 rounded-xl bg-green-500 hover:bg-green-600 text-white text-sm font-medium shadow-sm transition-colors"
-            >
-              <Save className="w-4 h-4" />
-              Salvar Produto
+            <button type="button" onClick={salvarProduto}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-2.5 rounded-xl bg-green-500 hover:bg-green-400 text-white text-sm font-bold transition-all active:scale-95">
+              <Save className="w-4 h-4" /> Salvar Produto
             </button>
           </div>
 
@@ -433,13 +343,16 @@ export default function CadastroProduto() {
 
       {/* MODAL */}
       {modal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-2xl text-center shadow-xl">
-            <h2 className="text-lg font-bold mb-4 text-gray-800">Produto salvo com sucesso!</h2>
-            <button
-              onClick={() => setModal(false)}
-              className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-xl text-sm transition-colors"
-            >
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-primary w-full max-w-sm rounded-2xl border border-white/10 p-6 space-y-4 text-center">
+            <div className="flex justify-center">
+              <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center">
+                <CheckCircle2 className="h-6 w-6 text-green-400" />
+              </div>
+            </div>
+            <h2 className="text-white font-bold text-lg">Produto salvo com sucesso!</h2>
+            <button onClick={() => setModal(false)}
+              className="w-full h-10 rounded-xl bg-green-500 hover:bg-green-400 text-white text-sm font-bold transition-all active:scale-95">
               OK
             </button>
           </div>
