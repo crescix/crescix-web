@@ -58,6 +58,7 @@ const menu: MenuItem[] = [
         group: "Produtos",
         items: [
           { label: "Cadastro", href: "/produtos/cadastro" },
+          { label: "Filtro", href: "/produtos/listar-produtos"},
         ],
       },
     ],
