@@ -176,6 +176,7 @@
   body {
     @apply bg-secondary text-foreground antialiased;
     font-feature-settings: "ss01", "cv11";
+    color-scheme: dark;
   }
 
   /* Scrollbar customizado pro tema */
@@ -199,6 +200,25 @@
   ::selection {
     background: rgba(34, 197, 94, 0.25);
     color: white;
+  }
+
+  /* ─── Dropdowns nativos <select> ────────────────────────────────────────── */
+  /* Por padrão o navegador renderiza <option> com fundo branco no Windows,
+     quebrando o tema escuro. Forçamos cores compatíveis. */
+  select {
+    color-scheme: dark;
+  }
+
+  select option {
+    background-color: var(--bg-surface);
+    color: white;
+  }
+
+  select option:hover,
+  select option:focus,
+  select option:checked {
+    background-color: var(--bg-elevated);
+    color: var(--brand);
   }
 }
 
