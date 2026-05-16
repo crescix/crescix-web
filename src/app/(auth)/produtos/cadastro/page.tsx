@@ -22,8 +22,8 @@ function Field({ label, required, error, children, className = "" }: {
   );
 }
 
-const inputClass = "w-full px-3.5 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/50 transition-all";
-const selectClass = "w-full px-3.5 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-cyan-500/50 transition-all cursor-pointer";
+const inputClass = "w-full px-3.5 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/25 focus:outline-none focus:border-green-500/50 transition-all";
+const selectClass = "w-full px-3.5 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-green-500/50 transition-all cursor-pointer";
 
 function Section({ icon: Icon, title, number, children }: {
   icon: React.ElementType; title: string; number: number; children: React.ReactNode;
@@ -31,7 +31,7 @@ function Section({ icon: Icon, title, number, children }: {
   return (
     <div className="bg-primary rounded-2xl border border-white/10 overflow-hidden">
       <div className="px-6 py-4 border-b border-white/10 flex items-center gap-3">
-        <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-bold flex items-center justify-center">
+        <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 text-xs font-bold flex items-center justify-center">
           {number}
         </span>
         <div className="flex items-center gap-2">
@@ -56,7 +56,7 @@ function CollapsibleSection({ icon: Icon, title, number, children }: {
         className="w-full px-6 py-4 border-b border-white/10 flex items-center justify-between hover:bg-white/5 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-bold flex items-center justify-center">
+          <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 text-xs font-bold flex items-center justify-center">
             {number}
           </span>
           <div className="flex items-center gap-2">
@@ -148,13 +148,13 @@ export default function CadastroProduto() {
                   <label className="block text-xs font-semibold text-white/50 uppercase tracking-wide mb-1.5">
                     Imagem do Produto
                   </label>
-                  <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-white/10 rounded-xl w-40 h-40 bg-white/5 hover:bg-cyan-500/5 hover:border-cyan-500/30 transition-all cursor-pointer group overflow-hidden relative">
+                  <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-white/10 rounded-xl w-40 h-40 bg-white/5 hover:bg-green-500/5 hover:border-green-500/30 transition-all cursor-pointer group overflow-hidden relative">
                     {imagem ? (
                       <img src={imagem} alt="Produto" className="w-full h-full object-cover" />
                     ) : (
                       <>
-                        <Upload className="w-5 h-5 text-white/20 group-hover:text-cyan-400 transition-colors" />
-                        <span className="text-xs text-white/30 group-hover:text-cyan-400 text-center px-2 transition-colors">
+                        <Upload className="w-5 h-5 text-white/20 group-hover:text-green-400 transition-colors" />
+                        <span className="text-xs text-white/30 group-hover:text-green-400 text-center px-2 transition-colors">
                           Clique para upload
                         </span>
                         <span className="text-xs text-white/20">PNG, JPG até 2MB</span>
@@ -320,7 +320,7 @@ export default function CadastroProduto() {
             <textarea
               name="descricao" value={form.descricao} onChange={handleChange}
               placeholder="Digite a descrição curta do produto..." rows={4}
-              className="w-full px-3.5 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/50 transition-all resize-none"
+              className="w-full px-3.5 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/25 focus:outline-none focus:border-green-500/50 transition-all resize-none"
             />
           </CollapsibleSection>
 

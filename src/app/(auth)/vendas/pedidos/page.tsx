@@ -101,7 +101,7 @@ export default function PedidosPage() {
             </h1>
           </div>
           <Link href="/vendas/pedidos/novo">
-            <Button className="bg-cyan-500 hover:bg-cyan-400 text-white font-bold rounded-full px-5 transition-all hover:scale-105 active:scale-95">
+            <Button className="bg-green-500 hover:bg-green-400 text-white font-bold rounded-full px-5 transition-all hover:scale-105 active:scale-95">
               <Plus className="mr-2 h-4 w-4" />
               Novo Pedido
             </Button>
@@ -121,7 +121,7 @@ export default function PedidosPage() {
                 placeholder="Buscar..."
                 value={searchTerm}
                 onChange={handleSearchChange}
-                className="pl-8 bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-cyan-500/50 h-9 text-sm"
+                className="pl-8 bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-green-500/50 h-9 text-sm"
               />
             </div>
           </div>
@@ -136,7 +136,7 @@ export default function PedidosPage() {
                 type="date"
                 value={dateStart}
                 onChange={handleDateStartChange}
-                className="bg-white/5 border-white/10 text-white focus:border-cyan-500/50 h-9 text-sm pr-9"
+                className="bg-white/5 border-white/10 text-white focus:border-green-500/50 h-9 text-sm pr-9"
               />
               <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30 pointer-events-none" />
             </div>
@@ -152,7 +152,7 @@ export default function PedidosPage() {
                 type="date"
                 value={dateEnd}
                 onChange={handleDateEndChange}
-                className="bg-white/5 border-white/10 text-white focus:border-cyan-500/50 h-9 text-sm pr-9"
+                className="bg-white/5 border-white/10 text-white focus:border-green-500/50 h-9 text-sm pr-9"
               />
               <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30 pointer-events-none" />
             </div>
@@ -166,7 +166,7 @@ export default function PedidosPage() {
             <select
               value={statusFilter}
               onChange={handleStatusChange}
-              className="w-full bg-white/5 border border-white/10 text-white focus:border-cyan-500/50 h-9 px-3 rounded-md focus:outline-none text-sm"
+              className="w-full bg-white/5 border border-white/10 text-white focus:border-green-500/50 h-9 px-3 rounded-md focus:outline-none text-sm"
             >
               <option value="">Todos</option>
               <option value="Faturado">Faturado</option>
@@ -221,7 +221,7 @@ export default function PedidosPage() {
                             setDateStart("");
                             setDateEnd("");
                           }}
-                          className="text-cyan-400 text-xs hover:underline"
+                          className="text-green-400 text-xs hover:underline"
                         >
                           Limpar filtros
                         </button>
@@ -270,7 +270,7 @@ export default function PedidosPage() {
                             aria-label="Editar pedido"
                             className="p-2 hover:bg-white/10 rounded-lg transition-colors group"
                           >
-                            <Pencil className="h-4 w-4 text-white/40 group-hover:text-cyan-400 transition-colors" />
+                            <Pencil className="h-4 w-4 text-white/40 group-hover:text-green-400 transition-colors" />
                           </button>
                         </Link>
                       </div>
@@ -308,7 +308,7 @@ export default function PedidosPage() {
               <ChevronLeft className="h-4 w-4" />
             </button>
 
-            <div className="px-4 h-9 rounded-lg border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 text-sm font-medium flex items-center gap-1">
+            <div className="px-4 h-9 rounded-lg border border-green-500/30 bg-green-500/10 text-green-400 text-sm font-medium flex items-center gap-1">
               <span>{safePage}</span>
               <span className="text-white/30">/</span>
               <span className="text-white/40">{totalPages}</span>

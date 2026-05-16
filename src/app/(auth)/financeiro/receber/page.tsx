@@ -166,7 +166,7 @@ export default function ContasReceberPage() {
           </div>
           <Button
             onClick={handleNovo}
-            className="bg-cyan-500 hover:bg-cyan-400 text-white font-bold rounded-full px-5 transition-all hover:scale-105 active:scale-95"
+            className="bg-green-500 hover:bg-green-400 text-white font-bold rounded-full px-5 transition-all hover:scale-105 active:scale-95"
           >
             <Plus className="mr-2 h-4 w-4" />
             Nova Conta
@@ -192,9 +192,9 @@ export default function ContasReceberPage() {
           <ResumoCard
             label="Próximos 7 dias"
             value={formatBRL(resumo.totalProx7)}
-            icon={<TrendingUp className="w-5 h-5 text-cyan-400" />}
-            bg="bg-cyan-500/10"
-            textColor="text-cyan-400"
+            icon={<TrendingUp className="w-5 h-5 text-green-400" />}
+            bg="bg-green-500/10"
+            textColor="text-green-400"
           />
           <ResumoCard
             label="Recebido no mês"
@@ -217,7 +217,7 @@ export default function ContasReceberPage() {
                 placeholder="Buscar..."
                 value={searchTerm}
                 onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                className="pl-8 bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-cyan-500/50 h-9 text-sm"
+                className="pl-8 bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-green-500/50 h-9 text-sm"
               />
             </div>
           </div>
@@ -229,7 +229,7 @@ export default function ContasReceberPage() {
                 type="date"
                 value={dateStart}
                 onChange={(e) => { setDateStart(e.target.value); setCurrentPage(1); }}
-                className="bg-white/5 border-white/10 text-white focus:border-cyan-500/50 h-9 text-sm pr-9"
+                className="bg-white/5 border-white/10 text-white focus:border-green-500/50 h-9 text-sm pr-9"
               />
               <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30 pointer-events-none" />
             </div>
@@ -242,7 +242,7 @@ export default function ContasReceberPage() {
                 type="date"
                 value={dateEnd}
                 onChange={(e) => { setDateEnd(e.target.value); setCurrentPage(1); }}
-                className="bg-white/5 border-white/10 text-white focus:border-cyan-500/50 h-9 text-sm pr-9"
+                className="bg-white/5 border-white/10 text-white focus:border-green-500/50 h-9 text-sm pr-9"
               />
               <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30 pointer-events-none" />
             </div>
@@ -253,7 +253,7 @@ export default function ContasReceberPage() {
             <select
               value={statusFilter}
               onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-              className="w-full bg-white/5 border border-white/10 text-white focus:border-cyan-500/50 h-9 px-3 rounded-md focus:outline-none text-sm"
+              className="w-full bg-white/5 border border-white/10 text-white focus:border-green-500/50 h-9 px-3 rounded-md focus:outline-none text-sm"
             >
               <option value="">Todos</option>
               <option value="Pendente">Pendente</option>
@@ -268,7 +268,7 @@ export default function ContasReceberPage() {
             <select
               value={categoriaFilter}
               onChange={(e) => { setCategoriaFilter(e.target.value); setCurrentPage(1); }}
-              className="w-full bg-white/5 border border-white/10 text-white focus:border-cyan-500/50 h-9 px-3 rounded-md focus:outline-none text-sm"
+              className="w-full bg-white/5 border border-white/10 text-white focus:border-green-500/50 h-9 px-3 rounded-md focus:outline-none text-sm"
             >
               <option value="">Todas</option>
               {CATEGORIAS_RECEBER.map((c) => (
@@ -309,7 +309,7 @@ export default function ContasReceberPage() {
                       </div>
                       <p className="text-white/40 text-sm">Nenhuma conta encontrada</p>
                       {hasFilters && (
-                        <button onClick={resetFilters} className="text-cyan-400 text-xs hover:underline">
+                        <button onClick={resetFilters} className="text-green-400 text-xs hover:underline">
                           Limpar filtros
                         </button>
                       )}
@@ -341,7 +341,7 @@ export default function ContasReceberPage() {
           <div className="flex items-center gap-1.5">
             <PagBtn icon={<ChevronsLeft className="h-4 w-4" />} onClick={() => setCurrentPage(1)} disabled={safePage === 1} />
             <PagBtn icon={<ChevronLeft className="h-4 w-4" />} onClick={() => setCurrentPage((p) => p - 1)} disabled={safePage === 1} />
-            <div className="px-4 h-9 rounded-lg border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 text-sm font-medium flex items-center gap-1">
+            <div className="px-4 h-9 rounded-lg border border-green-500/30 bg-green-500/10 text-green-400 text-sm font-medium flex items-center gap-1">
               <span>{safePage}</span>
               <span className="text-white/30">/</span>
               <span className="text-white/40">{totalPages}</span>

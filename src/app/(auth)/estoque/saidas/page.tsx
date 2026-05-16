@@ -38,8 +38,8 @@ function setLS<T>(key: string, value: T) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
-const inputClass  = "w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/50 text-sm transition-colors";
-const selectClass = "w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-cyan-500/50 text-sm transition-colors cursor-pointer";
+const inputClass  = "w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:outline-none focus:border-green-500/50 text-sm transition-colors";
+const selectClass = "w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-green-500/50 text-sm transition-colors cursor-pointer";
 
 function Field({ label, required, children, className = "" }: {
   label: string; required?: boolean; children: React.ReactNode; className?: string;
@@ -210,7 +210,7 @@ export default function SaidasEstoque() {
           </div>
           <button
             onClick={() => { setForm(FORM_VAZIO); setEditandoId(null); setFormErrors({}); setModalForm(true); }}
-            className="flex items-center gap-2 px-5 h-10 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-white text-sm font-bold transition-all active:scale-95"
+            className="flex items-center gap-2 px-5 h-10 rounded-xl bg-green-500 hover:bg-green-400 text-white text-sm font-bold transition-all active:scale-95"
           >
             <Plus className="h-4 w-4" /> Nova Saída
           </button>
@@ -219,7 +219,7 @@ export default function SaidasEstoque() {
         {/* Filtros */}
         <div className="bg-primary rounded-2xl border border-white/10 p-6 space-y-5">
           <div className="flex items-center gap-3">
-            <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
+            <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center">
               <Search className="h-3 w-3" />
             </span>
             <h2 className="text-base font-bold text-white">Filtrar Saídas</h2>
@@ -279,7 +279,7 @@ export default function SaidasEstoque() {
             )}
             <button
               onClick={() => buscar()}
-              className="flex items-center gap-2 px-6 h-10 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-white text-sm font-bold transition-all active:scale-95"
+              className="flex items-center gap-2 px-6 h-10 rounded-xl bg-green-500 hover:bg-green-400 text-white text-sm font-bold transition-all active:scale-95"
             >
               <Search className="h-4 w-4" /> Buscar
             </button>
@@ -291,7 +291,7 @@ export default function SaidasEstoque() {
           <div className="bg-primary rounded-2xl border border-white/10 overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
               <div className="flex items-center gap-3">
-                <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
+                <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center">
                   <PackageMinus className="h-3 w-3" />
                 </span>
                 <h2 className="text-base font-bold text-white">Resultados</h2>
@@ -356,7 +356,7 @@ export default function SaidasEstoque() {
                           <div className="flex justify-center gap-2">
                             <button
                               onClick={() => abrirEditar(saida)}
-                              className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-xs font-semibold transition-all active:scale-95"
+                              className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-green-500/10 hover:bg-green-500/20 text-green-400 text-xs font-semibold transition-all active:scale-95"
                             >
                               <Pencil className="h-3 w-3" /> Alterar
                             </button>
@@ -384,7 +384,7 @@ export default function SaidasEstoque() {
           <div className="bg-primary w-full max-w-2xl rounded-2xl border border-white/10 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 sticky top-0 bg-primary z-10">
               <div className="flex items-center gap-3">
-                <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
+                <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center">
                   <PackageMinus className="h-3 w-3" />
                 </span>
                 <h2 className="text-base font-bold text-white">
@@ -476,7 +476,7 @@ export default function SaidasEstoque() {
                   onChange={(e) => setForm({ ...form, observacoes: e.target.value })}
                   placeholder="Observações opcionais..."
                   rows={3}
-                  className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/50 text-sm transition-colors resize-none"
+                  className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:outline-none focus:border-green-500/50 text-sm transition-colors resize-none"
                 />
               </Field>
             </div>

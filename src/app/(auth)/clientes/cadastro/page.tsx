@@ -44,9 +44,9 @@ function Field({ label, required, error, children, className = "" }: {
   );
 }
 
-const inputClass = "w-full px-3.5 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/50 transition-all";
+const inputClass = "w-full px-3.5 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/25 focus:outline-none focus:border-green-500/50 transition-all";
 const inputErrorClass = "w-full px-3.5 py-2.5 text-sm bg-white/5 border border-red-400/50 rounded-xl text-white placeholder:text-white/25 focus:outline-none focus:border-red-400 transition-all";
-const selectClass = "w-full px-3.5 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-cyan-500/50 transition-all cursor-pointer";
+const selectClass = "w-full px-3.5 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-green-500/50 transition-all cursor-pointer";
 const selectErrorClass = "w-full px-3.5 py-2.5 text-sm bg-white/5 border border-red-400/50 rounded-xl text-white focus:outline-none focus:border-red-400 transition-all cursor-pointer";
 
 function Section({ icon: Icon, title, number, children }: {
@@ -55,7 +55,7 @@ function Section({ icon: Icon, title, number, children }: {
   return (
     <div className="bg-primary rounded-2xl border border-white/10 overflow-hidden">
       <div className="px-6 py-4 border-b border-white/10 flex items-center gap-3">
-        <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-bold flex items-center justify-center">
+        <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 text-xs font-bold flex items-center justify-center">
           {number}
         </span>
         <div className="flex items-center gap-2">

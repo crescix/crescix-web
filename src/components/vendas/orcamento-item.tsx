@@ -7,7 +7,7 @@ import { Orcamento } from "@/lib/data/orcamentos";
 import Link from "next/link";
 
 const STATUS_STYLES: Record<string, string> = {
-  Aberto:   "bg-cyan-500/15 text-cyan-400 border-cyan-500/25",
+  Aberto:   "bg-green-500/15 text-green-400 border-green-500/25",
   Aprovado: "bg-green-500/15 text-green-400 border-green-500/25",
   Recusado: "bg-red-500/15 text-red-400 border-red-500/25",
   Expirado: "bg-white/10 text-white/40 border-white/15",
@@ -49,7 +49,7 @@ export function OrcamentoItem({ data, onDelete }: OrcamentoItemProps) {
               title="Converter em pedido"
               className="p-2 hover:bg-white/10 rounded-lg transition-colors group"
             >
-              <Copy className="h-4 w-4 text-white/40 group-hover:text-cyan-400 transition-colors" />
+              <Copy className="h-4 w-4 text-white/40 group-hover:text-green-400 transition-colors" />
             </button>
           </Link>
 
@@ -59,7 +59,7 @@ export function OrcamentoItem({ data, onDelete }: OrcamentoItemProps) {
               title="Editar orçamento"
               className="p-2 hover:bg-white/10 rounded-lg transition-colors group"
             >
-              <Pencil className="h-4 w-4 text-white/40 group-hover:text-cyan-400 transition-colors" />
+              <Pencil className="h-4 w-4 text-white/40 group-hover:text-green-400 transition-colors" />
             </button>
           </Link>
 

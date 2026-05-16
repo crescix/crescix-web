@@ -84,7 +84,7 @@ export default function OrcamentosPage() {
             <h1 className="text-3xl font-black text-white tracking-tighter">Orçamentos</h1>
           </div>
           <Link href="/vendas/orcamentos/novo">
-            <Button className="bg-cyan-500 hover:bg-cyan-400 text-white font-bold rounded-full px-5 transition-all hover:scale-105 active:scale-95">
+            <Button className="bg-green-500 hover:bg-green-400 text-white font-bold rounded-full px-5 transition-all hover:scale-105 active:scale-95">
               <Plus className="mr-2 h-4 w-4" />
               Novo Orçamento
             </Button>
@@ -101,7 +101,7 @@ export default function OrcamentosPage() {
                 placeholder="Buscar..."
                 value={searchTerm}
                 onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                className="pl-8 bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-cyan-500/50 h-9 text-sm"
+                className="pl-8 bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-green-500/50 h-9 text-sm"
               />
             </div>
           </div>
@@ -111,7 +111,7 @@ export default function OrcamentosPage() {
             <div className="relative">
               <Input type="date" value={dateStart}
                 onChange={(e) => { setDateStart(e.target.value); setCurrentPage(1); }}
-                className="bg-white/5 border-white/10 text-white focus:border-cyan-500/50 h-9 text-sm pr-9"
+                className="bg-white/5 border-white/10 text-white focus:border-green-500/50 h-9 text-sm pr-9"
               />
               <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30 pointer-events-none" />
             </div>
@@ -122,7 +122,7 @@ export default function OrcamentosPage() {
             <div className="relative">
               <Input type="date" value={dateEnd}
                 onChange={(e) => { setDateEnd(e.target.value); setCurrentPage(1); }}
-                className="bg-white/5 border-white/10 text-white focus:border-cyan-500/50 h-9 text-sm pr-9"
+                className="bg-white/5 border-white/10 text-white focus:border-green-500/50 h-9 text-sm pr-9"
               />
               <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30 pointer-events-none" />
             </div>
@@ -133,7 +133,7 @@ export default function OrcamentosPage() {
             <select
               value={statusFilter}
               onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-              className="w-full bg-white/5 border border-white/10 text-white focus:border-cyan-500/50 h-9 px-3 rounded-md focus:outline-none text-sm"
+              className="w-full bg-white/5 border border-white/10 text-white focus:border-green-500/50 h-9 px-3 rounded-md focus:outline-none text-sm"
             >
               <option value="">Todos</option>
               <option value="Aberto">Aberto</option>
@@ -169,7 +169,7 @@ export default function OrcamentosPage() {
                       </div>
                       <p className="text-white/40 text-sm">Nenhum orçamento encontrado</p>
                       {(searchTerm || statusFilter || dateStart || dateEnd) && (
-                        <button onClick={resetFilters} className="text-cyan-400 text-xs hover:underline">
+                        <button onClick={resetFilters} className="text-green-400 text-xs hover:underline">
                           Limpar filtros
                         </button>
                       )}
@@ -205,7 +205,7 @@ export default function OrcamentosPage() {
             ].map((btn, i) =>
               i === 2
                 ? [
-                    <div key="indicator" className="px-4 h-9 rounded-lg border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 text-sm font-medium flex items-center gap-1">
+                    <div key="indicator" className="px-4 h-9 rounded-lg border border-green-500/30 bg-green-500/10 text-green-400 text-sm font-medium flex items-center gap-1">
                       <span>{safePage}</span>
                       <span className="text-white/30">/</span>
                       <span className="text-white/40">{totalPages}</span>

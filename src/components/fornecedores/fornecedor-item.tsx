@@ -31,7 +31,7 @@ export function FornecedorItem({ data, onDelete }: FornecedorRowProps) {
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-400/10"
+                            className="text-green-400 hover:text-green-300 hover:bg-green-400/10"
                         >
                             <Pencil className="h-4 w-4" />
                         </Button>

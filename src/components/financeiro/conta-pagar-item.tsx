@@ -64,7 +64,7 @@ export function ContaPagarItem({ data, onEdit, onDelete, onMarkPaid }: ContaPaga
             onClick={() => onEdit(data)}
             className="p-2 hover:bg-white/10 rounded-lg transition-colors group"
           >
-            <Pencil className="h-4 w-4 text-white/40 group-hover:text-cyan-400 transition-colors" />
+            <Pencil className="h-4 w-4 text-white/40 group-hover:text-green-400 transition-colors" />
           </button>
 
           <button

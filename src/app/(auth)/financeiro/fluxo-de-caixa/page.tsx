@@ -135,9 +135,9 @@ export default function FluxoDeCaixaPage() {
             <ResumoCard
               label="Saldo Líquido"
               value={`${resumo.saldo < 0 ? "-" : ""}${formatBRL(Math.abs(resumo.saldo))}`}
-              icon={<Wallet className={`w-5 h-5 ${resumo.saldo >= 0 ? "text-cyan-400" : "text-red-400"}`} />}
-              bg={resumo.saldo >= 0 ? "bg-cyan-500/10" : "bg-red-500/10"}
-              textColor={resumo.saldo >= 0 ? "text-cyan-400" : "text-red-400"}
+              icon={<Wallet className={`w-5 h-5 ${resumo.saldo >= 0 ? "text-green-400" : "text-red-400"}`} />}
+              bg={resumo.saldo >= 0 ? "bg-green-500/10" : "bg-red-500/10"}
+              textColor={resumo.saldo >= 0 ? "text-green-400" : "text-red-400"}
               hint={resumo.saldo >= 0 ? "Resultado positivo" : "Resultado negativo"}
             />
           </div>
@@ -268,7 +268,7 @@ export default function FluxoDeCaixaPage() {
                 onClick={() => setPeriodo(opt.value)}
                 className={`px-3 h-8 rounded-lg text-xs font-medium transition-colors border ${
                   periodo === opt.value
-                    ? "bg-cyan-500/15 text-cyan-400 border-cyan-500/30"
+                    ? "bg-green-500/15 text-green-400 border-green-500/30"
                     : "bg-white/5 text-white/60 border-white/10 hover:bg-white/10 hover:text-white"
                 }`}
               >
@@ -287,7 +287,7 @@ export default function FluxoDeCaixaPage() {
                   placeholder="Descrição, categoria, contraparte..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8 bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-cyan-500/50 h-9 text-sm"
+                  className="pl-8 bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-green-500/50 h-9 text-sm"
                 />
               </div>
             </div>
@@ -301,7 +301,7 @@ export default function FluxoDeCaixaPage() {
                       type="date"
                       value={dateStart}
                       onChange={(e) => setDateStart(e.target.value)}
-                      className="bg-white/5 border-white/10 text-white focus:border-cyan-500/50 h-9 text-sm pr-9"
+                      className="bg-white/5 border-white/10 text-white focus:border-green-500/50 h-9 text-sm pr-9"
                     />
                     <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30 pointer-events-none" />
                   </div>
@@ -313,7 +313,7 @@ export default function FluxoDeCaixaPage() {
                       type="date"
                       value={dateEnd}
                       onChange={(e) => setDateEnd(e.target.value)}
-                      className="bg-white/5 border-white/10 text-white focus:border-cyan-500/50 h-9 text-sm pr-9"
+                      className="bg-white/5 border-white/10 text-white focus:border-green-500/50 h-9 text-sm pr-9"
                     />
                     <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30 pointer-events-none" />
                   </div>
@@ -326,7 +326,7 @@ export default function FluxoDeCaixaPage() {
               <select
                 value={tipoFilter}
                 onChange={(e) => setTipoFilter(e.target.value as typeof tipoFilter)}
-                className="w-full bg-white/5 border border-white/10 text-white focus:border-cyan-500/50 h-9 px-3 rounded-md focus:outline-none text-sm"
+                className="w-full bg-white/5 border border-white/10 text-white focus:border-green-500/50 h-9 px-3 rounded-md focus:outline-none text-sm"
               >
                 <option value="">Todos</option>
                 <option value="entrada">Entradas</option>
@@ -339,7 +339,7 @@ export default function FluxoDeCaixaPage() {
               <select
                 value={naturezaFilter}
                 onChange={(e) => setNaturezaFilter(e.target.value as typeof naturezaFilter)}
-                className="w-full bg-white/5 border border-white/10 text-white focus:border-cyan-500/50 h-9 px-3 rounded-md focus:outline-none text-sm"
+                className="w-full bg-white/5 border border-white/10 text-white focus:border-green-500/50 h-9 px-3 rounded-md focus:outline-none text-sm"
               >
                 <option value="">Todas</option>
                 <option value="Realizada">Realizada</option>
@@ -352,7 +352,7 @@ export default function FluxoDeCaixaPage() {
         {/* Tabela */}
         <div className="rounded-2xl border border-white/10 overflow-hidden bg-primary">
           <div className="px-6 py-4 flex items-center gap-3 border-b border-white/10">
-            <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-bold flex items-center justify-center">
+            <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 text-xs font-bold flex items-center justify-center">
               ↕
             </span>
             <div>
@@ -392,7 +392,7 @@ export default function FluxoDeCaixaPage() {
                       <p className="text-white/40 text-sm">
                         Nenhuma transação no período/filtro
                       </p>
-                      <button onClick={resetFilters} className="text-cyan-400 text-xs hover:underline">
+                      <button onClick={resetFilters} className="text-green-400 text-xs hover:underline">
                         Limpar filtros
                       </button>
                     </div>
@@ -421,7 +421,7 @@ export default function FluxoDeCaixaPage() {
                     <TableCell>
                       <Badge className={
                         t.natureza === "Realizada"
-                          ? "bg-cyan-500/15 text-cyan-400 border-cyan-500/25 border text-xs font-medium"
+                          ? "bg-green-500/15 text-green-400 border-green-500/25 border text-xs font-medium"
                           : "bg-white/10 text-white/60 border-white/20 border text-xs font-medium"
                       }>
                         {t.natureza}

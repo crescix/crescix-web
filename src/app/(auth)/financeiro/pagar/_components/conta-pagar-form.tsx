@@ -38,8 +38,8 @@ interface ContaPagarFormProps {
 }
 
 const fieldLabel = "text-white/60 text-xs font-bold uppercase tracking-wider block mb-1.5";
-const fieldInput = "bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-cyan-500/50 h-9 text-sm";
-const fieldSelect = "w-full bg-white/5 border border-white/10 text-white focus:border-cyan-500/50 h-9 px-3 rounded-md focus:outline-none text-sm";
+const fieldInput = "bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-green-500/50 h-9 text-sm";
+const fieldSelect = "w-full bg-white/5 border border-white/10 text-white focus:border-green-500/50 h-9 px-3 rounded-md focus:outline-none text-sm";
 const fieldError = "text-red-400 text-xs mt-1";
 
 export function ContaPagarForm({ isOpen, onOpenChange, onSubmit, conta }: ContaPagarFormProps) {
@@ -244,7 +244,7 @@ export function ContaPagarForm({ isOpen, onOpenChange, onSubmit, conta }: ContaP
                 {...register("observacoes")}
                 rows={3}
                 placeholder="Anotações internas..."
-                className="w-full bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:border-cyan-500/50 px-3 py-2 rounded-md focus:outline-none text-sm resize-none"
+                className="w-full bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:border-green-500/50 px-3 py-2 rounded-md focus:outline-none text-sm resize-none"
               />
             </div>
           </div>
@@ -260,7 +260,7 @@ export function ContaPagarForm({ isOpen, onOpenChange, onSubmit, conta }: ContaP
             </Button>
             <Button
               type="submit"
-              className="bg-cyan-500 hover:bg-cyan-400 text-white font-bold"
+              className="bg-green-500 hover:bg-green-400 text-white font-bold"
             >
               <Save className="mr-2 h-4 w-4" />
               {isEdit ? "Salvar Alterações" : "Criar Conta"}

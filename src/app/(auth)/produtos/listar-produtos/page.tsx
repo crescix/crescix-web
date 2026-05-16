@@ -66,8 +66,8 @@ return (
 );
 }
 
-const inputClass = "w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/50 text-sm transition-colors";
-const selectClass = "w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-cyan-500/50 text-sm transition-colors cursor-pointer";
+const inputClass = "w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:outline-none focus:border-green-500/50 text-sm transition-colors";
+const selectClass = "w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-green-500/50 text-sm transition-colors cursor-pointer";
 
 interface SelectFieldProps {
 value: string;
@@ -113,7 +113,7 @@ return (
     <div className="bg-primary rounded-2xl border border-white/10 w-full max-w-lg">
     <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
         <div className="flex items-center gap-3">
-        <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
+        <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center">
             <SlidersHorizontal className="h-3 w-3" />
         </span>
         <h2 className="text-base font-bold text-white">Filtros Avançados</h2>
@@ -150,7 +150,7 @@ return (
         Limpar Filtros
         </button>
         <button onClick={aplicar}
-        className="px-6 h-10 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-white text-sm font-bold transition-all active:scale-95">
+        className="px-6 h-10 rounded-xl bg-green-500 hover:bg-green-400 text-white text-sm font-bold transition-all active:scale-95">
         Aplicar
         </button>
     </div>
@@ -177,7 +177,7 @@ return (
     <div className="bg-primary rounded-2xl border border-white/10 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
     <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 sticky top-0 bg-primary z-10">
         <div className="flex items-center gap-3">
-        <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
+        <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center">
             <Pencil className="h-3 w-3" />
         </span>
         <h2 className="text-base font-bold text-white">Editar Produto</h2>
@@ -378,7 +378,7 @@ return (
         </div>
         </div>
         <a href="/produtos/cadastro"
-        className="flex items-center gap-2 px-5 h-10 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-white text-sm font-bold transition-all active:scale-95">
+        className="flex items-center gap-2 px-5 h-10 rounded-xl bg-green-500 hover:bg-green-400 text-white text-sm font-bold transition-all active:scale-95">
         + Incluir Cadastro
         </a>
     </div>
@@ -386,7 +386,7 @@ return (
     {/* Painel de Filtro */}
     <div className="bg-primary rounded-2xl border border-white/10 p-6 space-y-5">
         <div className="flex items-center gap-3">
-        <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
+        <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center">
             <Search className="h-3 w-3" />
         </span>
         <h2 className="text-base font-bold text-white">Buscar Produtos</h2>
@@ -422,7 +422,7 @@ return (
             <SlidersHorizontal className="h-4 w-4" />
             Filtros avançados
             {filtrosAtivos > 0 && (
-            <span className="bg-cyan-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+            <span className="bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                 {filtrosAtivos}
             </span>
             )}
@@ -436,7 +436,7 @@ return (
             </button>
             )}
             <button onClick={() => buscar()}
-            className="flex items-center gap-2 px-6 h-10 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-white text-sm font-bold transition-all active:scale-95">
+            className="flex items-center gap-2 px-6 h-10 rounded-xl bg-green-500 hover:bg-green-400 text-white text-sm font-bold transition-all active:scale-95">
             <Search className="h-4 w-4" /> Buscar
             </button>
         </div>
@@ -448,7 +448,7 @@ return (
         <div className="bg-primary rounded-2xl border border-white/10 overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
             <div className="flex items-center gap-3">
-            <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
+            <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center">
                 <Package className="h-3 w-3" />
             </span>
             <h2 className="text-base font-bold text-white">Resultados</h2>
@@ -462,7 +462,7 @@ return (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
             <Package className="h-8 w-8 text-white/15" />
             <p className="text-white/30 text-sm">Nenhum produto encontrado para os filtros aplicados.</p>
-            <button onClick={limparBusca} className="text-cyan-400 text-sm hover:underline">Limpar filtros</button>
+            <button onClick={limparBusca} className="text-green-400 text-sm hover:underline">Limpar filtros</button>
             </div>
         ) : (
             <div className="overflow-x-auto">
@@ -490,7 +490,7 @@ return (
                     <td className="px-6 py-4">
                         <div className="flex gap-2 justify-center">
                         <button onClick={() => setModalEditar(p)}
-                            className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-xs font-semibold transition-all active:scale-95">
+                            className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-green-500/10 hover:bg-green-500/20 text-green-400 text-xs font-semibold transition-all active:scale-95">
                             <Pencil className="h-3 w-3" /> Alterar
                         </button>
                         <button onClick={() => setModalExcluir(p)}
