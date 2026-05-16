@@ -213,3 +213,111 @@ export function formatDateBR(iso: string): string {
   const [y, m, d] = iso.split("-");
   return `${d}/${m}/${y}`;
 }
+
+// ============================================================================
+// Fluxo de Caixa — agregação de transações
+// ============================================================================
+
+export type TipoTransacao = "entrada" | "saida";
+export type NaturezaTransacao = "Realizada" | "Prevista";
+
+export interface TransacaoFluxo {
+  id: string;
+  data: string;
+  descricao: string;
+  categoria: string;
+  contraparte?: string;
+  valor: number;
+  tipo: TipoTransacao;
+  natureza: NaturezaTransacao;
+  origem: "Pagar" | "Receber";
+}
+
+export function getTransacoesFluxo(): TransacaoFluxo[] {
+  const pagar = getContasPagar();
+  const receber = getContasReceber();
+  const out: TransacaoFluxo[] = [];
+
+  for (const p of pagar) {
+    if (p.status === "Cancelado") continue;
+    const realizada = p.status === "Pago" && !!p.data_pagamento;
+    out.push({
+      id: `pgr-${p.id}`,
+      data: realizada ? p.data_pagamento! : p.vencimento,
+      descricao: p.descricao,
+      categoria: p.categoria,
+      contraparte: p.fornecedor,
+      valor: p.valor,
+      tipo: "saida",
+      natureza: realizada ? "Realizada" : "Prevista",
+      origem: "Pagar",
+    });
+  }
+
+  for (const r of receber) {
+    if (r.status === "Cancelado") continue;
+    const realizada = r.status === "Recebido" && !!r.data_recebimento;
+    out.push({
+      id: `rcb-${r.id}`,
+      data: realizada ? r.data_recebimento! : r.vencimento,
+      descricao: r.descricao,
+      categoria: r.categoria,
+      contraparte: r.cliente,
+      valor: r.valor,
+      tipo: "entrada",
+      natureza: realizada ? "Realizada" : "Prevista",
+      origem: "Receber",
+    });
+  }
+
+  out.sort((a, b) => b.data.localeCompare(a.data));
+  return out;
+}
+
+export interface ResumoFluxo {
+  entradas: number;
+  saidas: number;
+  saldo: number;
+  entradasPrevistas: number;
+  saidasPrevistas: number;
+  saldoProjetado: number;
+}
+
+export function calcResumoFluxo(transacoes: TransacaoFluxo[]): ResumoFluxo {
+  const resumo: ResumoFluxo = {
+    entradas: 0, saidas: 0, saldo: 0,
+    entradasPrevistas: 0, saidasPrevistas: 0, saldoProjetado: 0,
+  };
+  for (const t of transacoes) {
+    if (t.natureza === "Realizada") {
+      if (t.tipo === "entrada") resumo.entradas += t.valor;
+      else resumo.saidas += t.valor;
+    } else {
+      if (t.tipo === "entrada") resumo.entradasPrevistas += t.valor;
+      else resumo.saidasPrevistas += t.valor;
+    }
+  }
+  resumo.saldo = resumo.entradas - resumo.saidas;
+  resumo.saldoProjetado =
+    (resumo.entradas + resumo.entradasPrevistas) -
+    (resumo.saidas + resumo.saidasPrevistas);
+  return resumo;
+}
+
+export interface PontoGrafico {
+  data: string;
+  entradas: number;
+  saidas: number;
+}
+
+export function agruparPorDia(transacoes: TransacaoFluxo[]): PontoGrafico[] {
+  const mapa = new Map<string, PontoGrafico>();
+  for (const t of transacoes) {
+    if (t.natureza !== "Realizada") continue;
+    const ponto = mapa.get(t.data) ?? { data: t.data, entradas: 0, saidas: 0 };
+    if (t.tipo === "entrada") ponto.entradas += t.valor;
+    else ponto.saidas += t.valor;
+    mapa.set(t.data, ponto);
+  }
+  return Array.from(mapa.values()).sort((a, b) => a.data.localeCompare(b.data));
+}
