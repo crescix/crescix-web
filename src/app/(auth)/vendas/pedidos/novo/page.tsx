@@ -1,15 +1,16 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useCallback, useEffect, Suspense } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   clientesData,
   vendedoresData,
   condicoesPagamentoData,
   produtosData,
   ItemVenda,
-  Cliente,
 } from "@/lib/data/cadastro-vendas";
+import { orcamentosData, Orcamento } from "@/lib/data/orcamentos";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,7 +21,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Trash2, Calendar, Plus, AlertCircle, CheckCircle2, PackageOpen } from "lucide-react";
+import {
+  Trash2, Calendar, Plus, AlertCircle, CheckCircle2, PackageOpen,
+  FileText, X, ExternalLink,
+} from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -32,10 +36,44 @@ function generateItemId(): string {
   return `item-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
+function findClienteIdByName(nome: string): string {
+  const match = clientesData.find(
+    (c) => c.nome.toLowerCase() === nome.toLowerCase()
+  );
+  return match?.id ?? clientesData[0]?.id ?? "";
+}
+
+function buildItemFromOrcamento(item: Orcamento["itens"] extends Array<infer T> | undefined ? T : never): ItemVenda {
+  const produtoNoCatalogo = produtosData.find(
+    (p) => p.nome.toLowerCase() === item.produto.toLowerCase()
+  );
+  const preco = item.preco_unitario;
+  const desconto = item.desconto_item;
+  const subtotal = preco * item.quantidade * (1 - desconto / 100);
+  return {
+    id: `item-${item.id}-${Date.now()}`,
+    produto: produtoNoCatalogo ?? {
+      id: `prod-${item.id}`,
+      nome: item.produto,
+      sku: "",
+      preco,
+    },
+    quantidade: item.quantidade,
+    preco_unitario: preco,
+    desconto_percentual: desconto,
+    subtotal,
+  };
+}
+
 // ─── Componente ───────────────────────────────────────────────────────────────
 
-export default function NovoPedidoPage() {
+function NovoPedidoForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const orcamentoIdParam = searchParams.get("orcamento");
+
+  // Origem (se veio de um orçamento)
+  const [orcamentoOrigem, setOrcamentoOrigem] = useState<Orcamento | null>(null);
 
   // Block 1 — Quem?
   const [clienteId, setClienteId] = useState<string>(clientesData[0]?.id ?? "");
@@ -60,6 +98,31 @@ export default function NovoPedidoPage() {
   // Estado de submissão
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string>("");
+
+  // ─── Pre-preenche a partir de orçamento (se ?orcamento= na URL) ─────────────
+  useEffect(() => {
+    if (!orcamentoIdParam) return;
+    const orc = orcamentosData.find((o) => o.id === orcamentoIdParam);
+    if (!orc) return;
+
+    setOrcamentoOrigem(orc);
+
+    // Pré-preenche cliente tentando casar pelo nome
+    setClienteId(findClienteIdByName(orc.cliente));
+
+    // Pré-preenche itens do orçamento
+    if (orc.itens && orc.itens.length > 0) {
+      setItens(orc.itens.map(buildItemFromOrcamento));
+    }
+  }, [orcamentoIdParam]);
+
+  const handleDesvincular = () => {
+    setOrcamentoOrigem(null);
+    setItens([]);
+    // Mantém cliente/vendedor/data para não desperdiçar inputs já alterados
+    // mas limpa a query string da URL pra não confundir
+    router.replace("/vendas/pedidos/novo");
+  };
 
   // ─── Derivados ──────────────────────────────────────────────────────────────
 
@@ -208,13 +271,50 @@ export default function NovoPedidoPage() {
               Vendas / Pedidos
             </p>
             <h1 className="text-3xl font-black text-white tracking-tighter">
-              Novo Pedido
+              {orcamentoOrigem ? "Converter Orçamento em Pedido" : "Novo Pedido"}
             </h1>
           </div>
           <div className="text-white/20 font-mono text-sm bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg">
             #001255
           </div>
         </div>
+
+        {/* Banner: pedido criado a partir de orçamento */}
+        {orcamentoOrigem && (
+          <div className="flex items-start gap-3 bg-green-500/10 border border-green-500/25 rounded-2xl p-4">
+            <div className="bg-green-500/20 rounded-xl p-2 flex-shrink-0">
+              <FileText className="h-4 w-4 text-green-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white text-sm font-semibold">
+                Convertendo orçamento em pedido
+              </p>
+              <p className="text-white/60 text-xs mt-0.5">
+                Os itens e cliente do orçamento{" "}
+                <Link
+                  href={`/vendas/orcamentos/${orcamentoOrigem.id}/editar`}
+                  className="text-green-400 font-medium hover:underline inline-flex items-center gap-1"
+                >
+                  {orcamentoOrigem.numero}
+                  <ExternalLink className="h-3 w-3" />
+                </Link>
+                {" "}foram pré-carregados. Revise antes de finalizar.
+              </p>
+              {orcamentoOrigem.observacoes && (
+                <p className="text-white/50 text-xs mt-2 italic">
+                  Obs. do orçamento: &ldquo;{orcamentoOrigem.observacoes}&rdquo;
+                </p>
+              )}
+            </div>
+            <button
+              onClick={handleDesvincular}
+              title="Desvincular do orçamento (limpa os itens)"
+              className="p-2 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors flex-shrink-0"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
 
         {/* Erro global */}
         {formError && (
@@ -558,5 +658,21 @@ export default function NovoPedidoPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// ─── Wrapper com Suspense ─────────────────────────────────────────────────────
+// useSearchParams() exige Suspense boundary para static build do Next.js.
+export default function NovoPedidoPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="w-full min-h-screen bg-secondary flex items-center justify-center">
+          <p className="text-white/30 text-sm">Carregando...</p>
+        </div>
+      }
+    >
+      <NovoPedidoForm />
+    </Suspense>
   );
 }
