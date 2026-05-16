@@ -3,20 +3,15 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import {
-  Plus,
-  Search,
-  Building2,
-  Pencil,
-  Trash2,
-  ChevronDown,
-  ChevronUp,
-  AlertTriangle,
-  X,
+  Plus, Search, Building2, Pencil, Trash2,
+  ChevronDown, ChevronUp, AlertTriangle, X,
 } from "lucide-react";
 import { fornecedoresData, Fornecedor } from "@/lib/data/fornecedores";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MODAL DE EXCLUSÃO (inline — sem dependência de componente externo)
+// MODAL DE EXCLUSÃO
 // ─────────────────────────────────────────────────────────────────────────────
 function ModalExclusao({
   fornecedor,
@@ -28,77 +23,75 @@ function ModalExclusao({
   onCancel: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Overlay */}
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+      onClick={onCancel}
+    >
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={onCancel}
-      />
-
-      {/* Dialog */}
-      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-5">
-
-        {/* Fechar */}
-        <button
-          onClick={onCancel}
-          className="absolute top-4 right-4 p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors"
-        >
-          <X className="w-4 h-4" />
-        </button>
-
-        {/* Ícone de alerta */}
-        <div className="flex items-center gap-3">
-          <div className="bg-rose-100 rounded-xl p-3 flex-shrink-0">
-            <AlertTriangle className="w-5 h-5 text-rose-600" />
+        onClick={(e) => e.stopPropagation()}
+        className="relative bg-primary border border-white/10 text-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden"
+      >
+        {/* Cabeçalho */}
+        <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
+          <div className="flex items-center gap-3">
+            <div className="bg-red-500/10 rounded-xl p-2.5">
+              <AlertTriangle className="w-5 h-5 text-red-400" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-white">Confirmar Exclusão</h2>
+              <p className="text-xs text-white/40 mt-0.5">Esta ação não poderá ser desfeita</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-base font-semibold text-gray-800">
-              Confirmar Exclusão
-            </h2>
-            <p className="text-xs text-gray-400 mt-0.5">
-              Esta ação não poderá ser desfeita
-            </p>
-          </div>
-        </div>
-
-        {/* Dados do fornecedor */}
-        <div className="bg-rose-50 border border-rose-100 rounded-xl p-4 space-y-2 text-sm">
-          <div className="flex gap-2">
-            <span className="text-gray-400 min-w-[80px]">Razão Social:</span>
-            <span className="font-medium text-gray-700">{fornecedor.razaoSocial}</span>
-          </div>
-          <div className="flex gap-2">
-            <span className="text-gray-400 min-w-[80px]">CNPJ:</span>
-            <span className="font-medium text-gray-700">{fornecedor.cnpj}</span>
-          </div>
-          <div className="flex gap-2">
-            <span className="text-gray-400 min-w-[80px]">Endereço:</span>
-            <span className="font-medium text-gray-700">{fornecedor.endereco}</span>
-          </div>
-        </div>
-
-        <p className="text-sm text-gray-500">
-          Tem certeza que deseja excluir o fornecedor{" "}
-          <strong className="text-gray-700">{fornecedor.razaoSocial}</strong>?
-        </p>
-
-        {/* Botões */}
-        <div className="flex gap-3 pt-1">
           <button
             onClick={onCancel}
-            className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+            className="text-white/50 hover:text-white transition-colors"
           >
-            Cancelar
-          </button>
-          <button
-            onClick={onConfirm}
-            className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium flex items-center justify-center gap-2 transition-colors"
-          >
-            <Trash2 className="w-4 h-4" />
-            Sim, Excluir
+            <X className="w-5 h-5" />
           </button>
         </div>
 
+        {/* Dados */}
+        <div className="p-6 space-y-4">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-3 text-sm">
+            <div className="grid grid-cols-[110px_1fr] gap-3">
+              <span className="text-xs text-white/50 font-bold uppercase">Razão Social</span>
+              <span className="text-white font-medium">{fornecedor.razaoSocial}</span>
+            </div>
+            <div className="grid grid-cols-[110px_1fr] gap-3">
+              <span className="text-xs text-white/50 font-bold uppercase">CNPJ</span>
+              <span className="text-white/80 font-mono">{fornecedor.cnpj}</span>
+            </div>
+            <div className="grid grid-cols-[110px_1fr] gap-3">
+              <span className="text-xs text-white/50 font-bold uppercase">Endereço</span>
+              <span className="text-white/80">{fornecedor.endereco}</span>
+            </div>
+          </div>
+
+          <p className="text-sm text-white/60">
+            Tem certeza que deseja excluir{" "}
+            <strong className="text-white">{fornecedor.razaoSocial}</strong>?
+          </p>
+        </div>
+
+        {/* Botões */}
+        <div className="border-t border-white/10 bg-white/5 px-6 py-5 flex gap-3 justify-end">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onCancel}
+            className="border border-white/10 text-white hover:bg-white/10"
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={onConfirm}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Sim, Excluir
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -113,7 +106,6 @@ export default function FornecedoresPage() {
   const [fornecedorParaExcluir, setFornecedorParaExcluir] = useState<Fornecedor | null>(null);
   const [lista, setLista] = useState<Fornecedor[]>(fornecedoresData);
 
-  // Agrupa por tipo
   const grouped = useMemo(() => {
     const filtrado = lista.filter(
       (f) =>
@@ -132,7 +124,7 @@ export default function FornecedoresPage() {
   const toggleGrupo = (tipo: string) =>
     setExpandidos((prev) => ({ ...prev, [tipo]: !prev[tipo] }));
 
-  const isExpanded = (tipo: string) => expandidos[tipo] !== false; // aberto por padrão
+  const isExpanded = (tipo: string) => expandidos[tipo] !== false;
 
   const handleConfirmarExclusao = () => {
     if (!fornecedorParaExcluir) return;
@@ -142,7 +134,6 @@ export default function FornecedoresPage() {
 
   return (
     <>
-      {/* Modal de exclusão */}
       {fornecedorParaExcluir && (
         <ModalExclusao
           fornecedor={fornecedorParaExcluir}
@@ -151,122 +142,125 @@ export default function FornecedoresPage() {
         />
       )}
 
-      <div className="min-h-screen w-full bg-gray-50">
-        <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 space-y-6">
+      <div className="w-full min-h-screen bg-secondary p-4 md:p-8 flex flex-col items-center">
+        <div className="w-full max-w-6xl space-y-6">
 
-          {/* Cabeçalho */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-800 tracking-tight">
+              <p className="text-white/60 text-xs font-medium uppercase tracking-widest mb-1">
+                Cadastros
+              </p>
+              <h1 className="text-3xl font-black text-white tracking-tighter">
                 Fornecedores
               </h1>
-              <p className="text-sm text-gray-400 mt-0.5">
-                {lista.length} parceiros cadastrados
+              <p className="text-sm text-white/40 mt-1">
+                {lista.length} {lista.length === 1 ? "parceiro cadastrado" : "parceiros cadastrados"}
               </p>
             </div>
             <Link href="/fornecedores/cadastro">
-              <button className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition-colors shadow-sm">
-                <Plus className="w-4 h-4" />
+              <Button className="bg-green-500 hover:bg-green-400 text-white font-bold rounded-full px-5 transition-all hover:scale-105 active:scale-95">
+                <Plus className="mr-2 h-4 w-4" />
                 Novo Fornecedor
-              </button>
+              </Button>
             </Link>
           </div>
 
           {/* Busca */}
           <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+            <Input
               type="text"
               placeholder="Buscar por razão social ou CNPJ..."
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-gray-200 rounded-xl text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+              className="pl-10 bg-primary border-white/10 text-white placeholder:text-white/30 focus:border-green-500/50 h-11 text-sm"
             />
           </div>
 
           {/* Lista agrupada */}
           {tipos.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
-              <Building2 className="w-8 h-8 text-gray-300 mx-auto mb-3" />
-              <p className="text-sm text-gray-400">Nenhum fornecedor encontrado.</p>
+            <div className="bg-primary rounded-2xl border border-white/10 p-16 text-center">
+              <Building2 className="w-10 h-10 text-white/15 mx-auto mb-3" />
+              <p className="text-sm text-white/40">Nenhum fornecedor encontrado.</p>
             </div>
           ) : (
             <div className="space-y-4">
               {tipos.map((tipo) => (
                 <div
                   key={tipo}
-                  className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
+                  className="bg-primary rounded-2xl border border-white/10 overflow-hidden"
                 >
                   {/* Header do grupo */}
                   <button
                     onClick={() => toggleGrupo(tipo)}
-                    className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50/60 transition-colors"
+                    className="w-full flex items-center justify-between px-6 py-4 hover:bg-white/5 transition-colors group"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="bg-teal-50 rounded-lg p-1.5">
-                        <Building2 className="w-4 h-4 text-teal-600" />
+                      <div className="bg-green-500/10 rounded-lg p-2">
+                        <Building2 className="w-4 h-4 text-green-400" />
                       </div>
-                      <span className="font-semibold text-gray-700 text-sm uppercase tracking-wide">
+                      <span className="font-bold text-white text-sm uppercase tracking-wide">
                         {tipo}
                       </span>
-                      <span className="bg-teal-50 text-teal-700 text-xs font-medium px-2 py-0.5 rounded-full">
+                      <span className="bg-green-500/15 text-green-400 text-xs font-semibold px-2 py-0.5 rounded-full border border-green-500/20">
                         {grouped[tipo].length}
                       </span>
                     </div>
                     {isExpanded(tipo)
-                      ? <ChevronUp className="w-4 h-4 text-gray-400" />
-                      : <ChevronDown className="w-4 h-4 text-gray-400" />
+                      ? <ChevronUp className="w-4 h-4 text-white/40 group-hover:text-white/70" />
+                      : <ChevronDown className="w-4 h-4 text-white/40 group-hover:text-white/70" />
                     }
                   </button>
 
                   {/* Tabela */}
                   {isExpanded(tipo) && (
-                    <div className="border-t border-gray-100">
+                    <div className="border-t border-white/10 overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
-                          <tr className="border-b border-gray-50">
-                            <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide w-[35%]">
+                          <tr className="bg-white/5 border-b border-white/10">
+                            <th className="text-left px-6 py-3 text-xs font-semibold text-white/50 uppercase tracking-wider w-[35%]">
                               Razão Social
                             </th>
-                            <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                            <th className="text-left px-6 py-3 text-xs font-semibold text-white/50 uppercase tracking-wider">
                               CNPJ
                             </th>
-                            <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                            <th className="text-left px-6 py-3 text-xs font-semibold text-white/50 uppercase tracking-wider">
                               Endereço
                             </th>
-                            <th className="text-right px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                            <th className="text-right px-6 py-3 text-xs font-semibold text-white/50 uppercase tracking-wider">
                               Ações
                             </th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-50">
+                        <tbody>
                           {grouped[tipo].map((f) => (
                             <tr
                               key={f.id}
-                              className="hover:bg-gray-50/60 transition-colors"
+                              className="border-b border-white/5 last:border-b-0 hover:bg-white/5 transition-colors"
                             >
-                              <td className="px-6 py-4 font-medium text-gray-700">
+                              <td className="px-6 py-4 font-medium text-white">
                                 {f.razaoSocial}
                               </td>
-                              <td className="px-6 py-4 text-gray-500">
+                              <td className="px-6 py-4 text-white/70 font-mono text-xs">
                                 {f.cnpj}
                               </td>
-                              <td className="px-6 py-4 text-gray-500">
+                              <td className="px-6 py-4 text-white/70">
                                 {f.endereco}
                               </td>
                               <td className="px-6 py-4">
-                                <div className="flex items-center justify-end gap-2">
+                                <div className="flex items-center justify-end gap-1">
                                   <Link
                                     href={`/fornecedores/editar/${f.id}`}
-                                    className="p-2 rounded-lg text-teal-600 hover:bg-teal-50 transition-colors"
                                     title="Editar"
+                                    className="p-2 rounded-lg text-white/40 hover:text-green-400 hover:bg-green-500/10 transition-colors"
                                   >
                                     <Pencil className="w-4 h-4" />
                                   </Link>
                                   <button
                                     onClick={() => setFornecedorParaExcluir(f)}
-                                    className="p-2 rounded-lg text-rose-500 hover:bg-rose-50 transition-colors"
                                     title="Excluir"
+                                    className="p-2 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </button>
