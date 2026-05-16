@@ -86,7 +86,7 @@ const menu: MenuItem[] = [
     subItems: [
       { label: "Contas a Pagar", href: "/financeiro/pagar" },
       { label: "Contas a Receber", href: "/financeiro/receber" },
-      { label: "Fluxo de Caixa", href: "/fluxo-de-caixa" },
+      { label: "Fluxo de Caixa", href: "/financeiro/fluxo-de-caixa" },
     ],
   },
 ];
