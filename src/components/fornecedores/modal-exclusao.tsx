@@ -69,7 +69,7 @@ export function ModalExclusao({
             <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-4">
               <div className="grid grid-cols-[100px_1fr] gap-3">
                 <span className="text-xs text-white/50 font-bold uppercase">Razão Social</span>
-                <span className="text-white font-medium">{fornecedor.razao_social}</span>
+                <span className="text-white font-medium">{fornecedor.razaoSocial}</span>
               </div>
               <div className="grid grid-cols-[100px_1fr] gap-3">
                 <span className="text-xs text-white/50 font-bold uppercase">CNPJ</span>

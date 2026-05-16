@@ -14,7 +14,7 @@ export function FornecedorItem({ data, onDelete }: FornecedorRowProps) {
     return (
         <TableRow className="border-b bg-primary border-white/10 transition-colors group">
             <TableCell className="font-bold text-white py-4">
-                {data.razao_social}
+                {data.razaoSocial}
             </TableCell>
 
             <TableCell className="text-white/70">

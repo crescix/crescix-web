@@ -105,7 +105,7 @@ export default function NovoPedidoPage() {
 
     const novoItem: ItemVenda = {
       id: generateItemId(),
-      produto: produtoEncontrado ?? { id: generateItemId(), nome: buscaProduto },
+      produto: produtoEncontrado ?? { id: generateItemId(), nome: buscaProduto, sku: "", preco: preco },
       quantidade: qtd,
       preco_unitario: preco,
       desconto_percentual: 0,
