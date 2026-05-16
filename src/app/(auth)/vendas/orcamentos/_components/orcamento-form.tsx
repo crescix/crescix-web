@@ -100,8 +100,8 @@ export function OrcamentoForm({ initialData, mode, orcamentoNumero }: OrcamentoF
   };
 
   /* ── Classes compartilhadas ── */
-  const inputCls  = "bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-cyan-500/50 h-9 text-sm";
-  const selectCls = `w-full h-9 px-3 text-sm rounded-md border focus:outline-none bg-white/5 border-white/10 text-white focus:border-cyan-500/50`;
+  const inputCls  = "bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-green-500/50 h-9 text-sm";
+  const selectCls = `w-full h-9 px-3 text-sm rounded-md border focus:outline-none bg-white/5 border-white/10 text-white focus:border-green-500/50`;
   const labelCls  = "text-white/50 text-xs font-medium block mb-1.5";
   const cardCls   = "bg-primary rounded-2xl border border-white/5 p-6";
 
@@ -134,7 +134,7 @@ export function OrcamentoForm({ initialData, mode, orcamentoNumero }: OrcamentoF
             </Link>
             <Button
               onClick={handleSubmit}
-              className="bg-cyan-500 hover:bg-cyan-400 text-white font-bold rounded-full px-5 transition-all hover:scale-105 active:scale-95"
+              className="bg-green-500 hover:bg-green-400 text-white font-bold rounded-full px-5 transition-all hover:scale-105 active:scale-95"
             >
               <Save className="mr-2 h-4 w-4" />
               {mode === "novo" ? "Criar Orçamento" : "Salvar Alterações"}
@@ -200,7 +200,7 @@ export function OrcamentoForm({ initialData, mode, orcamentoNumero }: OrcamentoF
             <Button
               onClick={addItem}
               variant="ghost"
-              className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-400/10 h-8 px-3 text-sm"
+              className="text-green-400 hover:text-green-300 hover:bg-green-400/10 h-8 px-3 text-sm"
             >
               <Plus className="h-3.5 w-3.5 mr-1.5" />
               Adicionar Item
@@ -294,7 +294,7 @@ export function OrcamentoForm({ initialData, mode, orcamentoNumero }: OrcamentoF
               onChange={(e) => setObservacoes(e.target.value)}
               placeholder="Condições de pagamento, prazo de entrega, garantia..."
               rows={6}
-              className="w-full bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:border-cyan-500/50 rounded-md px-3 py-2 text-sm resize-none focus:outline-none"
+              className="w-full bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:border-green-500/50 rounded-md px-3 py-2 text-sm resize-none focus:outline-none"
             />
           </div>
 
@@ -333,7 +333,7 @@ export function OrcamentoForm({ initialData, mode, orcamentoNumero }: OrcamentoF
 
             <div className="border-t border-white/10 pt-4 mt-4 flex items-center justify-between">
               <span className="text-white font-bold text-lg">Total</span>
-              <span className="text-cyan-400 text-2xl font-black tabular-nums">R$ {formatBRL(total)}</span>
+              <span className="text-green-400 text-2xl font-black tabular-nums">R$ {formatBRL(total)}</span>
             </div>
           </div>
 

@@ -230,7 +230,7 @@ export default function NovoPedidoPage() {
             {/* ── BLOCK 1: QUEM? ── */}
             <div className="bg-primary rounded-2xl border border-white/10 p-6 space-y-5">
               <div className="flex items-center gap-3">
-                <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-bold flex items-center justify-center">
+                <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 text-xs font-bold flex items-center justify-center">
                   1
                 </span>
                 <h2 className="text-base font-bold text-white">Quem está comprando?</h2>
@@ -245,7 +245,7 @@ export default function NovoPedidoPage() {
                   <select
                     value={clienteId}
                     onChange={(e) => setClienteId(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2 focus:outline-none focus:border-cyan-500/50 text-sm"
+                    className="w-full bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2 focus:outline-none focus:border-green-500/50 text-sm"
                   >
                     {clientesData.map((c) => (
                       <option key={c.id} value={c.id}>
@@ -279,7 +279,7 @@ export default function NovoPedidoPage() {
                       type="date"
                       value={dataEmissao}
                       onChange={(e) => setDataEmissao(e.target.value)}
-                      className="bg-white/5 border-white/10 text-white focus:border-cyan-500/50 h-9 text-sm pr-9"
+                      className="bg-white/5 border-white/10 text-white focus:border-green-500/50 h-9 text-sm pr-9"
                     />
                     <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30 pointer-events-none" />
                   </div>
@@ -293,7 +293,7 @@ export default function NovoPedidoPage() {
                   <select
                     value={vendedorId}
                     onChange={(e) => setVendedorId(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2 focus:outline-none focus:border-cyan-500/50 text-sm"
+                    className="w-full bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2 focus:outline-none focus:border-green-500/50 text-sm"
                   >
                     {vendedoresData.map((v) => (
                       <option key={v.id} value={v.id}>
@@ -308,7 +308,7 @@ export default function NovoPedidoPage() {
             {/* ── BLOCK 2: O QUÊ? ── */}
             <div className="bg-primary rounded-2xl border border-white/10 p-6 space-y-5">
               <div className="flex items-center gap-3">
-                <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-bold flex items-center justify-center">
+                <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 text-xs font-bold flex items-center justify-center">
                   2
                 </span>
                 <h2 className="text-base font-bold text-white">O que está sendo vendido?</h2>
@@ -321,7 +321,7 @@ export default function NovoPedidoPage() {
                   value={buscaProduto}
                   onChange={(e) => setBuscaProduto(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleAddItem()}
-                  className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-cyan-500/50 h-9 text-sm"
+                  className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-green-500/50 h-9 text-sm"
                 />
                 <Input
                   type="number"
@@ -330,7 +330,7 @@ export default function NovoPedidoPage() {
                   value={quantidade}
                   onChange={(e) => setQuantidade(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleAddItem()}
-                  className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-cyan-500/50 h-9 text-sm"
+                  className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-green-500/50 h-9 text-sm"
                 />
                 <Input
                   type="text"
@@ -338,11 +338,11 @@ export default function NovoPedidoPage() {
                   value={precoUnitario}
                   onChange={(e) => setPrecoUnitario(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleAddItem()}
-                  className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-cyan-500/50 h-9 text-sm"
+                  className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-green-500/50 h-9 text-sm"
                 />
                 <Button
                   onClick={handleAddItem}
-                  className="bg-cyan-500 hover:bg-cyan-400 text-white font-bold h-9 px-4 text-sm active:scale-95 transition-all"
+                  className="bg-green-500 hover:bg-green-400 text-white font-bold h-9 px-4 text-sm active:scale-95 transition-all"
                 >
                   <Plus className="h-4 w-4 mr-1" />
                   Adicionar
@@ -398,7 +398,7 @@ export default function NovoPedidoPage() {
                               onChange={(e) =>
                                 handleUpdateQuantidade(item.id, parseInt(e.target.value, 10))
                               }
-                              className="w-16 bg-white/5 border border-white/10 text-white text-center text-sm rounded-md px-2 py-1 focus:outline-none focus:border-cyan-500/50"
+                              className="w-16 bg-white/5 border border-white/10 text-white text-center text-sm rounded-md px-2 py-1 focus:outline-none focus:border-green-500/50"
                             />
                           </TableCell>
                           <TableCell className="text-white/70 text-sm text-right">
@@ -413,7 +413,7 @@ export default function NovoPedidoPage() {
                               onChange={(e) =>
                                 handleUpdateDesconto(item.id, parseFloat(e.target.value))
                               }
-                              className="w-16 bg-white/5 border border-white/10 text-white text-center text-sm rounded-md px-2 py-1 focus:outline-none focus:border-cyan-500/50"
+                              className="w-16 bg-white/5 border border-white/10 text-white text-center text-sm rounded-md px-2 py-1 focus:outline-none focus:border-green-500/50"
                             />
                           </TableCell>
                           <TableCell className="text-white font-semibold text-sm text-right">
@@ -453,7 +453,7 @@ export default function NovoPedidoPage() {
           {/* ── BLOCK 3: QUANTO E COMO? ── */}
           <div className="bg-primary rounded-2xl border border-white/10 p-6 space-y-5 sticky top-6">
             <div className="flex items-center gap-3">
-              <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-bold flex items-center justify-center">
+              <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 text-xs font-bold flex items-center justify-center">
                 3
               </span>
               <h2 className="text-base font-bold text-white">Quanto e como?</h2>
@@ -486,7 +486,7 @@ export default function NovoPedidoPage() {
                     step={0.01}
                     value={frete}
                     onChange={(e) => setFrete(e.target.value)}
-                    className="w-24 bg-white/5 border border-white/10 text-white text-right text-sm rounded-md px-2 py-1 focus:outline-none focus:border-cyan-500/50"
+                    className="w-24 bg-white/5 border border-white/10 text-white text-right text-sm rounded-md px-2 py-1 focus:outline-none focus:border-green-500/50"
                   />
                 </div>
               </div>
@@ -522,7 +522,7 @@ export default function NovoPedidoPage() {
               <select
                 value={condicaoId}
                 onChange={(e) => setCondicaoId(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2 focus:outline-none focus:border-cyan-500/50 text-sm"
+                className="w-full bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2 focus:outline-none focus:border-green-500/50 text-sm"
               >
                 {condicoesPagamentoData.map((c) => (
                   <option key={c.id} value={c.id}>

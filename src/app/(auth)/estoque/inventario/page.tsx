@@ -50,8 +50,8 @@ function setLS<T>(key: string, value: T) {
 }
 
 /* ─── CSS helpers ────────────────────────────────────────────── */
-const inputClass  = "w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/50 text-sm transition-colors";
-const selectClass = "w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-cyan-500/50 text-sm transition-colors cursor-pointer";
+const inputClass  = "w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:outline-none focus:border-green-500/50 text-sm transition-colors";
+const selectClass = "w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-green-500/50 text-sm transition-colors cursor-pointer";
 
 function Field({ label, required, children, className = "" }: {
   label: string; required?: boolean; children: React.ReactNode; className?: string;
@@ -239,7 +239,7 @@ export default function Inventario() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
             { label: "Produtos",        value: totalProdutos,  color: "text-white",        icon: <ClipboardList className="h-4 w-4" /> },
-            { label: "Total unidades",  value: totalUnidades,  color: "text-cyan-400",     icon: <TrendingUp className="h-4 w-4" /> },
+            { label: "Total unidades",  value: totalUnidades,  color: "text-green-400",     icon: <TrendingUp className="h-4 w-4" /> },
             { label: "Estoque baixo",   value: produtosBaixo,  color: "text-yellow-400",   icon: <Minus className="h-4 w-4" /> },
             { label: "Zerados",         value: produtosZerado, color: "text-red-400",       icon: <TrendingDown className="h-4 w-4" /> },
           ].map((c) => (
@@ -256,7 +256,7 @@ export default function Inventario() {
         {/* ── Filtros ── */}
         <div className="bg-primary rounded-2xl border border-white/10 p-6 space-y-4">
           <div className="flex items-center gap-3">
-            <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
+            <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center">
               <Search className="h-3 w-3" />
             </span>
             <h2 className="text-base font-bold text-white">Filtrar Inventário</h2>
@@ -302,7 +302,7 @@ export default function Inventario() {
         <div className="bg-primary rounded-2xl border border-white/10 overflow-hidden">
           <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
             <div className="flex items-center gap-3">
-              <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
+              <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center">
                 <ClipboardList className="h-3 w-3" />
               </span>
               <h2 className="text-base font-bold text-white">Posição do Estoque</h2>
@@ -351,7 +351,7 @@ export default function Inventario() {
                           {linha.ajustes === 0 ? (
                             <span className="text-white/30">—</span>
                           ) : (
-                            <span className={linha.ajustes > 0 ? "text-cyan-400" : "text-orange-400"}>
+                            <span className={linha.ajustes > 0 ? "text-green-400" : "text-orange-400"}>
                               {linha.ajustes > 0 ? "+" : ""}{linha.ajustes}
                             </span>
                           )}
@@ -368,7 +368,7 @@ export default function Inventario() {
                           <div className="flex justify-center gap-2">
                             <button
                               onClick={() => abrirAjuste(linha)}
-                              className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-xs font-semibold transition-all active:scale-95"
+                              className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-green-500/10 hover:bg-green-500/20 text-green-400 text-xs font-semibold transition-all active:scale-95"
                             >
                               <SlidersHorizontal className="h-3 w-3" /> Ajustar
                             </button>
@@ -396,7 +396,7 @@ export default function Inventario() {
           <div className="bg-primary w-full max-w-md rounded-2xl border border-white/10">
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
               <div className="flex items-center gap-3">
-                <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
+                <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center">
                   <SlidersHorizontal className="h-3 w-3" />
                 </span>
                 <h2 className="text-base font-bold text-white">Ajuste Manual</h2>
@@ -461,7 +461,7 @@ export default function Inventario() {
               </button>
               <button
                 onClick={handleSolicitarAjuste}
-                className="px-6 h-10 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-white text-sm font-bold transition-all active:scale-95"
+                className="px-6 h-10 rounded-xl bg-green-500 hover:bg-green-400 text-white text-sm font-bold transition-all active:scale-95"
               >
                 Revisar ajuste
               </button>
@@ -475,8 +475,8 @@ export default function Inventario() {
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
           <div className="bg-primary w-full max-w-sm rounded-2xl border border-white/10 p-6 space-y-5">
             <div className="flex justify-center">
-              <div className="w-12 h-12 rounded-full bg-cyan-500/10 flex items-center justify-center">
-                <AlertCircle className="h-6 w-6 text-cyan-400" />
+              <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center">
+                <AlertCircle className="h-6 w-6 text-green-400" />
               </div>
             </div>
             <div className="text-center space-y-1">
@@ -514,7 +514,7 @@ export default function Inventario() {
               </button>
               <button
                 onClick={confirmarAjuste}
-                className="flex-1 h-10 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-white text-sm font-bold transition-all active:scale-95"
+                className="flex-1 h-10 rounded-xl bg-green-500 hover:bg-green-400 text-white text-sm font-bold transition-all active:scale-95"
               >
                 Confirmar
               </button>
@@ -529,7 +529,7 @@ export default function Inventario() {
           <div className="bg-primary w-full max-w-lg rounded-2xl border border-white/10 max-h-[80vh] flex flex-col">
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 shrink-0">
               <div className="flex items-center gap-3">
-                <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
+                <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center">
                   <ClipboardList className="h-3 w-3" />
                 </span>
                 <div>

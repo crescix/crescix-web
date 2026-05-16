@@ -115,7 +115,7 @@ return (
     {/* Card de Filtro */}
     <div className="bg-primary rounded-2xl border border-white/10 p-6 space-y-5">
         <div className="flex items-center gap-3">
-        <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-bold flex items-center justify-center">
+        <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 text-xs font-bold flex items-center justify-center">
             <Search className="h-3 w-3" />
         </span>
         <h2 className="text-base font-bold text-white">Buscar clientes</h2>
@@ -128,7 +128,7 @@ return (
             <input
                 id="nome"
                 placeholder="Busca por nome ou código"
-                className="w-full h-10 px-3 rounded-lg bg-white/5 text-white border border-white/10 placeholder:text-white/25 focus:outline-none focus:border-cyan-500/50 text-sm transition-colors"
+                className="w-full h-10 px-3 rounded-lg bg-white/5 text-white border border-white/10 placeholder:text-white/25 focus:outline-none focus:border-green-500/50 text-sm transition-colors"
             />
             </div>
 
@@ -137,7 +137,7 @@ return (
             <input
                 id="cpf"
                 placeholder="000.000.000-00"
-                className="w-full h-10 px-3 rounded-lg bg-white/5 text-white border border-white/10 placeholder:text-white/25 focus:outline-none focus:border-cyan-500/50 text-sm transition-colors"
+                className="w-full h-10 px-3 rounded-lg bg-white/5 text-white border border-white/10 placeholder:text-white/25 focus:outline-none focus:border-green-500/50 text-sm transition-colors"
             />
             </div>
         </div>
@@ -146,7 +146,7 @@ return (
             <label className="text-white/50 text-xs font-medium">Situação</label>
             <select
             id="situacao"
-            className="w-full h-10 px-3 rounded-lg bg-white/5 text-white border border-white/10 focus:outline-none focus:border-cyan-500/50 text-sm transition-colors"
+            className="w-full h-10 px-3 rounded-lg bg-white/5 text-white border border-white/10 focus:outline-none focus:border-green-500/50 text-sm transition-colors"
             >
             <option value="" className="bg-[#0f2f52]">Todos</option>
             <option value="ativo" className="bg-[#0f2f52]">Ativo</option>
@@ -166,7 +166,7 @@ return (
 
             <button
             type="submit"
-            className="flex items-center gap-2 px-6 h-10 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-white text-sm font-bold transition-all active:scale-95"
+            className="flex items-center gap-2 px-6 h-10 rounded-xl bg-green-500 hover:bg-green-400 text-white text-sm font-bold transition-all active:scale-95"
             >
             <Search className="h-4 w-4" />
             Buscar
@@ -180,7 +180,7 @@ return (
         <div className="bg-primary rounded-2xl border border-white/10 overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
             <div className="flex items-center gap-3">
-            <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-bold flex items-center justify-center">
+            <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 text-xs font-bold flex items-center justify-center">
                 <Users className="h-3 w-3" />
             </span>
             <h2 className="text-base font-bold text-white">Resultados</h2>
@@ -228,7 +228,7 @@ return (
                         <div className="flex justify-center gap-2">
                         <button
                             onClick={() => { setClienteEditando(cliente); setModalEditar(true); }}
-                            className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-xs font-semibold transition-all active:scale-95"
+                            className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-green-500/10 hover:bg-green-500/20 text-green-400 text-xs font-semibold transition-all active:scale-95"
                         >
                             <Pencil className="h-3 w-3" />
                             Alterar
@@ -257,7 +257,7 @@ return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
         <div className="bg-primary w-full max-w-md rounded-2xl border border-white/10 p-6 space-y-5">
         <div className="flex items-center gap-3">
-            <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
+            <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center">
             <Pencil className="h-3 w-3" />
             </span>
             <h2 className="text-base font-bold text-white">Alterar Cliente</h2>
@@ -269,7 +269,7 @@ return (
             <input
                 value={clienteEditando.nome}
                 onChange={(e) => setClienteEditando({ ...clienteEditando, nome: e.target.value })}
-                className="w-full h-10 px-3 rounded-lg bg-white/5 text-white border border-white/10 focus:outline-none focus:border-cyan-500/50 text-sm transition-colors"
+                className="w-full h-10 px-3 rounded-lg bg-white/5 text-white border border-white/10 focus:outline-none focus:border-green-500/50 text-sm transition-colors"
             />
             </div>
 
@@ -278,7 +278,7 @@ return (
             <input
                 value={clienteEditando.cpf}
                 onChange={(e) => setClienteEditando({ ...clienteEditando, cpf: e.target.value })}
-                className="w-full h-10 px-3 rounded-lg bg-white/5 text-white border border-white/10 focus:outline-none focus:border-cyan-500/50 text-sm transition-colors"
+                className="w-full h-10 px-3 rounded-lg bg-white/5 text-white border border-white/10 focus:outline-none focus:border-green-500/50 text-sm transition-colors"
             />
             </div>
 
@@ -287,7 +287,7 @@ return (
             <input
                 value={clienteEditando.telefone}
                 onChange={(e) => setClienteEditando({ ...clienteEditando, telefone: e.target.value })}
-                className="w-full h-10 px-3 rounded-lg bg-white/5 text-white border border-white/10 focus:outline-none focus:border-cyan-500/50 text-sm transition-colors"
+                className="w-full h-10 px-3 rounded-lg bg-white/5 text-white border border-white/10 focus:outline-none focus:border-green-500/50 text-sm transition-colors"
             />
             </div>
 
@@ -296,7 +296,7 @@ return (
             <select
                 value={clienteEditando.status}
                 onChange={(e) => setClienteEditando({ ...clienteEditando, status: e.target.value as "ativo" | "inativo" })}
-                className="w-full h-10 px-3 rounded-lg bg-white/5 text-white border border-white/10 focus:outline-none focus:border-cyan-500/50 text-sm transition-colors"
+                className="w-full h-10 px-3 rounded-lg bg-white/5 text-white border border-white/10 focus:outline-none focus:border-green-500/50 text-sm transition-colors"
             >
                 <option value="ativo" className="bg-[#0f2f52]">Ativo</option>
                 <option value="inativo" className="bg-[#0f2f52]">Inativo</option>
