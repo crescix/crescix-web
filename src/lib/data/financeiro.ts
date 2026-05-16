@@ -152,14 +152,47 @@ export function setContasPagar(contas: ContaPagar[]): void {
   localStorage.setItem(STORAGE_KEY_PAGAR, JSON.stringify(contas));
 }
 
+const contasReceberMock: ContaReceber[] = [
+  {
+    id: "cr-1", descricao: "Venda Pedido #1254",
+    cliente: "Tech Solutions", categoria: "Venda",
+    valor: 2500, vencimento: "2026-05-25", status: "Pendente",
+  },
+  {
+    id: "cr-2", descricao: "Serviço de instalação",
+    cliente: "João Silva Ltda", categoria: "Serviço",
+    valor: 480, vencimento: "2026-05-12", status: "Recebido",
+    data_recebimento: "2026-05-12", forma_pagamento: "Pix",
+  },
+  {
+    id: "cr-3", descricao: "Venda Pedido #1255",
+    cliente: "Maria Souza", categoria: "Venda",
+    valor: 350, vencimento: "2026-05-20", status: "Pendente",
+  },
+  {
+    id: "cr-4", descricao: "Comissão de parceria",
+    categoria: "Comissão", valor: 1200, vencimento: "2026-04-30",
+    status: "Pendente",
+  },
+  {
+    id: "cr-5", descricao: "Venda Pedido #1253",
+    cliente: "Distribuidora XYZ", categoria: "Venda",
+    valor: 1850.5, vencimento: "2026-05-08", status: "Recebido",
+    data_recebimento: "2026-05-08", forma_pagamento: "Transferência",
+  },
+];
+
 export function getContasReceber(): ContaReceber[] {
-  if (typeof window === "undefined") return [];
+  if (typeof window === "undefined") return contasReceberMock;
   const raw = localStorage.getItem(STORAGE_KEY_RECEBER);
-  if (!raw) return [];
+  if (!raw) {
+    localStorage.setItem(STORAGE_KEY_RECEBER, JSON.stringify(contasReceberMock));
+    return contasReceberMock.map(recalcStatusReceber);
+  }
   try {
     return (JSON.parse(raw) as ContaReceber[]).map(recalcStatusReceber);
   } catch {
-    return [];
+    return contasReceberMock.map(recalcStatusReceber);
   }
 }
 

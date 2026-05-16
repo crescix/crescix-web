@@ -4,17 +4,18 @@ import { createPortal } from "react-dom";
 import { useEffect } from "react";
 import { Trash2, AlertTriangle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ContaPagar, formatBRL, formatDateBR } from "@/lib/data/financeiro";
+import { ContaPagar, ContaReceber, formatBRL, formatDateBR } from "@/lib/data/financeiro";
 
 interface ModalExclusaoContaProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
-  conta: ContaPagar | null;
+  conta: ContaPagar | ContaReceber | null;
+  tipo?: "pagar" | "receber";
 }
 
 export function ModalExclusaoConta({
-  isOpen, onOpenChange, onConfirm, conta,
+  isOpen, onOpenChange, onConfirm, conta, tipo = "pagar",
 }: ModalExclusaoContaProps) {
   useEffect(() => {
     if (!isOpen) return;
@@ -53,7 +54,7 @@ export function ModalExclusaoConta({
           <div className="flex gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-400">
             <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
             <p className="text-sm font-medium">
-              Você tem certeza que deseja excluir esta conta a pagar? Esta ação não poderá ser desfeita.
+              Você tem certeza que deseja excluir esta conta a {tipo === "receber" ? "receber" : "pagar"}? Esta ação não poderá ser desfeita.
             </p>
           </div>
 
