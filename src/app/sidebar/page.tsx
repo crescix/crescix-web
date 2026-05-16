@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/auth-context";
+import Image from "next/image";
 
 /* TIPOS */
 type SubItem = {
@@ -86,10 +87,12 @@ export function Sidebar() {
                         </button>
 
                         {/* Logo seta */}
-                        <img
-                            src="/Logo.png"
+                        <Image
+                            src="/images/Logo.png"
                             alt="Logo"
-                            className="h-9 w-9 md:h-10 md:w-10 rounded-full object-cover border bg-[#508991] p-1"
+                            width={40}
+                            height={40}
+                            className="rounded-full object-cover border bg-[#508991] p-1"
                         />
 
                         {/* Título da página (mudar depois para aparecer o nome da página atual*/}

@@ -93,7 +93,7 @@ export default function PedidosPage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
-            <p className="text-white/40 text-xs font-medium uppercase tracking-widest mb-1">
+            <p className="text-white/60 text-xs font-medium uppercase tracking-widest mb-1">
               Vendas
             </p>
             <h1 className="text-3xl font-black text-white tracking-tighter">

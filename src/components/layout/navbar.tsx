@@ -111,7 +111,7 @@ export function Navbar() {
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#508991] flex-shrink-0">
                 <img 
-                  src="/Logo.png"           
+                  src="/images/Logo.png"           
                   alt="Logo do Meu Negócio"
                   className="h-[29px] w-[48.33px] object-contain"
                   style={{ opacity: 1 }}
