@@ -9,9 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { registerSchema, RegisterData } from "@/lib/validations/register";
 import { useAuth } from "@/context/auth-context";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+
 export default function RegisterPage() {
-    const {signOut} = useAuth()
+    const { signUp, signOut } = useAuth();
+    const [submitError, setSubmitError] = useState("");
+    const [loading, setLoading] = useState(false);
+
     const {
         register,
         handleSubmit,
@@ -29,13 +33,33 @@ export default function RegisterPage() {
         setValue("phone", value);
     };
 
-    const onSubmit = (data: RegisterData) => {
-        console.log("Dados formatados:", data);
+    const onSubmit = async (data: RegisterData) => {
+        setSubmitError("");
+        setLoading(true);
+        try {
+            await signUp({
+                name: data.name,
+                email: data.email,
+                phone: data.phone,
+                password: data.password,
+            });
+            // signUp redireciona para /dashboard em sucesso
+        } catch (err) {
+            setSubmitError(
+                err instanceof Error
+                    ? err.message
+                    : "Erro ao criar conta. Tente novamente."
+            );
+        } finally {
+            setLoading(false);
+        }
     };
 
-    useEffect(() =>{
-        signOut()
-    },[])
+    // Garante que ao chegar na tela de cadastro o usuário está deslogado
+    useEffect(() => {
+        signOut();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
         <div className="flex flex-col md:flex-row w-full max-w-[1000px] min-h-[650px] bg-white rounded-none md:rounded-3xl overflow-hidden shadow-2xl">
@@ -149,11 +173,18 @@ export default function RegisterPage() {
                             </div>
                         </div>
 
+                        {submitError && (
+                            <p className="text-sm text-red-500 text-center font-medium">
+                                {submitError}
+                            </p>
+                        )}
+
                         <Button
                             type="submit"
-                            className="w-full bg-primary hover:bg-primary/90 text-white h-12 rounded-full text-lg font-semibold shadow-lg mt-4"
+                            disabled={loading}
+                            className="w-full bg-primary hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed text-white h-12 rounded-full text-lg font-semibold shadow-lg mt-4"
                         >
-                            Criar Conta
+                            {loading ? "Criando conta..." : "Criar Conta"}
                         </Button>
                     </form>
 

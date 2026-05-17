@@ -1,17 +1,43 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
 import { useRouter } from "next/navigation";
-import { api } from "@/services/api/axios-config";
-import { AuthContextData, SignInCredentials, UserProfile, SignUpCredentials } from "@/types/auth";
+import axios from "axios";
+import {
+  api,
+  STORAGE_TOKEN_KEY,
+  STORAGE_USER_KEY,
+} from "@/services/api/axios-config";
+import {
+  AuthContextData,
+  AuthResponse,
+  SignInCredentials,
+  SignUpCredentials,
+  UserProfile,
+} from "@/types/auth";
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
-// ─── Usuários mock para testar sem backend ────────────────────────────────────
-const MOCK_USERS = [
-  { id: "1", name: "Thiago", email: "thiago@crescix.com", password: "123456" },
-  { id: "2", name: "Admin", email: "admin@crescix.com",   password: "admin123" },
-];
+/**
+ * Extrai mensagem amigável de um erro da API.
+ * O backend devolve { error, message, statusCode } padronizado.
+ */
+function extractApiError(err: unknown, fallback: string): string {
+  if (axios.isAxiosError(err)) {
+    const data = err.response?.data as
+      | { message?: string; error?: string }
+      | undefined;
+    return data?.message || err.message || fallback;
+  }
+  if (err instanceof Error) return err.message;
+  return fallback;
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -20,62 +46,75 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isAuthenticated = !!user;
 
+  // ─── Restore session on mount ────────────────────────────────────────────
+  // Se há token no localStorage, valida com a API (GET /auth/me).
+  // Se falhar (token expirado/inválido), limpa o storage silenciosamente.
   useEffect(() => {
-    const storedToken = localStorage.getItem("@Crescix:token");
-    const storedUser  = localStorage.getItem("@Crescix:user");
+    const storedToken = localStorage.getItem(STORAGE_TOKEN_KEY);
 
-    if (storedToken && storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-        api.defaults.headers.common["Authorization"] = `Bearer ${storedToken}`;
-      } catch {
-        localStorage.clear();
-      }
+    if (!storedToken) {
+      setIsAuthenticating(false);
+      return;
     }
 
-    setIsAuthenticating(false);
+    api
+      .get<UserProfile>("/auth/me")
+      .then((response) => {
+        setUser(response.data);
+        localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(response.data));
+      })
+      .catch(() => {
+        localStorage.removeItem(STORAGE_TOKEN_KEY);
+        localStorage.removeItem(STORAGE_USER_KEY);
+        setUser(null);
+      })
+      .finally(() => {
+        setIsAuthenticating(false);
+      });
   }, []);
 
+  // ─── Sign In ─────────────────────────────────────────────────────────────
   async function signIn({ email, password }: SignInCredentials) {
-    // ── MOCK: simula autenticação sem backend ──────────────────────────────────
-    // Quando o backend estiver pronto, substitua este bloco por:
-    // const response = await api.post("/sessions", { email, password });
-    // const { token, user: userData } = response.data;
+    try {
+      const response = await api.post<AuthResponse>("/auth/login", {
+        email,
+        password,
+      });
+      const { token, user: userData } = response.data;
 
-    const mockUser = MOCK_USERS.find(
-      (u) => u.email === email && u.password === password
-    );
-
-    if (!mockUser) {
-      throw new Error("Email ou senha inválidos.");
+      localStorage.setItem(STORAGE_TOKEN_KEY, token);
+      localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(userData));
+      setUser(userData);
+      router.push("/dashboard");
+    } catch (err) {
+      throw new Error(
+        extractApiError(err, "E-mail ou senha incorretos.")
+      );
     }
-
-    const { password: _, ...userData } = mockUser;
-    const token = `mock-token-${userData.id}-${Date.now()}`;
-
-    // ─────────────────────────────────────────────────────────────────────────
-
-    localStorage.setItem("@Crescix:token", token);
-    localStorage.setItem("@Crescix:user", JSON.stringify(userData));
-
-    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-    setUser(userData as UserProfile);
-    router.push("/dashboard");
   }
 
+  // ─── Sign Up ─────────────────────────────────────────────────────────────
+  // O backend retorna { token, user } já no signup → faz auto-login.
   async function signUp(data: SignUpCredentials) {
-    // ── MOCK: simula cadastro sem backend ──────────────────────────────────────
-    // Quando o backend estiver pronto, substitua por:
-    // await api.post("/users", data);
-    console.log("Mock signUp:", data);
-    // ─────────────────────────────────────────────────────────────────────────
-    router.push("/login");
+    try {
+      const response = await api.post<AuthResponse>("/auth/signup", data);
+      const { token, user: userData } = response.data;
+
+      localStorage.setItem(STORAGE_TOKEN_KEY, token);
+      localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(userData));
+      setUser(userData);
+      router.push("/dashboard");
+    } catch (err) {
+      throw new Error(
+        extractApiError(err, "Erro ao criar conta. Tente novamente.")
+      );
+    }
   }
 
+  // ─── Sign Out ────────────────────────────────────────────────────────────
   function signOut() {
-    localStorage.removeItem("@Crescix:token");
-    localStorage.removeItem("@Crescix:user");
+    localStorage.removeItem(STORAGE_TOKEN_KEY);
+    localStorage.removeItem(STORAGE_USER_KEY);
     setUser(null);
     router.push("/login");
   }

@@ -32,6 +32,16 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.local.example
+!.env.example
+
+# Claude / agentes
+.claude/
+
+# Arquivos temporários usados pra commits/PRs longos
+*.tmp
+.commit-msg.tmp
+.pr-body.tmp.md
 
 # vercel
 .vercel
