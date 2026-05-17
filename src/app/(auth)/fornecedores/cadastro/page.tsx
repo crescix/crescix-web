@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import axios from "axios";
 import { createFornecedor } from "@/services/fornecedores";
-import { maskCNPJ, maskPhone } from "@/lib/utils/masks";
+import { maskCNPJ, maskPhone, normalizeUrl } from "@/lib/utils/masks";
 
 function Field({ label, required, error, children, className = "" }: {
   label: string; required?: boolean; error?: string; children: React.ReactNode; className?: string;
@@ -71,7 +71,7 @@ export default function CadastroFornecedor() {
         nomeVendedor: data.nomeVendedor,
         whatsappVendedor: data.whatsappVendedor,
         emailVendedor: data.emailVendedor,
-        siteCatalogo: data.siteCatalogo || undefined,
+        siteCatalogo: data.siteCatalogo ? normalizeUrl(data.siteCatalogo) : undefined,
         chavePix: data.chavePix,
         banco: data.banco,
         agencia: data.agencia,
@@ -199,7 +199,7 @@ export default function CadastroFornecedor() {
               </Field>
 
               <Field label="Site / Catálogo" error={errors.siteCatalogo?.message}>
-                <input {...register("siteCatalogo")} placeholder="https://..." className={inputClass} />
+                <input {...register("siteCatalogo")} placeholder="www.exemplo.com.br" className={inputClass} />
               </Field>
 
             </div>

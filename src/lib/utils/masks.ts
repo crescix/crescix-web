@@ -79,3 +79,15 @@ export function maskPhone(value: string): string {
 export function unmask(value: string): string {
   return value.replace(/\D/g, "");
 }
+
+/**
+ * Normaliza uma URL informada pelo usuário: aceita "www.exemplo.com",
+ * "exemplo.com.br" ou "https://exemplo.com" e devolve sempre com prefixo
+ * `https://`. String vazia retorna vazia.
+ */
+export function normalizeUrl(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+}
