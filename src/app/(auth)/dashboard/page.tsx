@@ -19,6 +19,8 @@ import {
 } from "@/lib/data/financeiro";
 import { listContasPagar, type ContaPagar } from "@/services/contas-pagar";
 import { listContasReceber, type ContaReceber } from "@/services/contas-receber";
+import { listPedidos, type Pedido } from "@/services/pedidos";
+import { listMovimentos, type MovimentoEstoque } from "@/services/movimentos-estoque";
 
 function saudacao(): string {
   const hora = new Date().getHours();
@@ -39,6 +41,8 @@ export default function DashboardPage() {
   const [transacoes, setTransacoes] = useState<TransacaoFluxo[]>([]);
   const [contasPagar, setContasPagar] = useState<ContaPagar[]>([]);
   const [contasReceber, setContasReceber] = useState<ContaReceber[]>([]);
+  const [pedidos, setPedidos] = useState<Pedido[]>([]);
+  const [movimentos, setMovimentos] = useState<MovimentoEstoque[]>([]);
 
   useEffect(() => {
     const perfil = getPerfil();
@@ -51,17 +55,30 @@ export default function DashboardPage() {
     Promise.all([
       listContasPagar({ limit: 500 }),
       listContasReceber({ limit: 500 }),
+      listPedidos({ limit: 500 }),
+      listMovimentos({ limit: 500, tipo: "ENTRADA", motivo: "COMPRA" }),
     ])
-      .then(([pagarRes, receberRes]) => {
+      .then(([pagarRes, receberRes, pedidosRes, movimentosRes]) => {
         if (cancelled) return;
         setContasPagar(pagarRes.data);
         setContasReceber(receberRes.data);
-        setTransacoes(buildTransacoesFluxo(pagarRes.data, receberRes.data));
+        setPedidos(pedidosRes.data);
+        setMovimentos(movimentosRes.data);
+        setTransacoes(
+          buildTransacoesFluxo({
+            pagar: pagarRes.data,
+            receber: receberRes.data,
+            pedidos: pedidosRes.data,
+            movimentos: movimentosRes.data,
+          })
+        );
       })
       .catch(() => {
         if (!cancelled) {
           setContasPagar([]);
           setContasReceber([]);
+          setPedidos([]);
+          setMovimentos([]);
           setTransacoes([]);
         }
       })
