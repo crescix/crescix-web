@@ -1,222 +1,165 @@
-export type StatusContaPagar = "Pendente" | "Pago" | "Atrasado" | "Cancelado";
-export type StatusContaReceber = "Pendente" | "Recebido" | "Atrasado" | "Cancelado";
+/**
+ * Re-exports do service + helpers de display do módulo Financeiro
+ * (Contas a Pagar, Contas a Receber e Fluxo de Caixa).
+ *
+ * Os mocks/localStorage foram removidos — os dados vêm da API agora.
+ */
 
-export type CategoriaPagar =
-  | "Fornecedor"
-  | "Aluguel"
-  | "Energia"
-  | "Água"
-  | "Internet/Telefonia"
-  | "Salários"
-  | "Impostos"
-  | "Marketing"
-  | "Manutenção"
-  | "Outros";
+export type {
+  ContaPagar,
+  ContaPagarCreate,
+  ContaPagarUpdate,
+  ContaPagarQuery,
+} from "@/services/contas-pagar";
 
-export type CategoriaReceber =
-  | "Venda"
-  | "Serviço"
-  | "Comissão"
-  | "Reembolso"
-  | "Outros";
+export type {
+  ContaReceber,
+  ContaReceberCreate,
+  ContaReceberUpdate,
+  ContaReceberQuery,
+} from "@/services/contas-receber";
 
-export type FormaPagamento =
-  | "Dinheiro"
-  | "Pix"
-  | "Cartão de Crédito"
-  | "Cartão de Débito"
-  | "Boleto"
-  | "Transferência"
-  | "Outros";
+import type {
+  CategoriaPagar,
+  CategoriaReceber,
+  StatusConta,
+  FormaPagamento,
+} from "@/services/api/enums";
 
-export interface ContaPagar {
-  id: string;
-  descricao: string;
-  fornecedor?: string;
-  categoria: CategoriaPagar;
-  valor: number;
-  vencimento: string;
-  data_pagamento?: string;
-  status: StatusContaPagar;
-  forma_pagamento?: FormaPagamento;
-  observacoes?: string;
-}
+export type {
+  CategoriaPagar,
+  CategoriaReceber,
+  StatusConta,
+  FormaPagamento,
+} from "@/services/api/enums";
 
-export interface ContaReceber {
-  id: string;
-  descricao: string;
-  cliente?: string;
-  categoria: CategoriaReceber;
-  valor: number;
-  vencimento: string;
-  data_recebimento?: string;
-  status: StatusContaReceber;
-  forma_pagamento?: FormaPagamento;
-  observacoes?: string;
-}
+import type { ContaPagar } from "@/services/contas-pagar";
+import type { ContaReceber } from "@/services/contas-receber";
 
-export const CATEGORIAS_PAGAR: CategoriaPagar[] = [
-  "Fornecedor", "Aluguel", "Energia", "Água", "Internet/Telefonia",
-  "Salários", "Impostos", "Marketing", "Manutenção", "Outros",
+// ─── Labels e options ─────────────────────────────────────────────────────────
+
+export const CATEGORIA_PAGAR_LABEL: Record<CategoriaPagar, string> = {
+  FORNECEDOR:         "Fornecedor",
+  ALUGUEL:            "Aluguel",
+  ENERGIA:            "Energia",
+  AGUA:               "Água",
+  INTERNET_TELEFONIA: "Internet/Telefonia",
+  SALARIOS:           "Salários",
+  IMPOSTOS:           "Impostos",
+  MARKETING:          "Marketing",
+  MANUTENCAO:         "Manutenção",
+  OUTROS:             "Outros",
+};
+
+export const CATEGORIA_PAGAR_OPTIONS: CategoriaPagar[] = [
+  "FORNECEDOR",
+  "ALUGUEL",
+  "ENERGIA",
+  "AGUA",
+  "INTERNET_TELEFONIA",
+  "SALARIOS",
+  "IMPOSTOS",
+  "MARKETING",
+  "MANUTENCAO",
+  "OUTROS",
 ];
 
-export const CATEGORIAS_RECEBER: CategoriaReceber[] = [
-  "Venda", "Serviço", "Comissão", "Reembolso", "Outros",
+export const CATEGORIA_RECEBER_LABEL: Record<CategoriaReceber, string> = {
+  VENDA:     "Venda",
+  SERVICO:   "Serviço",
+  COMISSAO:  "Comissão",
+  REEMBOLSO: "Reembolso",
+  OUTROS:    "Outros",
+};
+
+export const CATEGORIA_RECEBER_OPTIONS: CategoriaReceber[] = [
+  "VENDA",
+  "SERVICO",
+  "COMISSAO",
+  "REEMBOLSO",
+  "OUTROS",
 ];
 
-export const FORMAS_PAGAMENTO: FormaPagamento[] = [
-  "Dinheiro", "Pix", "Cartão de Crédito", "Cartão de Débito",
-  "Boleto", "Transferência", "Outros",
+export const STATUS_CONTA_LABEL: Record<StatusConta, string> = {
+  PENDENTE:  "Pendente",
+  PAGO:      "Pago",
+  RECEBIDO:  "Recebido",
+  ATRASADO:  "Atrasado",
+  CANCELADO: "Cancelado",
+};
+
+export const STATUS_CONTA_STYLES: Record<StatusConta, string> = {
+  PENDENTE:  "bg-amber-500/15 text-amber-400 border-amber-500/25",
+  PAGO:      "bg-green-500/15 text-green-400 border-green-500/25",
+  RECEBIDO:  "bg-green-500/15 text-green-400 border-green-500/25",
+  ATRASADO:  "bg-red-500/15 text-red-400 border-red-500/25",
+  CANCELADO: "bg-white/10 text-white/40 border-white/15",
+};
+
+/** Status disponíveis no filtro/form de contas a pagar (exclui RECEBIDO). */
+export const STATUS_CONTA_PAGAR_OPTIONS: StatusConta[] = [
+  "PENDENTE",
+  "PAGO",
+  "ATRASADO",
+  "CANCELADO",
 ];
 
-export const fornecedoresMock = [
-  "Distribuidora Alfa", "Tech Supplies", "Atacado Beta",
-  "Fornecedora Nordeste", "Importadora Sul",
+/** Status disponíveis no filtro/form de contas a receber (exclui PAGO). */
+export const STATUS_CONTA_RECEBER_OPTIONS: StatusConta[] = [
+  "PENDENTE",
+  "RECEBIDO",
+  "ATRASADO",
+  "CANCELADO",
 ];
 
-const STORAGE_KEY_PAGAR = "crescix:contas_pagar";
-const STORAGE_KEY_RECEBER = "crescix:contas_receber";
+export const FORMA_PAGAMENTO_LABEL: Record<FormaPagamento, string> = {
+  DINHEIRO:       "Dinheiro",
+  PIX:            "Pix",
+  CARTAO_CREDITO: "Cartão de Crédito",
+  CARTAO_DEBITO:  "Cartão de Débito",
+  BOLETO:         "Boleto",
+  TRANSFERENCIA:  "Transferência",
+  OUTROS:         "Outros",
+};
 
-function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function isOverdue(vencimento: string): boolean {
-  return vencimento < todayISO();
-}
-
-export function recalcStatusPagar(conta: ContaPagar): ContaPagar {
-  if (conta.status === "Pendente" && isOverdue(conta.vencimento)) {
-    return { ...conta, status: "Atrasado" };
-  }
-  return conta;
-}
-
-export function recalcStatusReceber(conta: ContaReceber): ContaReceber {
-  if (conta.status === "Pendente" && isOverdue(conta.vencimento)) {
-    return { ...conta, status: "Atrasado" };
-  }
-  return conta;
-}
-
-const contasPagarMock: ContaPagar[] = [
-  {
-    id: "cp-1", descricao: "Aluguel da loja - Maio",
-    categoria: "Aluguel", valor: 2800, vencimento: "2026-05-10",
-    status: "Pago", data_pagamento: "2026-05-09", forma_pagamento: "Pix",
-  },
-  {
-    id: "cp-2", descricao: "Energia elétrica - CEMIG",
-    categoria: "Energia", valor: 480.75, vencimento: "2026-05-20",
-    status: "Pendente", forma_pagamento: "Boleto",
-  },
-  {
-    id: "cp-3", descricao: "Compra de mercadorias",
-    fornecedor: "Distribuidora Alfa", categoria: "Fornecedor",
-    valor: 3200, vencimento: "2026-05-25", status: "Pendente",
-  },
-  {
-    id: "cp-4", descricao: "Plano de internet",
-    categoria: "Internet/Telefonia", valor: 199.9, vencimento: "2026-05-08",
-    status: "Pendente",
-  },
-  {
-    id: "cp-5", descricao: "Anúncios Meta Ads",
-    categoria: "Marketing", valor: 750, vencimento: "2026-04-28",
-    status: "Pago", data_pagamento: "2026-04-28", forma_pagamento: "Cartão de Crédito",
-  },
-  {
-    id: "cp-6", descricao: "Manutenção do ar-condicionado",
-    categoria: "Manutenção", valor: 350, vencimento: "2026-06-02",
-    status: "Pendente",
-  },
+export const FORMA_PAGAMENTO_OPTIONS: FormaPagamento[] = [
+  "DINHEIRO",
+  "PIX",
+  "CARTAO_CREDITO",
+  "CARTAO_DEBITO",
+  "BOLETO",
+  "TRANSFERENCIA",
+  "OUTROS",
 ];
 
-export function getContasPagar(): ContaPagar[] {
-  if (typeof window === "undefined") return contasPagarMock;
-  const raw = localStorage.getItem(STORAGE_KEY_PAGAR);
-  if (!raw) {
-    localStorage.setItem(STORAGE_KEY_PAGAR, JSON.stringify(contasPagarMock));
-    return contasPagarMock.map(recalcStatusPagar);
-  }
-  try {
-    const parsed = JSON.parse(raw) as ContaPagar[];
-    return parsed.map(recalcStatusPagar);
-  } catch {
-    return contasPagarMock.map(recalcStatusPagar);
-  }
+// ─── Helpers de display ──────────────────────────────────────────────────────
+
+export function formatBRL(value: number | string | null | undefined): string {
+  const n = typeof value === "string" ? Number(value) : (value ?? 0);
+  if (!Number.isFinite(n)) return "R$ 0,00";
+  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-export function setContasPagar(contas: ContaPagar[]): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY_PAGAR, JSON.stringify(contas));
-}
-
-const contasReceberMock: ContaReceber[] = [
-  {
-    id: "cr-1", descricao: "Venda Pedido #1254",
-    cliente: "Tech Solutions", categoria: "Venda",
-    valor: 2500, vencimento: "2026-05-25", status: "Pendente",
-  },
-  {
-    id: "cr-2", descricao: "Serviço de instalação",
-    cliente: "João Silva Ltda", categoria: "Serviço",
-    valor: 480, vencimento: "2026-05-12", status: "Recebido",
-    data_recebimento: "2026-05-12", forma_pagamento: "Pix",
-  },
-  {
-    id: "cr-3", descricao: "Venda Pedido #1255",
-    cliente: "Maria Souza", categoria: "Venda",
-    valor: 350, vencimento: "2026-05-20", status: "Pendente",
-  },
-  {
-    id: "cr-4", descricao: "Comissão de parceria",
-    categoria: "Comissão", valor: 1200, vencimento: "2026-04-30",
-    status: "Pendente",
-  },
-  {
-    id: "cr-5", descricao: "Venda Pedido #1253",
-    cliente: "Distribuidora XYZ", categoria: "Venda",
-    valor: 1850.5, vencimento: "2026-05-08", status: "Recebido",
-    data_recebimento: "2026-05-08", forma_pagamento: "Transferência",
-  },
-];
-
-export function getContasReceber(): ContaReceber[] {
-  if (typeof window === "undefined") return contasReceberMock;
-  const raw = localStorage.getItem(STORAGE_KEY_RECEBER);
-  if (!raw) {
-    localStorage.setItem(STORAGE_KEY_RECEBER, JSON.stringify(contasReceberMock));
-    return contasReceberMock.map(recalcStatusReceber);
-  }
-  try {
-    return (JSON.parse(raw) as ContaReceber[]).map(recalcStatusReceber);
-  } catch {
-    return contasReceberMock.map(recalcStatusReceber);
-  }
-}
-
-export function setContasReceber(contas: ContaReceber[]): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY_RECEBER, JSON.stringify(contas));
-}
-
-export function formatBRL(value: number): string {
-  return value.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
-}
-
-export function formatDateBR(iso: string): string {
+/**
+ * Converte ISO ("2026-05-16" ou completo) para "DD/MM/YYYY".
+ */
+export function formatDateBR(iso: string | null | undefined): string {
   if (!iso) return "";
-  const [y, m, d] = iso.split("-");
+  const date = iso.split("T")[0].split(" ")[0];
+  const [y, m, d] = date.split("-");
+  if (!y || !m || !d) return iso;
   return `${d}/${m}/${y}`;
 }
 
-// ============================================================================
-// Fluxo de Caixa — agregação de transações
-// ============================================================================
+/** Alias semântico igual ao usado nos outros módulos. */
+export const isoToDisplay = formatDateBR;
+
+export function isoToInputDate(iso: string | null | undefined): string {
+  if (!iso) return "";
+  return iso.split("T")[0];
+}
+
+// ─── Fluxo de Caixa — agregação ─────────────────────────────────────────────
 
 export type TipoTransacao = "entrada" | "saida";
 export type NaturezaTransacao = "Realizada" | "Prevista";
@@ -233,21 +176,43 @@ export interface TransacaoFluxo {
   origem: "Pagar" | "Receber";
 }
 
-export function getTransacoesFluxo(): TransacaoFluxo[] {
-  const pagar = getContasPagar();
-  const receber = getContasReceber();
+export interface ResumoFluxo {
+  entradas: number;
+  saidas: number;
+  saldo: number;
+  entradasPrevistas: number;
+  saidasPrevistas: number;
+  saldoProjetado: number;
+}
+
+export interface PontoGrafico {
+  data: string;
+  entradas: number;
+  saidas: number;
+}
+
+/**
+ * Constrói o array de transações de fluxo de caixa a partir das contas
+ * vindas da API. Função pura (sem fetch).
+ */
+export function buildTransacoesFluxo(
+  pagar: ContaPagar[],
+  receber: ContaReceber[]
+): TransacaoFluxo[] {
   const out: TransacaoFluxo[] = [];
 
   for (const p of pagar) {
-    if (p.status === "Cancelado") continue;
-    const realizada = p.status === "Pago" && !!p.data_pagamento;
+    if (p.status === "CANCELADO") continue;
+    const realizada = p.status === "PAGO" && !!p.dataPagamento;
     out.push({
       id: `pgr-${p.id}`,
-      data: realizada ? p.data_pagamento! : p.vencimento,
+      data: realizada
+        ? p.dataPagamento!.split("T")[0]
+        : p.vencimento.split("T")[0],
       descricao: p.descricao,
-      categoria: p.categoria,
-      contraparte: p.fornecedor,
-      valor: p.valor,
+      categoria: CATEGORIA_PAGAR_LABEL[p.categoria] ?? p.categoria,
+      contraparte: undefined,
+      valor: Number(p.valor),
       tipo: "saida",
       natureza: realizada ? "Realizada" : "Prevista",
       origem: "Pagar",
@@ -255,15 +220,17 @@ export function getTransacoesFluxo(): TransacaoFluxo[] {
   }
 
   for (const r of receber) {
-    if (r.status === "Cancelado") continue;
-    const realizada = r.status === "Recebido" && !!r.data_recebimento;
+    if (r.status === "CANCELADO") continue;
+    const realizada = r.status === "RECEBIDO" && !!r.dataRecebimento;
     out.push({
       id: `rcb-${r.id}`,
-      data: realizada ? r.data_recebimento! : r.vencimento,
+      data: realizada
+        ? r.dataRecebimento!.split("T")[0]
+        : r.vencimento.split("T")[0],
       descricao: r.descricao,
-      categoria: r.categoria,
-      contraparte: r.cliente,
-      valor: r.valor,
+      categoria: CATEGORIA_RECEBER_LABEL[r.categoria] ?? r.categoria,
+      contraparte: undefined,
+      valor: Number(r.valor),
       tipo: "entrada",
       natureza: realizada ? "Realizada" : "Prevista",
       origem: "Receber",
@@ -274,19 +241,14 @@ export function getTransacoesFluxo(): TransacaoFluxo[] {
   return out;
 }
 
-export interface ResumoFluxo {
-  entradas: number;
-  saidas: number;
-  saldo: number;
-  entradasPrevistas: number;
-  saidasPrevistas: number;
-  saldoProjetado: number;
-}
-
 export function calcResumoFluxo(transacoes: TransacaoFluxo[]): ResumoFluxo {
   const resumo: ResumoFluxo = {
-    entradas: 0, saidas: 0, saldo: 0,
-    entradasPrevistas: 0, saidasPrevistas: 0, saldoProjetado: 0,
+    entradas: 0,
+    saidas: 0,
+    saldo: 0,
+    entradasPrevistas: 0,
+    saidasPrevistas: 0,
+    saldoProjetado: 0,
   };
   for (const t of transacoes) {
     if (t.natureza === "Realizada") {
@@ -299,25 +261,22 @@ export function calcResumoFluxo(transacoes: TransacaoFluxo[]): ResumoFluxo {
   }
   resumo.saldo = resumo.entradas - resumo.saidas;
   resumo.saldoProjetado =
-    (resumo.entradas + resumo.entradasPrevistas) -
-    (resumo.saidas + resumo.saidasPrevistas);
+    resumo.entradas + resumo.entradasPrevistas
+    - (resumo.saidas + resumo.saidasPrevistas);
   return resumo;
-}
-
-export interface PontoGrafico {
-  data: string;
-  entradas: number;
-  saidas: number;
 }
 
 export function agruparPorDia(transacoes: TransacaoFluxo[]): PontoGrafico[] {
   const mapa = new Map<string, PontoGrafico>();
   for (const t of transacoes) {
     if (t.natureza !== "Realizada") continue;
-    const ponto = mapa.get(t.data) ?? { data: t.data, entradas: 0, saidas: 0 };
+    const ponto =
+      mapa.get(t.data) ?? { data: t.data, entradas: 0, saidas: 0 };
     if (t.tipo === "entrada") ponto.entradas += t.valor;
     else ponto.saidas += t.valor;
     mapa.set(t.data, ponto);
   }
-  return Array.from(mapa.values()).sort((a, b) => a.data.localeCompare(b.data));
+  return Array.from(mapa.values()).sort((a, b) =>
+    a.data.localeCompare(b.data)
+  );
 }

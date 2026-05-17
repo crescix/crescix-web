@@ -1,30 +1,50 @@
 "use client";
 
 import { createPortal } from "react-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { X, Save } from "lucide-react";
+import axios from "axios";
+import { X, Save, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   ContaReceber,
-  StatusContaReceber,
-  CATEGORIAS_RECEBER,
-  FORMAS_PAGAMENTO,
+  CATEGORIA_RECEBER_LABEL,
+  CATEGORIA_RECEBER_OPTIONS,
+  STATUS_CONTA_LABEL,
+  STATUS_CONTA_RECEBER_OPTIONS,
+  FORMA_PAGAMENTO_LABEL,
+  FORMA_PAGAMENTO_OPTIONS,
+  isoToInputDate,
 } from "@/lib/data/financeiro";
-import { clientesMock } from "@/lib/data/orcamentos";
+import {
+  createContaReceber,
+  updateContaReceber,
+} from "@/services/contas-receber";
+import { listClientes, type Cliente } from "@/services/clientes";
+import type {
+  CategoriaReceber,
+  StatusConta,
+  FormaPagamento,
+} from "@/services/api/enums";
+
+const CATEGORIAS_VALUES = CATEGORIA_RECEBER_OPTIONS as readonly CategoriaReceber[];
+const STATUS_VALUES = STATUS_CONTA_RECEBER_OPTIONS as readonly StatusConta[];
+const FORMA_VALUES = FORMA_PAGAMENTO_OPTIONS as readonly FormaPagamento[];
 
 const schema = z.object({
   descricao: z.string().min(3, "Descrição obrigatória (mín. 3 caracteres)"),
-  categoria: z.enum(CATEGORIAS_RECEBER as unknown as [string, ...string[]]),
-  cliente: z.string().optional(),
-  valor: z.number({ message: "Valor obrigatório" }).positive("Valor deve ser maior que zero"),
+  categoria: z.enum(CATEGORIAS_VALUES as unknown as [string, ...string[]]),
+  clienteId: z.string().optional(),
+  valor: z
+    .number({ message: "Valor obrigatório" })
+    .positive("Valor deve ser maior que zero"),
   vencimento: z.string().min(1, "Vencimento obrigatório"),
-  status: z.enum(["Pendente", "Recebido", "Atrasado", "Cancelado"]),
-  data_recebimento: z.string().optional(),
-  forma_pagamento: z.string().optional(),
+  status: z.enum(STATUS_VALUES as unknown as [string, ...string[]]),
+  dataRecebimento: z.string().optional(),
+  formaPagamento: z.string().optional(),
   observacoes: z.string().optional(),
 });
 
@@ -33,17 +53,37 @@ type FormData = z.infer<typeof schema>;
 interface ContaReceberFormProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (conta: ContaReceber) => void;
+  onSaved: () => void;
   conta: ContaReceber | null;
 }
 
-const fieldLabel = "text-white/60 text-xs font-bold uppercase tracking-wider block mb-1.5";
-const fieldInput = "bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-green-500/50 h-9 text-sm";
-const fieldSelect = "w-full bg-white/5 border border-white/10 text-white focus:border-green-500/50 h-9 px-3 rounded-md focus:outline-none text-sm";
+const fieldLabel =
+  "text-white/60 text-xs font-bold uppercase tracking-wider block mb-1.5";
+const fieldInput =
+  "bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-green-500/50 h-9 text-sm";
+const fieldSelect =
+  "w-full bg-white/5 border border-white/10 text-white focus:border-green-500/50 h-9 px-3 rounded-md focus:outline-none text-sm";
 const fieldError = "text-red-400 text-xs mt-1";
 
-export function ContaReceberForm({ isOpen, onOpenChange, onSubmit, conta }: ContaReceberFormProps) {
+function extractMessage(err: unknown, fallback: string): string {
+  if (axios.isAxiosError(err) && err.response?.data?.message) {
+    return err.response.data.message;
+  }
+  return fallback;
+}
+
+export function ContaReceberForm({
+  isOpen,
+  onOpenChange,
+  onSaved,
+  conta,
+}: ContaReceberFormProps) {
   const isEdit = conta !== null;
+
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [loadingClientes, setLoadingClientes] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
     register,
@@ -55,28 +95,49 @@ export function ContaReceberForm({ isOpen, onOpenChange, onSubmit, conta }: Cont
     resolver: zodResolver(schema),
     defaultValues: {
       descricao: "",
-      categoria: "Venda",
-      cliente: "",
+      categoria: "VENDA",
+      clienteId: "",
       valor: 0,
       vencimento: "",
-      status: "Pendente",
-      data_recebimento: "",
-      forma_pagamento: "",
+      status: "PENDENTE",
+      dataRecebimento: "",
+      formaPagamento: "",
       observacoes: "",
     },
   });
 
   useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+    setLoadingClientes(true);
+    listClientes({ limit: 100, status: "ATIVO" })
+      .then((res) => {
+        if (cancelled) return;
+        setClientes(res.data);
+      })
+      .catch(() => {
+        if (!cancelled) setClientes([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingClientes(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
     if (isOpen) {
+      setSubmitError(null);
       reset({
         descricao: conta?.descricao ?? "",
-        categoria: conta?.categoria ?? "Venda",
-        cliente: conta?.cliente ?? "",
-        valor: conta?.valor ?? 0,
-        vencimento: conta?.vencimento ?? "",
-        status: conta?.status ?? "Pendente",
-        data_recebimento: conta?.data_recebimento ?? "",
-        forma_pagamento: conta?.forma_pagamento ?? "",
+        categoria: conta?.categoria ?? "VENDA",
+        clienteId: conta?.clienteId ?? "",
+        valor: conta ? Number(conta.valor) : 0,
+        vencimento: isoToInputDate(conta?.vencimento) ?? "",
+        status: conta?.status ?? "PENDENTE",
+        dataRecebimento: isoToInputDate(conta?.dataRecebimento) ?? "",
+        formaPagamento: conta?.formaPagamento ?? "",
         observacoes: conta?.observacoes ?? "",
       });
     }
@@ -85,34 +146,60 @@ export function ContaReceberForm({ isOpen, onOpenChange, onSubmit, conta }: Cont
   useEffect(() => {
     if (!isOpen) return;
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onOpenChange(false);
+      if (e.key === "Escape" && !submitting) onOpenChange(false);
     };
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
-  }, [isOpen, onOpenChange]);
+  }, [isOpen, onOpenChange, submitting]);
 
   const status = watch("status");
-  const showDataRecebimento = status === "Recebido";
+  const showDataRecebimento = status === "RECEBIDO";
 
-  const submit = (data: FormData) => {
-    const novaConta: ContaReceber = {
-      id: conta?.id ?? `cr-${Date.now()}`,
-      descricao: data.descricao,
-      categoria: data.categoria as ContaReceber["categoria"],
-      cliente: data.cliente || undefined,
+  const submit = async (data: FormData) => {
+    setSubmitError(null);
+    setSubmitting(true);
+
+    const payload = {
+      descricao: data.descricao.trim(),
+      categoria: data.categoria as CategoriaReceber,
+      clienteId: data.clienteId || undefined,
       valor: data.valor,
       vencimento: data.vencimento,
-      status: data.status as StatusContaReceber,
-      data_recebimento: data.status === "Recebido"
-        ? (data.data_recebimento || new Date().toISOString().slice(0, 10))
+      status: data.status as StatusConta,
+      dataRecebimento:
+        data.status === "RECEBIDO"
+          ? data.dataRecebimento || new Date().toISOString().slice(0, 10)
+          : undefined,
+      formaPagamento: data.formaPagamento
+        ? (data.formaPagamento as FormaPagamento)
         : undefined,
-      forma_pagamento: data.forma_pagamento
-        ? (data.forma_pagamento as ContaReceber["forma_pagamento"])
-        : undefined,
-      observacoes: data.observacoes || undefined,
+      observacoes: data.observacoes?.trim() || undefined,
     };
-    onSubmit(novaConta);
-    onOpenChange(false);
+
+    try {
+      if (isEdit && conta) {
+        await updateContaReceber(conta.id, {
+          ...payload,
+          clienteId: payload.clienteId ?? null,
+          dataRecebimento: payload.dataRecebimento ?? null,
+          formaPagamento: payload.formaPagamento ?? null,
+          observacoes: payload.observacoes ?? null,
+        });
+      } else {
+        await createContaReceber(payload);
+      }
+      onSaved();
+      onOpenChange(false);
+    } catch (err) {
+      setSubmitError(
+        extractMessage(
+          err,
+          isEdit ? "Erro ao salvar alterações." : "Erro ao criar conta."
+        )
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -120,7 +207,7 @@ export function ContaReceberForm({ isOpen, onOpenChange, onSubmit, conta }: Cont
   return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 overflow-y-auto"
-      onClick={() => onOpenChange(false)}
+      onClick={() => !submitting && onOpenChange(false)}
     >
       <div
         onClick={(e) => e.stopPropagation()}
@@ -136,8 +223,9 @@ export function ContaReceberForm({ isOpen, onOpenChange, onSubmit, conta }: Cont
             </p>
           </div>
           <button
-            onClick={() => onOpenChange(false)}
-            className="text-white/50 hover:text-white transition-colors"
+            onClick={() => !submitting && onOpenChange(false)}
+            disabled={submitting}
+            className="text-white/50 hover:text-white transition-colors disabled:opacity-30"
           >
             <X className="w-5 h-5" />
           </button>
@@ -145,6 +233,15 @@ export function ContaReceberForm({ isOpen, onOpenChange, onSubmit, conta }: Cont
 
         <form onSubmit={handleSubmit(submit)}>
           <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+            {submitError && (
+              <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-3">
+                <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
+                <p className="flex-1 text-red-400 text-sm font-medium">
+                  {submitError}
+                </p>
+              </div>
+            )}
+
             <div>
               <label className={fieldLabel}>Descrição *</label>
               <Input
@@ -152,32 +249,43 @@ export function ContaReceberForm({ isOpen, onOpenChange, onSubmit, conta }: Cont
                 placeholder="Ex.: Venda Pedido #1254, Serviço de instalação..."
                 className={fieldInput}
               />
-              {errors.descricao && <p className={fieldError}>{errors.descricao.message}</p>}
+              {errors.descricao && (
+                <p className={fieldError}>{errors.descricao.message}</p>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className={fieldLabel}>Categoria *</label>
                 <select {...register("categoria")} className={fieldSelect}>
-                  {CATEGORIAS_RECEBER.map((c) => (
-                    <option key={c} value={c} className="bg-primary">{c}</option>
+                  {CATEGORIA_RECEBER_OPTIONS.map((c) => (
+                    <option key={c} value={c} className="bg-primary">
+                      {CATEGORIA_RECEBER_LABEL[c]}
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div>
                 <label className={fieldLabel}>Cliente</label>
-                <input
-                  {...register("cliente")}
-                  list="clientes-list"
-                  placeholder="Selecione ou digite"
-                  className={`${fieldInput} px-3`}
-                />
-                <datalist id="clientes-list">
-                  {clientesMock.map((c) => (
-                    <option key={c} value={c} />
+                <select
+                  {...register("clienteId")}
+                  className={fieldSelect}
+                  disabled={loadingClientes}
+                >
+                  <option value="" className="bg-primary">
+                    {loadingClientes
+                      ? "Carregando..."
+                      : clientes.length === 0
+                      ? "Nenhum cliente ativo"
+                      : "—"}
+                  </option>
+                  {clientes.map((c) => (
+                    <option key={c.id} value={c.id} className="bg-primary">
+                      {c.nome}
+                    </option>
                   ))}
-                </datalist>
+                </select>
               </div>
             </div>
 
@@ -192,13 +300,21 @@ export function ContaReceberForm({ isOpen, onOpenChange, onSubmit, conta }: Cont
                   className={fieldInput}
                   {...register("valor", { valueAsNumber: true })}
                 />
-                {errors.valor && <p className={fieldError}>{errors.valor.message}</p>}
+                {errors.valor && (
+                  <p className={fieldError}>{errors.valor.message}</p>
+                )}
               </div>
 
               <div>
                 <label className={fieldLabel}>Vencimento *</label>
-                <Input type="date" {...register("vencimento")} className={fieldInput} />
-                {errors.vencimento && <p className={fieldError}>{errors.vencimento.message}</p>}
+                <Input
+                  type="date"
+                  {...register("vencimento")}
+                  className={fieldInput}
+                />
+                {errors.vencimento && (
+                  <p className={fieldError}>{errors.vencimento.message}</p>
+                )}
               </div>
             </div>
 
@@ -206,19 +322,22 @@ export function ContaReceberForm({ isOpen, onOpenChange, onSubmit, conta }: Cont
               <div>
                 <label className={fieldLabel}>Status *</label>
                 <select {...register("status")} className={fieldSelect}>
-                  <option value="Pendente" className="bg-primary">Pendente</option>
-                  <option value="Recebido" className="bg-primary">Recebido</option>
-                  <option value="Atrasado" className="bg-primary">Atrasado</option>
-                  <option value="Cancelado" className="bg-primary">Cancelado</option>
+                  {STATUS_CONTA_RECEBER_OPTIONS.map((s) => (
+                    <option key={s} value={s} className="bg-primary">
+                      {STATUS_CONTA_LABEL[s]}
+                    </option>
+                  ))}
                 </select>
               </div>
 
               <div>
                 <label className={fieldLabel}>Forma de Recebimento</label>
-                <select {...register("forma_pagamento")} className={fieldSelect}>
+                <select {...register("formaPagamento")} className={fieldSelect}>
                   <option value="" className="bg-primary">—</option>
-                  {FORMAS_PAGAMENTO.map((f) => (
-                    <option key={f} value={f} className="bg-primary">{f}</option>
+                  {FORMA_PAGAMENTO_OPTIONS.map((f) => (
+                    <option key={f} value={f} className="bg-primary">
+                      {FORMA_PAGAMENTO_LABEL[f]}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -227,7 +346,11 @@ export function ContaReceberForm({ isOpen, onOpenChange, onSubmit, conta }: Cont
             {showDataRecebimento && (
               <div>
                 <label className={fieldLabel}>Data do Recebimento</label>
-                <Input type="date" {...register("data_recebimento")} className={fieldInput} />
+                <Input
+                  type="date"
+                  {...register("dataRecebimento")}
+                  className={fieldInput}
+                />
                 <p className="text-white/30 text-xs mt-1">
                   Se vazio, será preenchido com a data de hoje.
                 </p>
@@ -249,17 +372,27 @@ export function ContaReceberForm({ isOpen, onOpenChange, onSubmit, conta }: Cont
             <Button
               type="button"
               variant="ghost"
+              disabled={submitting}
               onClick={() => onOpenChange(false)}
-              className="border border-white/10 text-white hover:bg-white/10"
+              className="border border-white/10 text-white hover:bg-white/10 disabled:opacity-50"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
-              className="bg-green-500 hover:bg-green-400 text-white font-bold"
+              disabled={submitting}
+              className="bg-green-500 hover:bg-green-400 text-white font-bold disabled:opacity-60"
             >
-              <Save className="mr-2 h-4 w-4" />
-              {isEdit ? "Salvar Alterações" : "Criar Conta"}
+              {submitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              {submitting
+                ? "Salvando..."
+                : isEdit
+                ? "Salvar Alterações"
+                : "Criar Conta"}
             </Button>
           </div>
         </form>

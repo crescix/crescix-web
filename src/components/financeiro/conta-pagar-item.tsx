@@ -1,27 +1,34 @@
 "use client";
 
-import { Check, Pencil, Trash2 } from "lucide-react";
+import { Check, Pencil, Trash2, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { ContaPagar, formatBRL, formatDateBR } from "@/lib/data/financeiro";
-
-const STATUS_STYLES: Record<string, string> = {
-  Pendente:  "bg-amber-500/15 text-amber-400 border-amber-500/25",
-  Pago:      "bg-green-500/15 text-green-400 border-green-500/25",
-  Atrasado:  "bg-red-500/15 text-red-400 border-red-500/25",
-  Cancelado: "bg-white/10 text-white/40 border-white/15",
-};
+import {
+  ContaPagar,
+  CATEGORIA_PAGAR_LABEL,
+  STATUS_CONTA_LABEL,
+  STATUS_CONTA_STYLES,
+  formatBRL,
+  formatDateBR,
+} from "@/lib/data/financeiro";
 
 interface ContaPagarItemProps {
   data: ContaPagar;
   onEdit: (conta: ContaPagar) => void;
   onDelete: (conta: ContaPagar) => void;
   onMarkPaid: (conta: ContaPagar) => void;
+  isMarkingPaid?: boolean;
 }
 
-export function ContaPagarItem({ data, onEdit, onDelete, onMarkPaid }: ContaPagarItemProps) {
-  const isPaid = data.status === "Pago";
-  const isOverdue = data.status === "Atrasado";
+export function ContaPagarItem({
+  data,
+  onEdit,
+  onDelete,
+  onMarkPaid,
+  isMarkingPaid,
+}: ContaPagarItemProps) {
+  const isPaid = data.status === "PAGO";
+  const isOverdue = data.status === "ATRASADO";
 
   return (
     <TableRow className="border-b border-white/5 hover:bg-white/5 transition-colors">
@@ -29,9 +36,18 @@ export function ContaPagarItem({ data, onEdit, onDelete, onMarkPaid }: ContaPaga
         {data.descricao}
       </TableCell>
       <TableCell className="text-white/70 text-sm">
-        {data.fornecedor ?? <span className="text-white/30">—</span>}
+        {/* Backend hoje não popula fornecedorNome — apenas o id. */}
+        {data.fornecedorId ? (
+          <span className="text-white/60 font-mono text-xs">
+            #{data.fornecedorId.slice(0, 6)}
+          </span>
+        ) : (
+          <span className="text-white/30">—</span>
+        )}
       </TableCell>
-      <TableCell className="text-white/70 text-sm">{data.categoria}</TableCell>
+      <TableCell className="text-white/70 text-sm">
+        {CATEGORIA_PAGAR_LABEL[data.categoria] ?? data.categoria}
+      </TableCell>
       <TableCell className="text-sm">
         <span className={isOverdue ? "text-red-400/80 font-medium" : "text-white/70"}>
           {formatDateBR(data.vencimento)}
@@ -42,9 +58,9 @@ export function ContaPagarItem({ data, onEdit, onDelete, onMarkPaid }: ContaPaga
       </TableCell>
       <TableCell>
         <Badge
-          className={`${STATUS_STYLES[data.status] ?? "bg-white/10 text-white/60 border-white/20"} border text-xs font-medium`}
+          className={`${STATUS_CONTA_STYLES[data.status] ?? "bg-white/10 text-white/60 border-white/20"} border text-xs font-medium`}
         >
-          {data.status}
+          {STATUS_CONTA_LABEL[data.status] ?? data.status}
         </Badge>
       </TableCell>
       <TableCell>
@@ -53,9 +69,14 @@ export function ContaPagarItem({ data, onEdit, onDelete, onMarkPaid }: ContaPaga
             <button
               title="Marcar como pago"
               onClick={() => onMarkPaid(data)}
-              className="p-2 hover:bg-green-500/10 rounded-lg transition-colors group"
+              disabled={isMarkingPaid}
+              className="p-2 hover:bg-green-500/10 rounded-lg transition-colors group disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Check className="h-4 w-4 text-white/40 group-hover:text-green-400 transition-colors" />
+              {isMarkingPaid ? (
+                <Loader2 className="h-4 w-4 text-green-400 animate-spin" />
+              ) : (
+                <Check className="h-4 w-4 text-white/40 group-hover:text-green-400 transition-colors" />
+              )}
             </button>
           )}
 

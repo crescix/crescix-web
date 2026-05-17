@@ -14,10 +14,11 @@ import {
 import { useAuth } from "@/context/auth-context";
 import { getPerfil, getIniciais } from "@/lib/data/perfil";
 import {
-  getContasPagar, getContasReceber, getTransacoesFluxo,
-  agruparPorDia, formatBRL, formatDateBR,
+  buildTransacoesFluxo, agruparPorDia, formatBRL, formatDateBR,
   type TransacaoFluxo,
 } from "@/lib/data/financeiro";
+import { listContasPagar, type ContaPagar } from "@/services/contas-pagar";
+import { listContasReceber, type ContaReceber } from "@/services/contas-receber";
 
 function saudacao(): string {
   const hora = new Date().getHours();
@@ -36,14 +37,39 @@ export default function DashboardPage() {
   const [perfilNome, setPerfilNome] = useState("");
   const [perfilFoto, setPerfilFoto] = useState<string | undefined>();
   const [transacoes, setTransacoes] = useState<TransacaoFluxo[]>([]);
+  const [contasPagar, setContasPagar] = useState<ContaPagar[]>([]);
+  const [contasReceber, setContasReceber] = useState<ContaReceber[]>([]);
 
   useEffect(() => {
     const perfil = getPerfil();
     setPerfilNome(perfil.nome || user?.name || "");
     setPerfilFoto(perfil.foto);
-    setTransacoes(getTransacoesFluxo());
-    setMounted(true);
   }, [user]);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      listContasPagar({ limit: 500 }),
+      listContasReceber({ limit: 500 }),
+    ])
+      .then(([pagarRes, receberRes]) => {
+        if (cancelled) return;
+        setContasPagar(pagarRes.data);
+        setContasReceber(receberRes.data);
+        setTransacoes(buildTransacoesFluxo(pagarRes.data, receberRes.data));
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setContasPagar([]);
+          setContasReceber([]);
+          setTransacoes([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setMounted(true);
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   // ─── KPIs do mês corrente ──────────────────────────────────────────────────
   const kpis = useMemo(() => {
@@ -54,9 +80,6 @@ export default function DashboardPage() {
     limite7Dias.setDate(limite7Dias.getDate() + 7);
     const limite7DiasISO = limite7Dias.toISOString().slice(0, 10);
 
-    const receberTodas = mounted ? getContasReceber() : [];
-    const pagarTodas = mounted ? getContasPagar() : [];
-
     let receitaMes = 0;
     let despesaMes = 0;
     let aReceber7d = 0;
@@ -64,32 +87,36 @@ export default function DashboardPage() {
     let receberAtrasado = 0;
     let pagarAtrasado = 0;
 
-    for (const r of receberTodas) {
-      if (r.status === "Recebido" && r.data_recebimento?.startsWith(mesAtual)) {
-        receitaMes += r.valor;
+    for (const r of contasReceber) {
+      const valor = Number(r.valor);
+      const vencimento = r.vencimento.split("T")[0];
+      if (r.status === "RECEBIDO" && r.dataRecebimento?.startsWith(mesAtual)) {
+        receitaMes += valor;
       }
       if (
-        r.status === "Pendente" &&
-        r.vencimento >= hojeISO &&
-        r.vencimento <= limite7DiasISO
+        r.status === "PENDENTE" &&
+        vencimento >= hojeISO &&
+        vencimento <= limite7DiasISO
       ) {
-        aReceber7d += r.valor;
+        aReceber7d += valor;
       }
-      if (r.status === "Atrasado") receberAtrasado += r.valor;
+      if (r.status === "ATRASADO") receberAtrasado += valor;
     }
 
-    for (const p of pagarTodas) {
-      if (p.status === "Pago" && p.data_pagamento?.startsWith(mesAtual)) {
-        despesaMes += p.valor;
+    for (const p of contasPagar) {
+      const valor = Number(p.valor);
+      const vencimento = p.vencimento.split("T")[0];
+      if (p.status === "PAGO" && p.dataPagamento?.startsWith(mesAtual)) {
+        despesaMes += valor;
       }
       if (
-        p.status === "Pendente" &&
-        p.vencimento >= hojeISO &&
-        p.vencimento <= limite7DiasISO
+        p.status === "PENDENTE" &&
+        vencimento >= hojeISO &&
+        vencimento <= limite7DiasISO
       ) {
-        aPagar7d += p.valor;
+        aPagar7d += valor;
       }
-      if (p.status === "Atrasado") pagarAtrasado += p.valor;
+      if (p.status === "ATRASADO") pagarAtrasado += valor;
     }
 
     const saldoMes = receitaMes - despesaMes;
@@ -99,7 +126,7 @@ export default function DashboardPage() {
       aReceber7d, aPagar7d,
       receberAtrasado, pagarAtrasado,
     };
-  }, [mounted, transacoes]);
+  }, [contasPagar, contasReceber]);
 
   // ─── Gráfico: últimos 30 dias ─────────────────────────────────────────────
   const grafico = useMemo(() => {

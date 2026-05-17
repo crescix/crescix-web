@@ -65,20 +65,6 @@ export function isoToInputDate(iso: string | null | undefined): string {
 }
 
 /**
- * @deprecated Lista temporária — usada pelo form de Contas a Receber
- * enquanto a migração para a API não acontece (PR H). Em código novo
- * use `listClientes` do service.
- */
-export const clientesMock: string[] = [
-  "Tech Solutions",
-  "João Silva Ltda",
-  "Maria Souza",
-  "Distribuidora XYZ",
-  "Comércio Geral",
-  "Pedro Oliveira ME",
-];
-
-/**
  * Sugere o próximo número sequencial baseado nos orçamentos existentes.
  * Ex.: já existe #ORC-0001 e #ORC-0002 → retorna #ORC-0003
  */

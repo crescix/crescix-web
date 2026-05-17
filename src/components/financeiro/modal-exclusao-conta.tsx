@@ -2,9 +2,16 @@
 
 import { createPortal } from "react-dom";
 import { useEffect } from "react";
-import { Trash2, AlertTriangle, X } from "lucide-react";
+import { Trash2, AlertTriangle, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ContaPagar, ContaReceber, formatBRL, formatDateBR } from "@/lib/data/financeiro";
+import {
+  ContaPagar,
+  ContaReceber,
+  CATEGORIA_PAGAR_LABEL,
+  CATEGORIA_RECEBER_LABEL,
+  formatBRL,
+  formatDateBR,
+} from "@/lib/data/financeiro";
 
 interface ModalExclusaoContaProps {
   isOpen: boolean;
@@ -12,26 +19,39 @@ interface ModalExclusaoContaProps {
   onConfirm: () => void;
   conta: ContaPagar | ContaReceber | null;
   tipo?: "pagar" | "receber";
+  isDeleting?: boolean;
 }
 
 export function ModalExclusaoConta({
-  isOpen, onOpenChange, onConfirm, conta, tipo = "pagar",
+  isOpen,
+  onOpenChange,
+  onConfirm,
+  conta,
+  tipo = "pagar",
+  isDeleting = false,
 }: ModalExclusaoContaProps) {
   useEffect(() => {
     if (!isOpen) return;
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onOpenChange(false);
+      if (e.key === "Escape" && !isDeleting) onOpenChange(false);
     };
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
-  }, [isOpen, onOpenChange]);
+  }, [isOpen, onOpenChange, isDeleting]);
 
   if (!isOpen || !conta) return null;
+
+  const categoriaLabel =
+    tipo === "receber"
+      ? (CATEGORIA_RECEBER_LABEL as Record<string, string>)[conta.categoria] ??
+        conta.categoria
+      : (CATEGORIA_PAGAR_LABEL as Record<string, string>)[conta.categoria] ??
+        conta.categoria;
 
   return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
-      onClick={() => onOpenChange(false)}
+      onClick={() => !isDeleting && onOpenChange(false)}
     >
       <div
         onClick={(e) => e.stopPropagation()}
@@ -43,8 +63,9 @@ export function ModalExclusaoConta({
             <p className="text-white/60 text-sm mt-1">Esta ação é irreversível.</p>
           </div>
           <button
-            onClick={() => onOpenChange(false)}
-            className="text-white/50 hover:text-white transition-colors"
+            onClick={() => !isDeleting && onOpenChange(false)}
+            disabled={isDeleting}
+            className="text-white/50 hover:text-white transition-colors disabled:opacity-30"
           >
             <X className="w-5 h-5" />
           </button>
@@ -54,7 +75,9 @@ export function ModalExclusaoConta({
           <div className="flex gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-400">
             <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
             <p className="text-sm font-medium">
-              Você tem certeza que deseja excluir esta conta a {tipo === "receber" ? "receber" : "pagar"}? Esta ação não poderá ser desfeita.
+              Você tem certeza que deseja excluir esta conta a{" "}
+              {tipo === "receber" ? "receber" : "pagar"}? Esta ação não poderá
+              ser desfeita.
             </p>
           </div>
 
@@ -69,7 +92,7 @@ export function ModalExclusaoConta({
               </div>
               <div className="grid grid-cols-[110px_1fr] gap-3">
                 <span className="text-xs text-white/50 font-bold uppercase">Categoria</span>
-                <span className="text-white font-medium">{conta.categoria}</span>
+                <span className="text-white font-medium">{categoriaLabel}</span>
               </div>
               <div className="grid grid-cols-[110px_1fr] gap-3">
                 <span className="text-xs text-white/50 font-bold uppercase">Valor</span>
@@ -87,18 +110,24 @@ export function ModalExclusaoConta({
           <Button
             type="button"
             variant="ghost"
+            disabled={isDeleting}
             onClick={() => onOpenChange(false)}
-            className="border border-white/10 text-white hover:bg-white/10"
+            className="border border-white/10 text-white hover:bg-white/10 disabled:opacity-50"
           >
             Cancelar
           </Button>
           <Button
             type="button"
             variant="destructive"
-            onClick={() => { onConfirm(); onOpenChange(false); }}
+            disabled={isDeleting}
+            onClick={onConfirm}
           >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Sim, Excluir
+            {isDeleting ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Trash2 className="mr-2 h-4 w-4" />
+            )}
+            {isDeleting ? "Excluindo..." : "Sim, Excluir"}
           </Button>
         </div>
       </div>

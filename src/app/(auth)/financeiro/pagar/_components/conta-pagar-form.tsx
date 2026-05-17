@@ -1,30 +1,50 @@
 "use client";
 
 import { createPortal } from "react-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { X, Save } from "lucide-react";
+import axios from "axios";
+import { X, Save, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   ContaPagar,
-  StatusContaPagar,
-  CATEGORIAS_PAGAR,
-  FORMAS_PAGAMENTO,
-  fornecedoresMock,
+  CATEGORIA_PAGAR_LABEL,
+  CATEGORIA_PAGAR_OPTIONS,
+  STATUS_CONTA_LABEL,
+  STATUS_CONTA_PAGAR_OPTIONS,
+  FORMA_PAGAMENTO_LABEL,
+  FORMA_PAGAMENTO_OPTIONS,
+  isoToInputDate,
 } from "@/lib/data/financeiro";
+import {
+  createContaPagar,
+  updateContaPagar,
+} from "@/services/contas-pagar";
+import { listFornecedores, type Fornecedor } from "@/services/fornecedores";
+import type {
+  CategoriaPagar,
+  StatusConta,
+  FormaPagamento,
+} from "@/services/api/enums";
+
+const CATEGORIAS_VALUES = CATEGORIA_PAGAR_OPTIONS as readonly CategoriaPagar[];
+const STATUS_VALUES = STATUS_CONTA_PAGAR_OPTIONS as readonly StatusConta[];
+const FORMA_VALUES = FORMA_PAGAMENTO_OPTIONS as readonly FormaPagamento[];
 
 const schema = z.object({
   descricao: z.string().min(3, "Descrição obrigatória (mín. 3 caracteres)"),
-  categoria: z.enum(CATEGORIAS_PAGAR as unknown as [string, ...string[]]),
-  fornecedor: z.string().optional(),
-  valor: z.number({ message: "Valor obrigatório" }).positive("Valor deve ser maior que zero"),
+  categoria: z.enum(CATEGORIAS_VALUES as unknown as [string, ...string[]]),
+  fornecedorId: z.string().optional(),
+  valor: z
+    .number({ message: "Valor obrigatório" })
+    .positive("Valor deve ser maior que zero"),
   vencimento: z.string().min(1, "Vencimento obrigatório"),
-  status: z.enum(["Pendente", "Pago", "Atrasado", "Cancelado"]),
-  data_pagamento: z.string().optional(),
-  forma_pagamento: z.string().optional(),
+  status: z.enum(STATUS_VALUES as unknown as [string, ...string[]]),
+  dataPagamento: z.string().optional(),
+  formaPagamento: z.string().optional(),
   observacoes: z.string().optional(),
 });
 
@@ -33,17 +53,37 @@ type FormData = z.infer<typeof schema>;
 interface ContaPagarFormProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (conta: ContaPagar) => void;
+  onSaved: () => void;
   conta: ContaPagar | null;
 }
 
-const fieldLabel = "text-white/60 text-xs font-bold uppercase tracking-wider block mb-1.5";
-const fieldInput = "bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-green-500/50 h-9 text-sm";
-const fieldSelect = "w-full bg-white/5 border border-white/10 text-white focus:border-green-500/50 h-9 px-3 rounded-md focus:outline-none text-sm";
+const fieldLabel =
+  "text-white/60 text-xs font-bold uppercase tracking-wider block mb-1.5";
+const fieldInput =
+  "bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-green-500/50 h-9 text-sm";
+const fieldSelect =
+  "w-full bg-white/5 border border-white/10 text-white focus:border-green-500/50 h-9 px-3 rounded-md focus:outline-none text-sm";
 const fieldError = "text-red-400 text-xs mt-1";
 
-export function ContaPagarForm({ isOpen, onOpenChange, onSubmit, conta }: ContaPagarFormProps) {
+function extractMessage(err: unknown, fallback: string): string {
+  if (axios.isAxiosError(err) && err.response?.data?.message) {
+    return err.response.data.message;
+  }
+  return fallback;
+}
+
+export function ContaPagarForm({
+  isOpen,
+  onOpenChange,
+  onSaved,
+  conta,
+}: ContaPagarFormProps) {
   const isEdit = conta !== null;
+
+  const [fornecedores, setFornecedores] = useState<Fornecedor[]>([]);
+  const [loadingFornecedores, setLoadingFornecedores] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
     register,
@@ -55,28 +95,49 @@ export function ContaPagarForm({ isOpen, onOpenChange, onSubmit, conta }: ContaP
     resolver: zodResolver(schema),
     defaultValues: {
       descricao: "",
-      categoria: "Fornecedor",
-      fornecedor: "",
+      categoria: "FORNECEDOR",
+      fornecedorId: "",
       valor: 0,
       vencimento: "",
-      status: "Pendente",
-      data_pagamento: "",
-      forma_pagamento: "",
+      status: "PENDENTE",
+      dataPagamento: "",
+      formaPagamento: "",
       observacoes: "",
     },
   });
 
   useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+    setLoadingFornecedores(true);
+    listFornecedores({ limit: 100 })
+      .then((res) => {
+        if (cancelled) return;
+        setFornecedores(res.data);
+      })
+      .catch(() => {
+        if (!cancelled) setFornecedores([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingFornecedores(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
     if (isOpen) {
+      setSubmitError(null);
       reset({
         descricao: conta?.descricao ?? "",
-        categoria: conta?.categoria ?? "Fornecedor",
-        fornecedor: conta?.fornecedor ?? "",
-        valor: conta?.valor ?? 0,
-        vencimento: conta?.vencimento ?? "",
-        status: conta?.status ?? "Pendente",
-        data_pagamento: conta?.data_pagamento ?? "",
-        forma_pagamento: conta?.forma_pagamento ?? "",
+        categoria: conta?.categoria ?? "FORNECEDOR",
+        fornecedorId: conta?.fornecedorId ?? "",
+        valor: conta ? Number(conta.valor) : 0,
+        vencimento: isoToInputDate(conta?.vencimento) ?? "",
+        status: conta?.status ?? "PENDENTE",
+        dataPagamento: isoToInputDate(conta?.dataPagamento) ?? "",
+        formaPagamento: conta?.formaPagamento ?? "",
         observacoes: conta?.observacoes ?? "",
       });
     }
@@ -85,36 +146,62 @@ export function ContaPagarForm({ isOpen, onOpenChange, onSubmit, conta }: ContaP
   useEffect(() => {
     if (!isOpen) return;
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onOpenChange(false);
+      if (e.key === "Escape" && !submitting) onOpenChange(false);
     };
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
-  }, [isOpen, onOpenChange]);
+  }, [isOpen, onOpenChange, submitting]);
 
   const categoria = watch("categoria");
   const status = watch("status");
-  const showFornecedor = categoria === "Fornecedor";
-  const showDataPagamento = status === "Pago";
+  const showFornecedor = categoria === "FORNECEDOR";
+  const showDataPagamento = status === "PAGO";
 
-  const submit = (data: FormData) => {
-    const novaConta: ContaPagar = {
-      id: conta?.id ?? `cp-${Date.now()}`,
-      descricao: data.descricao,
-      categoria: data.categoria as ContaPagar["categoria"],
-      fornecedor: showFornecedor && data.fornecedor ? data.fornecedor : undefined,
+  const submit = async (data: FormData) => {
+    setSubmitError(null);
+    setSubmitting(true);
+
+    const payload = {
+      descricao: data.descricao.trim(),
+      categoria: data.categoria as CategoriaPagar,
+      fornecedorId:
+        showFornecedor && data.fornecedorId ? data.fornecedorId : undefined,
       valor: data.valor,
       vencimento: data.vencimento,
-      status: data.status as StatusContaPagar,
-      data_pagamento: data.status === "Pago"
-        ? (data.data_pagamento || new Date().toISOString().slice(0, 10))
-        : undefined,
-      forma_pagamento: data.forma_pagamento
-        ? (data.forma_pagamento as ContaPagar["forma_pagamento"])
-        : undefined,
-      observacoes: data.observacoes || undefined,
+      status: data.status as StatusConta,
+      dataPagamento:
+        data.status === "PAGO"
+          ? data.dataPagamento || new Date().toISOString().slice(0, 10)
+          : undefined,
+      formaPagamento:
+        data.formaPagamento ? (data.formaPagamento as FormaPagamento) : undefined,
+      observacoes: data.observacoes?.trim() || undefined,
     };
-    onSubmit(novaConta);
-    onOpenChange(false);
+
+    try {
+      if (isEdit && conta) {
+        await updateContaPagar(conta.id, {
+          ...payload,
+          fornecedorId: payload.fornecedorId ?? null,
+          dataPagamento: payload.dataPagamento ?? null,
+          formaPagamento: payload.formaPagamento ?? null,
+          observacoes: payload.observacoes ?? null,
+        });
+      } else {
+        await createContaPagar(payload);
+      }
+      onSaved();
+      onOpenChange(false);
+    } catch (err) {
+      setSubmitError(
+        extractMessage(
+          err,
+          isEdit ? "Erro ao salvar alterações." : "Erro ao criar conta."
+        )
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -122,7 +209,7 @@ export function ContaPagarForm({ isOpen, onOpenChange, onSubmit, conta }: ContaP
   return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 overflow-y-auto"
-      onClick={() => onOpenChange(false)}
+      onClick={() => !submitting && onOpenChange(false)}
     >
       <div
         onClick={(e) => e.stopPropagation()}
@@ -138,8 +225,9 @@ export function ContaPagarForm({ isOpen, onOpenChange, onSubmit, conta }: ContaP
             </p>
           </div>
           <button
-            onClick={() => onOpenChange(false)}
-            className="text-white/50 hover:text-white transition-colors"
+            onClick={() => !submitting && onOpenChange(false)}
+            disabled={submitting}
+            className="text-white/50 hover:text-white transition-colors disabled:opacity-30"
           >
             <X className="w-5 h-5" />
           </button>
@@ -147,6 +235,15 @@ export function ContaPagarForm({ isOpen, onOpenChange, onSubmit, conta }: ContaP
 
         <form onSubmit={handleSubmit(submit)}>
           <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+            {submitError && (
+              <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-3">
+                <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
+                <p className="flex-1 text-red-400 text-sm font-medium">
+                  {submitError}
+                </p>
+              </div>
+            )}
+
             <div>
               <label className={fieldLabel}>Descrição *</label>
               <Input
@@ -154,15 +251,19 @@ export function ContaPagarForm({ isOpen, onOpenChange, onSubmit, conta }: ContaP
                 placeholder="Ex.: Aluguel maio, Conta de luz CEMIG..."
                 className={fieldInput}
               />
-              {errors.descricao && <p className={fieldError}>{errors.descricao.message}</p>}
+              {errors.descricao && (
+                <p className={fieldError}>{errors.descricao.message}</p>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className={fieldLabel}>Categoria *</label>
                 <select {...register("categoria")} className={fieldSelect}>
-                  {CATEGORIAS_PAGAR.map((c) => (
-                    <option key={c} value={c} className="bg-primary">{c}</option>
+                  {CATEGORIA_PAGAR_OPTIONS.map((c) => (
+                    <option key={c} value={c} className="bg-primary">
+                      {CATEGORIA_PAGAR_LABEL[c]}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -170,17 +271,24 @@ export function ContaPagarForm({ isOpen, onOpenChange, onSubmit, conta }: ContaP
               {showFornecedor && (
                 <div>
                   <label className={fieldLabel}>Fornecedor</label>
-                  <input
-                    {...register("fornecedor")}
-                    list="fornecedores-list"
-                    placeholder="Selecione ou digite"
-                    className={`${fieldInput} px-3`}
-                  />
-                  <datalist id="fornecedores-list">
-                    {fornecedoresMock.map((f) => (
-                      <option key={f} value={f} />
+                  <select
+                    {...register("fornecedorId")}
+                    className={fieldSelect}
+                    disabled={loadingFornecedores}
+                  >
+                    <option value="" className="bg-primary">
+                      {loadingFornecedores
+                        ? "Carregando..."
+                        : fornecedores.length === 0
+                        ? "Nenhum fornecedor cadastrado"
+                        : "—"}
+                    </option>
+                    {fornecedores.map((f) => (
+                      <option key={f.id} value={f.id} className="bg-primary">
+                        {f.razaoSocial}
+                      </option>
                     ))}
-                  </datalist>
+                  </select>
                 </div>
               )}
             </div>
@@ -196,13 +304,21 @@ export function ContaPagarForm({ isOpen, onOpenChange, onSubmit, conta }: ContaP
                   className={fieldInput}
                   {...register("valor", { valueAsNumber: true })}
                 />
-                {errors.valor && <p className={fieldError}>{errors.valor.message}</p>}
+                {errors.valor && (
+                  <p className={fieldError}>{errors.valor.message}</p>
+                )}
               </div>
 
               <div>
                 <label className={fieldLabel}>Vencimento *</label>
-                <Input type="date" {...register("vencimento")} className={fieldInput} />
-                {errors.vencimento && <p className={fieldError}>{errors.vencimento.message}</p>}
+                <Input
+                  type="date"
+                  {...register("vencimento")}
+                  className={fieldInput}
+                />
+                {errors.vencimento && (
+                  <p className={fieldError}>{errors.vencimento.message}</p>
+                )}
               </div>
             </div>
 
@@ -210,19 +326,22 @@ export function ContaPagarForm({ isOpen, onOpenChange, onSubmit, conta }: ContaP
               <div>
                 <label className={fieldLabel}>Status *</label>
                 <select {...register("status")} className={fieldSelect}>
-                  <option value="Pendente" className="bg-primary">Pendente</option>
-                  <option value="Pago" className="bg-primary">Pago</option>
-                  <option value="Atrasado" className="bg-primary">Atrasado</option>
-                  <option value="Cancelado" className="bg-primary">Cancelado</option>
+                  {STATUS_CONTA_PAGAR_OPTIONS.map((s) => (
+                    <option key={s} value={s} className="bg-primary">
+                      {STATUS_CONTA_LABEL[s]}
+                    </option>
+                  ))}
                 </select>
               </div>
 
               <div>
                 <label className={fieldLabel}>Forma de Pagamento</label>
-                <select {...register("forma_pagamento")} className={fieldSelect}>
+                <select {...register("formaPagamento")} className={fieldSelect}>
                   <option value="" className="bg-primary">—</option>
-                  {FORMAS_PAGAMENTO.map((f) => (
-                    <option key={f} value={f} className="bg-primary">{f}</option>
+                  {FORMA_PAGAMENTO_OPTIONS.map((f) => (
+                    <option key={f} value={f} className="bg-primary">
+                      {FORMA_PAGAMENTO_LABEL[f]}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -231,7 +350,11 @@ export function ContaPagarForm({ isOpen, onOpenChange, onSubmit, conta }: ContaP
             {showDataPagamento && (
               <div>
                 <label className={fieldLabel}>Data do Pagamento</label>
-                <Input type="date" {...register("data_pagamento")} className={fieldInput} />
+                <Input
+                  type="date"
+                  {...register("dataPagamento")}
+                  className={fieldInput}
+                />
                 <p className="text-white/30 text-xs mt-1">
                   Se vazio, será preenchido com a data de hoje.
                 </p>
@@ -253,17 +376,27 @@ export function ContaPagarForm({ isOpen, onOpenChange, onSubmit, conta }: ContaP
             <Button
               type="button"
               variant="ghost"
+              disabled={submitting}
               onClick={() => onOpenChange(false)}
-              className="border border-white/10 text-white hover:bg-white/10"
+              className="border border-white/10 text-white hover:bg-white/10 disabled:opacity-50"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
-              className="bg-green-500 hover:bg-green-400 text-white font-bold"
+              disabled={submitting}
+              className="bg-green-500 hover:bg-green-400 text-white font-bold disabled:opacity-60"
             >
-              <Save className="mr-2 h-4 w-4" />
-              {isEdit ? "Salvar Alterações" : "Criar Conta"}
+              {submitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              {submitting
+                ? "Salvando..."
+                : isEdit
+                ? "Salvar Alterações"
+                : "Criar Conta"}
             </Button>
           </div>
         </form>
