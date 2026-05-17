@@ -15,16 +15,10 @@ import {
 } from "@/services/produtos";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { extractApiError } from "@/lib/utils/api-errors";
 
 const inputClass =
   "w-full h-10 px-3 rounded-lg bg-white/5 text-white border border-white/10 placeholder:text-white/25 focus:outline-none focus:border-green-500/50 text-sm transition-colors";
-
-function extractMessage(err: unknown, fallback: string): string {
-  if (axios.isAxiosError(err) && err.response?.data?.message) {
-    return err.response.data.message;
-  }
-  return fallback;
-}
 
 function fmtBRL(value: string | number): string {
   const n = typeof value === "string" ? parseFloat(value) : value;
@@ -51,7 +45,7 @@ export default function ProdutosPage() {
       });
       setLista(result.data);
     } catch (err) {
-      setError(extractMessage(err, "Não foi possível carregar os produtos."));
+      setError(extractApiError(err, "Não foi possível carregar os produtos."));
     }
   }, []);
 
@@ -75,7 +69,7 @@ export default function ProdutosPage() {
       setLista((prev) => prev.filter((p) => p.id !== excluindo.id));
       setExcluindo(null);
     } catch (err) {
-      setError(extractMessage(err, "Erro ao excluir o produto."));
+      setError(extractApiError(err, "Erro ao excluir o produto."));
     } finally {
       setIsDeleting(false);
     }
@@ -260,7 +254,7 @@ function ModalEditar({
       });
       onSaved(updated);
     } catch (e2) {
-      setErr(extractMessage(e2, "Erro ao salvar o produto."));
+      setErr(extractApiError(e2, "Erro ao salvar o produto."));
       setSaving(false);
     }
   }

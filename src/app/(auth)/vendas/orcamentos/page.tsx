@@ -18,17 +18,11 @@ import { OrcamentoItem } from "@/components/vendas/orcamento-item";
 import { ModalExclusaoOrcamento } from "@/components/vendas/modal-exclusao-orcamento";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { extractApiError } from "@/lib/utils/api-errors";
 import {
   Table, TableBody, TableCell,
   TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-
-function extractMessage(err: unknown, fallback: string): string {
-  if (axios.isAxiosError(err) && err.response?.data?.message) {
-    return err.response.data.message;
-  }
-  return fallback;
-}
 
 const ITEMS_PER_PAGE = 8;
 
@@ -59,7 +53,7 @@ export default function OrcamentosPage() {
         });
         setData(result.data);
       } catch (err) {
-        setError(extractMessage(err, "Não foi possível carregar os orçamentos."));
+        setError(extractApiError(err, "Não foi possível carregar os orçamentos."));
       }
     },
     []
@@ -109,7 +103,7 @@ export default function OrcamentosPage() {
       setOrcamentoAlvo(null);
       setModalOpen(false);
     } catch (err) {
-      setError(extractMessage(err, "Erro ao excluir o orçamento."));
+      setError(extractApiError(err, "Erro ao excluir o orçamento."));
     } finally {
       setIsDeleting(false);
     }

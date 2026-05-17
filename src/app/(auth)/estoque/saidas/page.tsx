@@ -29,13 +29,7 @@ import {
   deleteMovimento,
 } from "@/services/movimentos-estoque";
 import { listProdutos, type Produto } from "@/services/produtos";
-
-function extractMessage(err: unknown, fallback: string): string {
-  if (axios.isAxiosError(err) && err.response?.data?.message) {
-    return err.response.data.message;
-  }
-  return fallback;
-}
+import { extractApiError } from "@/lib/utils/api-errors";
 
 const inputClass =
   "w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:outline-none focus:border-green-500/50 text-sm transition-colors";
@@ -130,7 +124,7 @@ export default function SaidasEstoque() {
       setSaidas(movRes.data);
       setProdutos(prodRes.data);
     } catch (err) {
-      setLoadError(extractMessage(err, "Erro ao carregar saídas."));
+      setLoadError(extractApiError(err, "Erro ao carregar saídas."));
     } finally {
       setLoading(false);
     }
@@ -170,7 +164,7 @@ export default function SaidasEstoque() {
       setSucesso("Saída registrada com sucesso!");
       fetchData();
     } catch (err) {
-      setSubmitError(extractMessage(err, "Erro ao registrar saída."));
+      setSubmitError(extractApiError(err, "Erro ao registrar saída."));
     } finally {
       setSubmitting(false);
     }
@@ -185,7 +179,7 @@ export default function SaidasEstoque() {
       setSucesso("Saída excluída com sucesso!");
       fetchData();
     } catch (err) {
-      setLoadError(extractMessage(err, "Erro ao excluir saída."));
+      setLoadError(extractApiError(err, "Erro ao excluir saída."));
     } finally {
       setIsDeleting(false);
     }

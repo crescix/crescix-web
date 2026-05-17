@@ -38,6 +38,7 @@ import { ModalExclusaoConta } from "@/components/financeiro/modal-exclusao-conta
 import { ContaReceberForm } from "./_components/conta-receber-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { extractApiError } from "@/lib/utils/api-errors";
 import {
   Table,
   TableBody,
@@ -48,13 +49,6 @@ import {
 } from "@/components/ui/table";
 
 const ITEMS_PER_PAGE = 8;
-
-function extractMessage(err: unknown, fallback: string): string {
-  if (axios.isAxiosError(err) && err.response?.data?.message) {
-    return err.response.data.message;
-  }
-  return fallback;
-}
 
 export default function ContasReceberPage() {
   const [data, setData] = useState<ContaReceber[]>([]);
@@ -98,7 +92,7 @@ export default function ContasReceberPage() {
       });
       setData(res.data);
     } catch (err) {
-      setLoadError(extractMessage(err, "Erro ao carregar contas a receber."));
+      setLoadError(extractApiError(err, "Erro ao carregar contas a receber."));
     } finally {
       setLoading(false);
     }
@@ -171,7 +165,7 @@ export default function ContasReceberPage() {
       setDeleteOpen(false);
       fetchData();
     } catch (err) {
-      setLoadError(extractMessage(err, "Erro ao excluir conta."));
+      setLoadError(extractApiError(err, "Erro ao excluir conta."));
     } finally {
       setIsDeleting(false);
     }
@@ -186,7 +180,7 @@ export default function ContasReceberPage() {
       });
       fetchData();
     } catch (err) {
-      setLoadError(extractMessage(err, "Erro ao marcar como recebido."));
+      setLoadError(extractApiError(err, "Erro ao marcar como recebido."));
     } finally {
       setMarkingReceivedId(null);
     }

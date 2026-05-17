@@ -24,6 +24,7 @@ import {
   updateContaReceber,
 } from "@/services/contas-receber";
 import { listClientes, type Cliente } from "@/services/clientes";
+import { extractApiError } from "@/lib/utils/api-errors";
 import type {
   CategoriaReceber,
   StatusConta,
@@ -64,13 +65,6 @@ const fieldInput =
 const fieldSelect =
   "w-full bg-white/5 border border-white/10 text-white focus:border-green-500/50 h-9 px-3 rounded-md focus:outline-none text-sm";
 const fieldError = "text-red-400 text-xs mt-1";
-
-function extractMessage(err: unknown, fallback: string): string {
-  if (axios.isAxiosError(err) && err.response?.data?.message) {
-    return err.response.data.message;
-  }
-  return fallback;
-}
 
 export function ContaReceberForm({
   isOpen,
@@ -192,7 +186,7 @@ export function ContaReceberForm({
       onOpenChange(false);
     } catch (err) {
       setSubmitError(
-        extractMessage(
+        extractApiError(
           err,
           isEdit ? "Erro ao salvar alterações." : "Erro ao criar conta."
         )

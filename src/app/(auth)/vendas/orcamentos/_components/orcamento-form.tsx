@@ -22,6 +22,7 @@ import {
 } from "@/services/orcamentos";
 import { listClientes, type Cliente } from "@/services/clientes";
 import { listProdutos, type Produto } from "@/services/produtos";
+import { extractApiError } from "@/lib/utils/api-errors";
 
 interface OrcamentoFormProps {
   mode: "novo" | "editar";
@@ -49,13 +50,6 @@ function newItem(): ItemForm {
 
 function formatBRL(v: number): string {
   return v.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
-}
-
-function extractMessage(err: unknown, fallback: string): string {
-  if (axios.isAxiosError(err) && err.response?.data?.message) {
-    return err.response.data.message;
-  }
-  return fallback;
 }
 
 export function OrcamentoForm({ mode, orcamentoId }: OrcamentoFormProps) {
@@ -129,7 +123,7 @@ export function OrcamentoForm({ mode, orcamentoId }: OrcamentoFormProps) {
         const message =
           mode === "editar" && axios.isAxiosError(err) && err.response?.status === 404
             ? "Orçamento não encontrado."
-            : extractMessage(err, "Erro ao carregar dados do orçamento.");
+            : extractApiError(err, "Erro ao carregar dados do orçamento.");
         setLoadError(message);
       })
       .finally(() => {
@@ -227,7 +221,7 @@ export function OrcamentoForm({ mode, orcamentoId }: OrcamentoFormProps) {
       router.push("/vendas/orcamentos");
     } catch (err) {
       setSubmitError(
-        extractMessage(
+        extractApiError(
           err,
           mode === "novo" ? "Erro ao criar o orçamento." : "Erro ao salvar as alterações."
         )

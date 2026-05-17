@@ -29,15 +29,9 @@ import { listContasReceber } from "@/services/contas-receber";
 import { listPedidos } from "@/services/pedidos";
 import { listMovimentos } from "@/services/movimentos-estoque";
 import { ORIGEM_LABEL } from "@/lib/data/financeiro";
+import { extractApiError } from "@/lib/utils/api-errors";
 
 type PeriodoPreset = "hoje" | "7d" | "30d" | "mes" | "tudo" | "custom";
-
-function extractMessage(err: unknown, fallback: string): string {
-  if (axios.isAxiosError(err) && err.response?.data?.message) {
-    return err.response.data.message;
-  }
-  return fallback;
-}
 
 export default function FluxoDeCaixaPage() {
   const [transacoes, setTransacoes] = useState<TransacaoFluxo[]>([]);
@@ -72,7 +66,7 @@ export default function FluxoDeCaixaPage() {
         })
       );
     } catch (err) {
-      setLoadError(extractMessage(err, "Erro ao carregar transações."));
+      setLoadError(extractApiError(err, "Erro ao carregar transações."));
     } finally {
       setMounted(true);
     }

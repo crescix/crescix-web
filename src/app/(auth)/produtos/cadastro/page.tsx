@@ -8,16 +8,10 @@ import {
   Package, ChevronLeft, Save, X, CheckCircle2, AlertCircle, Loader2,
 } from "lucide-react";
 import { createProduto } from "@/services/produtos";
+import { extractApiError } from "@/lib/utils/api-errors";
 
 const inputClass =
   "w-full px-3.5 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/25 focus:outline-none focus:border-green-500/50 transition-colors";
-
-function extractMessage(err: unknown, fallback: string): string {
-  if (axios.isAxiosError(err) && err.response?.data?.message) {
-    return err.response.data.message;
-  }
-  return fallback;
-}
 
 export default function CadastroProduto() {
   const router = useRouter();
@@ -52,7 +46,7 @@ export default function CadastroProduto() {
       });
       setSuccess(true);
     } catch (err) {
-      setError(extractMessage(err, "Erro ao cadastrar o produto. Tente novamente."));
+      setError(extractApiError(err, "Erro ao cadastrar o produto. Tente novamente."));
     } finally {
       setSaving(false);
     }

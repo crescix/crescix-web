@@ -24,6 +24,7 @@ import {
   updateContaPagar,
 } from "@/services/contas-pagar";
 import { listFornecedores, type Fornecedor } from "@/services/fornecedores";
+import { extractApiError } from "@/lib/utils/api-errors";
 import type {
   CategoriaPagar,
   StatusConta,
@@ -64,13 +65,6 @@ const fieldInput =
 const fieldSelect =
   "w-full bg-white/5 border border-white/10 text-white focus:border-green-500/50 h-9 px-3 rounded-md focus:outline-none text-sm";
 const fieldError = "text-red-400 text-xs mt-1";
-
-function extractMessage(err: unknown, fallback: string): string {
-  if (axios.isAxiosError(err) && err.response?.data?.message) {
-    return err.response.data.message;
-  }
-  return fallback;
-}
 
 export function ContaPagarForm({
   isOpen,
@@ -194,7 +188,7 @@ export function ContaPagarForm({
       onOpenChange(false);
     } catch (err) {
       setSubmitError(
-        extractMessage(
+        extractApiError(
           err,
           isEdit ? "Erro ao salvar alterações." : "Erro ao criar conta."
         )

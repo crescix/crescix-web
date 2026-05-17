@@ -9,18 +9,12 @@ import {
 } from "lucide-react";
 import { createCliente } from "@/services/clientes";
 import { maskCPF, maskPhone } from "@/lib/utils/masks";
+import { extractApiError } from "@/lib/utils/api-errors";
 
 const inputClass =
   "w-full px-3.5 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/25 focus:outline-none focus:border-green-500/50 transition-colors";
 const selectClass =
   "w-full px-3.5 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-green-500/50 transition-colors cursor-pointer";
-
-function extractMessage(err: unknown, fallback: string): string {
-  if (axios.isAxiosError(err) && err.response?.data?.message) {
-    return err.response.data.message;
-  }
-  return fallback;
-}
 
 export default function CadastroCliente() {
   const router = useRouter();
@@ -57,7 +51,7 @@ export default function CadastroCliente() {
       });
       setSuccess(true);
     } catch (err) {
-      setError(extractMessage(err, "Erro ao cadastrar o cliente. Tente novamente."));
+      setError(extractApiError(err, "Erro ao cadastrar o cliente. Tente novamente."));
     } finally {
       setSaving(false);
     }

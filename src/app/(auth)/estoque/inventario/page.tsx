@@ -27,13 +27,7 @@ import {
   createMovimento,
 } from "@/services/movimentos-estoque";
 import { listProdutos, type Produto } from "@/services/produtos";
-
-function extractMessage(err: unknown, fallback: string): string {
-  if (axios.isAxiosError(err) && err.response?.data?.message) {
-    return err.response.data.message;
-  }
-  return fallback;
-}
+import { extractApiError } from "@/lib/utils/api-errors";
 
 type LinhaInventario = {
   produtoId: string;
@@ -125,7 +119,7 @@ export default function Inventario() {
       setMovimentos(movRes.data);
       setProdutos(prodRes.data);
     } catch (err) {
-      setLoadError(extractMessage(err, "Erro ao carregar inventário."));
+      setLoadError(extractApiError(err, "Erro ao carregar inventário."));
     } finally {
       setLoading(false);
     }
@@ -235,7 +229,7 @@ export default function Inventario() {
       setSucesso(`Ajuste de "${produtoAlvo.produtoNome}" registrado!`);
       fetchData();
     } catch (err) {
-      setSubmitError(extractMessage(err, "Erro ao salvar ajuste."));
+      setSubmitError(extractApiError(err, "Erro ao salvar ajuste."));
     } finally {
       setSubmitting(false);
     }
