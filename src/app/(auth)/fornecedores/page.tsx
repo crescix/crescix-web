@@ -1,12 +1,20 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
   Plus, Search, Building2, Pencil, Trash2,
-  ChevronDown, ChevronUp, AlertTriangle, X,
+  ChevronDown, ChevronUp, AlertTriangle, X, Loader2, AlertCircle,
 } from "lucide-react";
-import { fornecedoresData, Fornecedor } from "@/lib/data/fornecedores";
+import axios from "axios";
+import {
+  Fornecedor,
+  FORNECEDOR_TYPE_LABEL,
+} from "@/lib/data/fornecedores";
+import {
+  listFornecedores,
+  deleteFornecedor,
+} from "@/services/fornecedores";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -17,10 +25,12 @@ function ModalExclusao({
   fornecedor,
   onConfirm,
   onCancel,
+  isDeleting,
 }: {
   fornecedor: Fornecedor;
   onConfirm: () => void;
   onCancel: () => void;
+  isDeleting: boolean;
 }) {
   return (
     <div
@@ -31,7 +41,6 @@ function ModalExclusao({
         onClick={(e) => e.stopPropagation()}
         className="relative bg-primary border border-white/10 text-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden"
       >
-        {/* Cabeçalho */}
         <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
           <div className="flex items-center gap-3">
             <div className="bg-red-500/10 rounded-xl p-2.5">
@@ -44,13 +53,13 @@ function ModalExclusao({
           </div>
           <button
             onClick={onCancel}
-            className="text-white/50 hover:text-white transition-colors"
+            disabled={isDeleting}
+            className="text-white/50 hover:text-white transition-colors disabled:opacity-40"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Dados */}
         <div className="p-6 space-y-4">
           <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-3 text-sm">
             <div className="grid grid-cols-[110px_1fr] gap-3">
@@ -73,12 +82,12 @@ function ModalExclusao({
           </p>
         </div>
 
-        {/* Botões */}
         <div className="border-t border-white/10 bg-white/5 px-6 py-5 flex gap-3 justify-end">
           <Button
             type="button"
             variant="ghost"
             onClick={onCancel}
+            disabled={isDeleting}
             className="border border-white/10 text-white hover:bg-white/10"
           >
             Cancelar
@@ -87,9 +96,14 @@ function ModalExclusao({
             type="button"
             variant="destructive"
             onClick={onConfirm}
+            disabled={isDeleting}
           >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Sim, Excluir
+            {isDeleting ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Trash2 className="mr-2 h-4 w-4" />
+            )}
+            {isDeleting ? "Excluindo..." : "Sim, Excluir"}
           </Button>
         </div>
       </div>
@@ -103,21 +117,55 @@ function ModalExclusao({
 export default function FornecedoresPage() {
   const [busca, setBusca] = useState("");
   const [expandidos, setExpandidos] = useState<Record<string, boolean>>({});
-  const [fornecedorParaExcluir, setFornecedorParaExcluir] = useState<Fornecedor | null>(null);
-  const [lista, setLista] = useState<Fornecedor[]>(fornecedoresData);
+  const [fornecedorParaExcluir, setFornecedorParaExcluir] =
+    useState<Fornecedor | null>(null);
+  const [lista, setLista] = useState<Fornecedor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
+  // ─── Fetch (com debounce na busca) ────────────────────────────────────────
+  const fetchFornecedores = useCallback(async (search?: string) => {
+    setError(null);
+    try {
+      const result = await listFornecedores({
+        limit: 100,
+        ...(search && search.trim() && { search: search.trim() }),
+      });
+      setLista(result.data);
+    } catch (err) {
+      const message =
+        axios.isAxiosError(err) && err.response?.data?.message
+          ? err.response.data.message
+          : "Não foi possível carregar os fornecedores.";
+      setError(message);
+    }
+  }, []);
+
+  // Carga inicial
+  useEffect(() => {
+    setLoading(true);
+    fetchFornecedores().finally(() => setLoading(false));
+  }, [fetchFornecedores]);
+
+  // Busca com debounce (300ms)
+  useEffect(() => {
+    if (loading) return; // não dispara enquanto a carga inicial não acaba
+    const handle = setTimeout(() => {
+      fetchFornecedores(busca);
+    }, 300);
+    return () => clearTimeout(handle);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [busca]);
+
+  // ─── Agrupamento por tipo (client-side) ──────────────────────────────────
   const grouped = useMemo(() => {
-    const filtrado = lista.filter(
-      (f) =>
-        f.razaoSocial.toLowerCase().includes(busca.toLowerCase()) ||
-        f.cnpj.includes(busca)
-    );
-    return filtrado.reduce((acc, curr) => {
+    return lista.reduce((acc, curr) => {
       if (!acc[curr.type]) acc[curr.type] = [];
       acc[curr.type].push(curr);
       return acc;
     }, {} as Record<string, Fornecedor[]>);
-  }, [lista, busca]);
+  }, [lista]);
 
   const tipos = Object.keys(grouped);
 
@@ -126,10 +174,25 @@ export default function FornecedoresPage() {
 
   const isExpanded = (tipo: string) => expandidos[tipo] !== false;
 
-  const handleConfirmarExclusao = () => {
+  // ─── Exclusão ─────────────────────────────────────────────────────────────
+  const handleConfirmarExclusao = async () => {
     if (!fornecedorParaExcluir) return;
-    setLista((prev) => prev.filter((f) => f.id !== fornecedorParaExcluir.id));
-    setFornecedorParaExcluir(null);
+    setIsDeleting(true);
+    try {
+      await deleteFornecedor(fornecedorParaExcluir.id);
+      setLista((prev) =>
+        prev.filter((f) => f.id !== fornecedorParaExcluir.id)
+      );
+      setFornecedorParaExcluir(null);
+    } catch (err) {
+      const message =
+        axios.isAxiosError(err) && err.response?.data?.message
+          ? err.response.data.message
+          : "Erro ao excluir o fornecedor.";
+      setError(message);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -139,6 +202,7 @@ export default function FornecedoresPage() {
           fornecedor={fornecedorParaExcluir}
           onConfirm={handleConfirmarExclusao}
           onCancel={() => setFornecedorParaExcluir(null)}
+          isDeleting={isDeleting}
         />
       )}
 
@@ -155,7 +219,9 @@ export default function FornecedoresPage() {
                 Fornecedores
               </h1>
               <p className="text-sm text-white/40 mt-1">
-                {lista.length} {lista.length === 1 ? "parceiro cadastrado" : "parceiros cadastrados"}
+                {loading
+                  ? "Carregando..."
+                  : `${lista.length} ${lista.length === 1 ? "parceiro cadastrado" : "parceiros cadastrados"}`}
               </p>
             </div>
             <Link href="/fornecedores/cadastro">
@@ -165,6 +231,32 @@ export default function FornecedoresPage() {
               </Button>
             </Link>
           </div>
+
+          {/* Error banner */}
+          {error && (
+            <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+              <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-red-400 text-sm font-medium">{error}</p>
+                <button
+                  onClick={() => {
+                    setError(null);
+                    setLoading(true);
+                    fetchFornecedores(busca).finally(() => setLoading(false));
+                  }}
+                  className="text-xs text-red-300 hover:underline mt-1"
+                >
+                  Tentar novamente
+                </button>
+              </div>
+              <button
+                onClick={() => setError(null)}
+                className="text-red-400/60 hover:text-red-400"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
 
           {/* Busca */}
           <div className="relative">
@@ -178,20 +270,44 @@ export default function FornecedoresPage() {
             />
           </div>
 
+          {/* Loading */}
+          {loading && (
+            <div className="bg-primary rounded-2xl border border-white/10 p-16 text-center">
+              <Loader2 className="w-8 h-8 text-green-400 mx-auto mb-3 animate-spin" />
+              <p className="text-sm text-white/40">Carregando fornecedores...</p>
+            </div>
+          )}
+
           {/* Lista agrupada */}
-          {tipos.length === 0 ? (
+          {!loading && tipos.length === 0 && !error && (
             <div className="bg-primary rounded-2xl border border-white/10 p-16 text-center">
               <Building2 className="w-10 h-10 text-white/15 mx-auto mb-3" />
-              <p className="text-sm text-white/40">Nenhum fornecedor encontrado.</p>
+              <p className="text-sm text-white/40">
+                {busca
+                  ? "Nenhum fornecedor encontrado para a busca."
+                  : "Você ainda não cadastrou nenhum fornecedor."}
+              </p>
+              {!busca && (
+                <Link href="/fornecedores/cadastro" className="inline-block mt-3">
+                  <Button
+                    size="sm"
+                    className="bg-green-500 hover:bg-green-400 text-white font-bold"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Cadastrar primeiro
+                  </Button>
+                </Link>
+              )}
             </div>
-          ) : (
+          )}
+
+          {!loading && tipos.length > 0 && (
             <div className="space-y-4">
               {tipos.map((tipo) => (
                 <div
                   key={tipo}
                   className="bg-primary rounded-2xl border border-white/10 overflow-hidden"
                 >
-                  {/* Header do grupo */}
                   <button
                     onClick={() => toggleGrupo(tipo)}
                     className="w-full flex items-center justify-between px-6 py-4 hover:bg-white/5 transition-colors group"
@@ -201,7 +317,7 @@ export default function FornecedoresPage() {
                         <Building2 className="w-4 h-4 text-green-400" />
                       </div>
                       <span className="font-bold text-white text-sm uppercase tracking-wide">
-                        {tipo}
+                        {FORNECEDOR_TYPE_LABEL[tipo as keyof typeof FORNECEDOR_TYPE_LABEL] ?? tipo}
                       </span>
                       <span className="bg-green-500/15 text-green-400 text-xs font-semibold px-2 py-0.5 rounded-full border border-green-500/20">
                         {grouped[tipo].length}
@@ -213,24 +329,15 @@ export default function FornecedoresPage() {
                     }
                   </button>
 
-                  {/* Tabela */}
                   {isExpanded(tipo) && (
                     <div className="border-t border-white/10 overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="bg-white/5 border-b border-white/10">
-                            <th className="text-left px-6 py-3 text-xs font-semibold text-white/50 uppercase tracking-wider w-[35%]">
-                              Razão Social
-                            </th>
-                            <th className="text-left px-6 py-3 text-xs font-semibold text-white/50 uppercase tracking-wider">
-                              CNPJ
-                            </th>
-                            <th className="text-left px-6 py-3 text-xs font-semibold text-white/50 uppercase tracking-wider">
-                              Endereço
-                            </th>
-                            <th className="text-right px-6 py-3 text-xs font-semibold text-white/50 uppercase tracking-wider">
-                              Ações
-                            </th>
+                            <th className="text-left px-6 py-3 text-xs font-semibold text-white/50 uppercase tracking-wider w-[35%]">Razão Social</th>
+                            <th className="text-left px-6 py-3 text-xs font-semibold text-white/50 uppercase tracking-wider">CNPJ</th>
+                            <th className="text-left px-6 py-3 text-xs font-semibold text-white/50 uppercase tracking-wider">Endereço</th>
+                            <th className="text-right px-6 py-3 text-xs font-semibold text-white/50 uppercase tracking-wider">Ações</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -239,15 +346,9 @@ export default function FornecedoresPage() {
                               key={f.id}
                               className="border-b border-white/5 last:border-b-0 hover:bg-white/5 transition-colors"
                             >
-                              <td className="px-6 py-4 font-medium text-white">
-                                {f.razaoSocial}
-                              </td>
-                              <td className="px-6 py-4 text-white/70 font-mono text-xs">
-                                {f.cnpj}
-                              </td>
-                              <td className="px-6 py-4 text-white/70">
-                                {f.endereco}
-                              </td>
+                              <td className="px-6 py-4 font-medium text-white">{f.razaoSocial}</td>
+                              <td className="px-6 py-4 text-white/70 font-mono text-xs">{f.cnpj}</td>
+                              <td className="px-6 py-4 text-white/70">{f.endereco}</td>
                               <td className="px-6 py-4">
                                 <div className="flex items-center justify-end gap-1">
                                   <Link

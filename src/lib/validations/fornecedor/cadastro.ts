@@ -1,10 +1,21 @@
 import * as z from "zod";
 
+/**
+ * Schema do formulário de fornecedor (cadastro e edição).
+ *
+ * Os valores de `type` espelham o enum `TipoFornecedor` do Prisma
+ * (COMERCIO/INDUSTRIA/SERVICO em maiúsculo). A camada de display
+ * usa `FORNECEDOR_TYPE_LABEL` de `@/lib/data/fornecedores` para
+ * mostrar com acentuação ("Comércio", etc.).
+ */
 export const fornecedorSchema = z.object({
   // Dados da Empresa
   razaoSocial: z.string().min(3, "Razão Social deve ter no mínimo 3 caracteres"),
   cnpj: z.string().min(14, "CNPJ inválido"),
   endereco: z.string().min(5, "Endereço completo é obrigatório"),
+  type: z.enum(["COMERCIO", "INDUSTRIA", "SERVICO"], {
+    message: "Selecione o tipo do fornecedor",
+  }),
   ramoAtividade: z.string().min(1, "Selecione um ramo de atividade"),
   bairro: z.string().min(2, "Bairro é obrigatório"),
   numero: z.string().min(1, "Número é obrigatório"),
