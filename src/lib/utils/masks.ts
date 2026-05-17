@@ -39,15 +39,24 @@ export function maskCNPJ(value: string): string {
  * dígitos nacionais, o +55 é adicionado no display.
  */
 export function maskPhone(value: string): string {
-  let d = value.replace(/\D/g, "");
+  // O input pode chegar com o proprio prefixo "+55" do display anterior.
+  // Removemos esse prefixo ANTES de extrair digitos pra nao acabar
+  // re-interpretando os "55" como digitos digitados pelo usuario.
+  let raw = value;
+  if (raw.startsWith("+55")) {
+    raw = raw.slice(3);
+  } else if (raw.startsWith("+")) {
+    // "+" sozinho ou prefixo internacional incompleto — descarta o "+"
+    // mas preserva os digitos seguintes.
+    raw = raw.slice(1);
+  }
 
-  // Remove "55" inicial se o resto for um número nacional válido (10-11 digits).
-  // Assim quando o mask reprocessa o próprio output, não fica empilhando 55.
-  if (d.startsWith("55") && d.length > 11) {
-    const rest = d.slice(2);
-    if (rest.length === 10 || rest.length === 11) {
-      d = rest;
-    }
+  let d = raw.replace(/\D/g, "");
+
+  // Se ainda assim sobrar um "55" inicial em paste de "5511..." (sem +),
+  // remove quando o resto tem tamanho de numero nacional valido (10-11).
+  if (d.startsWith("55") && (d.length === 12 || d.length === 13)) {
+    d = d.slice(2);
   }
 
   d = d.slice(0, 11);
