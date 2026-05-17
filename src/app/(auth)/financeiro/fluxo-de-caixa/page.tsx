@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import axios from "axios";
 import {
   ArrowUpRight, ArrowDownRight, Wallet, TrendingUp, TrendingDown,
-  Calendar, Search, FileText, Clock,
+  Calendar, Search, FileText, Clock, AlertCircle, Loader2, RefreshCw, X,
 } from "lucide-react";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis,
@@ -19,16 +20,26 @@ import {
   TransacaoFluxo,
   formatBRL,
   formatDateBR,
-  getTransacoesFluxo,
+  buildTransacoesFluxo,
   calcResumoFluxo,
   agruparPorDia,
 } from "@/lib/data/financeiro";
+import { listContasPagar } from "@/services/contas-pagar";
+import { listContasReceber } from "@/services/contas-receber";
 
 type PeriodoPreset = "hoje" | "7d" | "30d" | "mes" | "tudo" | "custom";
+
+function extractMessage(err: unknown, fallback: string): string {
+  if (axios.isAxiosError(err) && err.response?.data?.message) {
+    return err.response.data.message;
+  }
+  return fallback;
+}
 
 export default function FluxoDeCaixaPage() {
   const [transacoes, setTransacoes] = useState<TransacaoFluxo[]>([]);
   const [mounted, setMounted] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [periodo, setPeriodo] = useState<PeriodoPreset>("30d");
   const [dateStart, setDateStart] = useState("");
@@ -38,9 +49,24 @@ export default function FluxoDeCaixaPage() {
     useState<"" | "Realizada" | "Prevista">("");
   const [searchTerm, setSearchTerm] = useState("");
 
+  const fetchTransacoes = async () => {
+    setMounted(false);
+    setLoadError(null);
+    try {
+      const [pagarRes, receberRes] = await Promise.all([
+        listContasPagar({ limit: 500 }),
+        listContasReceber({ limit: 500 }),
+      ]);
+      setTransacoes(buildTransacoesFluxo(pagarRes.data, receberRes.data));
+    } catch (err) {
+      setLoadError(extractMessage(err, "Erro ao carregar transações."));
+    } finally {
+      setMounted(true);
+    }
+  };
+
   useEffect(() => {
-    setTransacoes(getTransacoesFluxo());
-    setMounted(true);
+    fetchTransacoes();
   }, []);
 
   const periodoRange = useMemo(() => {
@@ -107,6 +133,26 @@ export default function FluxoDeCaixaPage() {
             Fluxo de Caixa
           </h1>
         </div>
+
+        {loadError && (
+          <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+            <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+            <p className="flex-1 text-red-400 text-sm font-medium">{loadError}</p>
+            <button
+              onClick={fetchTransacoes}
+              className="text-red-400 hover:text-red-300 text-sm font-medium flex items-center gap-1"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              Tentar novamente
+            </button>
+            <button
+              onClick={() => setLoadError(null)}
+              className="text-red-400/60 hover:text-red-400"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
 
         {/* Cards — Realizado */}
         <div>

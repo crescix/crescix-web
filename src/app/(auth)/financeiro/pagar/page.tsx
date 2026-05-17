@@ -1,74 +1,114 @@
 "use client";
 
 import {
-  Plus, Search, Calendar, FileText,
-  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
-  TrendingDown, AlertCircle, Clock, CheckCircle2,
+  Plus,
+  Search,
+  Calendar,
+  FileText,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  TrendingDown,
+  AlertCircle,
+  Clock,
+  CheckCircle2,
+  Loader2,
+  RefreshCw,
+  X,
 } from "lucide-react";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import axios from "axios";
 import {
   ContaPagar,
-  CATEGORIAS_PAGAR,
-  getContasPagar,
-  setContasPagar,
+  CATEGORIA_PAGAR_LABEL,
+  CATEGORIA_PAGAR_OPTIONS,
+  STATUS_CONTA_LABEL,
+  STATUS_CONTA_PAGAR_OPTIONS,
   formatBRL,
 } from "@/lib/data/financeiro";
+import {
+  listContasPagar,
+  deleteContaPagar,
+  updateContaPagar,
+} from "@/services/contas-pagar";
+import type { CategoriaPagar, StatusConta } from "@/services/api/enums";
 import { ContaPagarItem } from "@/components/financeiro/conta-pagar-item";
 import { ModalExclusaoConta } from "@/components/financeiro/modal-exclusao-conta";
 import { ContaPagarForm } from "./_components/conta-pagar-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Table, TableBody, TableCell,
-  TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 
 const ITEMS_PER_PAGE = 8;
 
+function extractMessage(err: unknown, fallback: string): string {
+  if (axios.isAxiosError(err) && err.response?.data?.message) {
+    return err.response.data.message;
+  }
+  return fallback;
+}
+
 export default function ContasPagarPage() {
   const [data, setData] = useState<ContaPagar[]>([]);
-  const [mounted, setMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [dateStart, setDateStart] = useState("");
   const [dateEnd, setDateEnd] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [categoriaFilter, setCategoriaFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"" | StatusConta>("");
+  const [categoriaFilter, setCategoriaFilter] = useState<"" | CategoriaPagar>("");
 
   const [formOpen, setFormOpen] = useState(false);
   const [contaEdit, setContaEdit] = useState<ContaPagar | null>(null);
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [contaAlvo, setContaAlvo] = useState<ContaPagar | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [markingPaidId, setMarkingPaidId] = useState<string | null>(null);
 
   useEffect(() => {
-    setData(getContasPagar());
-    setMounted(true);
-  }, []);
+    const t = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const res = await listContasPagar({
+        limit: 200,
+        ...(debouncedSearch && { search: debouncedSearch }),
+        ...(statusFilter && { status: statusFilter }),
+        ...(categoriaFilter && { categoria: categoriaFilter }),
+        ...(dateStart && { vencimentoFrom: dateStart }),
+        ...(dateEnd && { vencimentoTo: dateEnd }),
+      });
+      setData(res.data);
+    } catch (err) {
+      setLoadError(extractMessage(err, "Erro ao carregar contas a pagar."));
+    } finally {
+      setLoading(false);
+    }
+  }, [debouncedSearch, statusFilter, categoriaFilter, dateStart, dateEnd]);
 
   useEffect(() => {
-    if (mounted) setContasPagar(data);
-  }, [data, mounted]);
+    fetchData();
+  }, [fetchData]);
 
-  const filteredData = useMemo(() =>
-    data.filter((c) => {
-      const matchSearch =
-        searchTerm === "" ||
-        c.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (c.fornecedor?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
-      const matchStatus = statusFilter === "" || c.status === statusFilter;
-      const matchCategoria = categoriaFilter === "" || c.categoria === categoriaFilter;
-      const matchStart = dateStart === "" || c.vencimento >= dateStart;
-      const matchEnd = dateEnd === "" || c.vencimento <= dateEnd;
-      return matchSearch && matchStatus && matchCategoria && matchStart && matchEnd;
-    }),
-    [data, searchTerm, statusFilter, categoriaFilter, dateStart, dateEnd]
-  );
-
-  const totalPages = Math.max(1, Math.ceil(filteredData.length / ITEMS_PER_PAGE));
+  const totalPages = Math.max(1, Math.ceil(data.length / ITEMS_PER_PAGE));
   const safePage = Math.min(currentPage, totalPages);
-  const paginatedData = filteredData.slice(
+  const paginatedData = data.slice(
     (safePage - 1) * ITEMS_PER_PAGE,
     safePage * ITEMS_PER_PAGE
   );
@@ -78,7 +118,6 @@ export default function ContasPagarPage() {
     const em7Dias = new Date();
     em7Dias.setDate(em7Dias.getDate() + 7);
     const limite7 = em7Dias.toISOString().slice(0, 10);
-
     const mesAtual = hoje.slice(0, 7);
 
     let totalPendente = 0;
@@ -87,13 +126,19 @@ export default function ContasPagarPage() {
     let pagoNoMes = 0;
 
     for (const c of data) {
-      if (c.status === "Pendente") totalPendente += c.valor;
-      if (c.status === "Atrasado") totalAtrasado += c.valor;
-      if (c.status === "Pendente" && c.vencimento >= hoje && c.vencimento <= limite7) {
-        totalProx7 += c.valor;
+      const valor = Number(c.valor);
+      const vencimento = c.vencimento.split("T")[0];
+      if (c.status === "PENDENTE") totalPendente += valor;
+      if (c.status === "ATRASADO") totalAtrasado += valor;
+      if (
+        c.status === "PENDENTE" &&
+        vencimento >= hoje &&
+        vencimento <= limite7
+      ) {
+        totalProx7 += valor;
       }
-      if (c.status === "Pago" && c.data_pagamento?.startsWith(mesAtual)) {
-        pagoNoMes += c.valor;
+      if (c.status === "PAGO" && c.dataPagamento?.startsWith(mesAtual)) {
+        pagoNoMes += valor;
       }
     }
 
@@ -110,40 +155,47 @@ export default function ContasPagarPage() {
     setFormOpen(true);
   };
 
-  const handleSubmit = (conta: ContaPagar) => {
-    setData((prev) => {
-      const exists = prev.some((c) => c.id === conta.id);
-      return exists
-        ? prev.map((c) => (c.id === conta.id ? conta : c))
-        : [conta, ...prev];
-    });
-  };
-
   const handleDeleteRequest = (conta: ContaPagar) => {
     setContaAlvo(conta);
     setDeleteOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (!contaAlvo) return;
-    setData((prev) => prev.filter((c) => c.id !== contaAlvo.id));
-    setContaAlvo(null);
+    setIsDeleting(true);
+    try {
+      await deleteContaPagar(contaAlvo.id);
+      setContaAlvo(null);
+      setDeleteOpen(false);
+      fetchData();
+    } catch (err) {
+      setLoadError(extractMessage(err, "Erro ao excluir conta."));
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
-  const handleMarkPaid = (conta: ContaPagar) => {
-    const hoje = new Date().toISOString().slice(0, 10);
-    setData((prev) =>
-      prev.map((c) =>
-        c.id === conta.id
-          ? { ...c, status: "Pago", data_pagamento: hoje }
-          : c
-      )
-    );
+  const handleMarkPaid = async (conta: ContaPagar) => {
+    setMarkingPaidId(conta.id);
+    try {
+      await updateContaPagar(conta.id, {
+        status: "PAGO",
+        dataPagamento: new Date().toISOString().slice(0, 10),
+      });
+      fetchData();
+    } catch (err) {
+      setLoadError(extractMessage(err, "Erro ao marcar como pago."));
+    } finally {
+      setMarkingPaidId(null);
+    }
   };
 
   const resetFilters = () => {
-    setSearchTerm(""); setStatusFilter("");
-    setCategoriaFilter(""); setDateStart(""); setDateEnd("");
+    setSearchTerm("");
+    setStatusFilter("");
+    setCategoriaFilter("");
+    setDateStart("");
+    setDateEnd("");
     setCurrentPage(1);
   };
 
@@ -153,7 +205,6 @@ export default function ContasPagarPage() {
   return (
     <div className="w-full min-h-screen bg-secondary p-4 md:p-8 flex flex-col items-center">
       <div className="w-full max-w-6xl space-y-6">
-
         {/* Header */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
@@ -172,6 +223,27 @@ export default function ContasPagarPage() {
             Nova Conta
           </Button>
         </div>
+
+        {/* Erro */}
+        {loadError && (
+          <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+            <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+            <p className="flex-1 text-red-400 text-sm font-medium">{loadError}</p>
+            <button
+              onClick={fetchData}
+              className="text-red-400 hover:text-red-300 text-sm font-medium flex items-center gap-1"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              Tentar novamente
+            </button>
+            <button
+              onClick={() => setLoadError(null)}
+              className="text-red-400/60 hover:text-red-400"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
 
         {/* Cards de resumo */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -216,19 +288,27 @@ export default function ContasPagarPage() {
               <Input
                 placeholder="Buscar..."
                 value={searchTerm}
-                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="pl-8 bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-green-500/50 h-9 text-sm"
               />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-white/50 text-xs font-medium block">Vencimento de</label>
+            <label className="text-white/50 text-xs font-medium block">
+              Vencimento de
+            </label>
             <div className="relative">
               <Input
                 type="date"
                 value={dateStart}
-                onChange={(e) => { setDateStart(e.target.value); setCurrentPage(1); }}
+                onChange={(e) => {
+                  setDateStart(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="bg-white/5 border-white/10 text-white focus:border-green-500/50 h-9 text-sm pr-9"
               />
               <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30 pointer-events-none" />
@@ -241,7 +321,10 @@ export default function ContasPagarPage() {
               <Input
                 type="date"
                 value={dateEnd}
-                onChange={(e) => { setDateEnd(e.target.value); setCurrentPage(1); }}
+                onChange={(e) => {
+                  setDateEnd(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="bg-white/5 border-white/10 text-white focus:border-green-500/50 h-9 text-sm pr-9"
               />
               <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30 pointer-events-none" />
@@ -252,27 +335,38 @@ export default function ContasPagarPage() {
             <label className="text-white/50 text-xs font-medium block">Status</label>
             <select
               value={statusFilter}
-              onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+              onChange={(e) => {
+                setStatusFilter(e.target.value as "" | StatusConta);
+                setCurrentPage(1);
+              }}
               className="w-full bg-white/5 border border-white/10 text-white focus:border-green-500/50 h-9 px-3 rounded-md focus:outline-none text-sm"
             >
               <option value="">Todos</option>
-              <option value="Pendente">Pendente</option>
-              <option value="Pago">Pago</option>
-              <option value="Atrasado">Atrasado</option>
-              <option value="Cancelado">Cancelado</option>
+              {STATUS_CONTA_PAGAR_OPTIONS.map((s) => (
+                <option key={s} value={s}>
+                  {STATUS_CONTA_LABEL[s]}
+                </option>
+              ))}
             </select>
           </div>
 
           <div className="md:col-span-5 lg:col-span-1 space-y-1.5 lg:col-start-5">
-            <label className="text-white/50 text-xs font-medium block">Categoria</label>
+            <label className="text-white/50 text-xs font-medium block">
+              Categoria
+            </label>
             <select
               value={categoriaFilter}
-              onChange={(e) => { setCategoriaFilter(e.target.value); setCurrentPage(1); }}
+              onChange={(e) => {
+                setCategoriaFilter(e.target.value as "" | CategoriaPagar);
+                setCurrentPage(1);
+              }}
               className="w-full bg-white/5 border border-white/10 text-white focus:border-green-500/50 h-9 px-3 rounded-md focus:outline-none text-sm"
             >
               <option value="">Todas</option>
-              {CATEGORIAS_PAGAR.map((c) => (
-                <option key={c} value={c}>{c}</option>
+              {CATEGORIA_PAGAR_OPTIONS.map((c) => (
+                <option key={c} value={c}>
+                  {CATEGORIA_PAGAR_LABEL[c]}
+                </option>
               ))}
             </select>
           </div>
@@ -283,10 +377,20 @@ export default function ContasPagarPage() {
           <Table>
             <TableHeader>
               <TableRow className="border-b border-white/10 hover:bg-transparent bg-white/5">
-                {["Descrição", "Fornecedor", "Categoria", "Vencimento", "Valor", "Status", "Ações"].map((h) => (
+                {[
+                  "Descrição",
+                  "Fornecedor",
+                  "Categoria",
+                  "Vencimento",
+                  "Valor",
+                  "Status",
+                  "Ações",
+                ].map((h) => (
                   <TableHead
                     key={h}
-                    className={`text-white/50 font-semibold text-xs uppercase tracking-wider ${h === "Valor" ? "text-right" : ""} ${h === "Ações" ? "text-center" : ""}`}
+                    className={`text-white/50 font-semibold text-xs uppercase tracking-wider ${
+                      h === "Valor" ? "text-right" : ""
+                    } ${h === "Ações" ? "text-center" : ""}`}
                   >
                     {h}
                   </TableHead>
@@ -294,10 +398,13 @@ export default function ContasPagarPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {!mounted ? (
+              {loading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-16 text-white/40 text-sm">
-                    Carregando...
+                  <TableCell colSpan={7} className="text-center py-16">
+                    <div className="flex items-center justify-center gap-2 text-white/60">
+                      <Loader2 className="w-4 h-4 animate-spin text-green-400" />
+                      <span className="text-sm">Carregando...</span>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : paginatedData.length === 0 ? (
@@ -307,9 +414,16 @@ export default function ContasPagarPage() {
                       <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
                         <FileText className="h-5 w-5 text-white/20" />
                       </div>
-                      <p className="text-white/40 text-sm">Nenhuma conta encontrada</p>
+                      <p className="text-white/40 text-sm">
+                        {hasFilters
+                          ? "Nenhuma conta encontrada com esses filtros"
+                          : "Nenhuma conta a pagar cadastrada"}
+                      </p>
                       {hasFilters && (
-                        <button onClick={resetFilters} className="text-green-400 text-xs hover:underline">
+                        <button
+                          onClick={resetFilters}
+                          className="text-green-400 text-xs hover:underline"
+                        >
                           Limpar filtros
                         </button>
                       )}
@@ -324,6 +438,7 @@ export default function ContasPagarPage() {
                     onEdit={handleEdit}
                     onDelete={handleDeleteRequest}
                     onMarkPaid={handleMarkPaid}
+                    isMarkingPaid={markingPaidId === c.id}
                   />
                 ))
               )}
@@ -334,37 +449,58 @@ export default function ContasPagarPage() {
         {/* Rodapé */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-white/30 text-xs">
-            {filteredData.length === 0
+            {data.length === 0
               ? "Nenhum resultado"
-              : `Exibindo ${(safePage - 1) * ITEMS_PER_PAGE + 1}–${Math.min(safePage * ITEMS_PER_PAGE, filteredData.length)} de ${filteredData.length} contas`}
+              : `Exibindo ${(safePage - 1) * ITEMS_PER_PAGE + 1}–${Math.min(
+                  safePage * ITEMS_PER_PAGE,
+                  data.length
+                )} de ${data.length} contas`}
           </p>
           <div className="flex items-center gap-1.5">
-            <PagBtn icon={<ChevronsLeft className="h-4 w-4" />} onClick={() => setCurrentPage(1)} disabled={safePage === 1} />
-            <PagBtn icon={<ChevronLeft className="h-4 w-4" />} onClick={() => setCurrentPage((p) => p - 1)} disabled={safePage === 1} />
+            <PagBtn
+              icon={<ChevronsLeft className="h-4 w-4" />}
+              onClick={() => setCurrentPage(1)}
+              disabled={safePage === 1}
+            />
+            <PagBtn
+              icon={<ChevronLeft className="h-4 w-4" />}
+              onClick={() => setCurrentPage((p) => p - 1)}
+              disabled={safePage === 1}
+            />
             <div className="px-4 h-9 rounded-lg border border-green-500/30 bg-green-500/10 text-green-400 text-sm font-medium flex items-center gap-1">
               <span>{safePage}</span>
               <span className="text-white/30">/</span>
               <span className="text-white/40">{totalPages}</span>
             </div>
-            <PagBtn icon={<ChevronRight className="h-4 w-4" />} onClick={() => setCurrentPage((p) => p + 1)} disabled={safePage === totalPages} />
-            <PagBtn icon={<ChevronsRight className="h-4 w-4" />} onClick={() => setCurrentPage(totalPages)} disabled={safePage === totalPages} />
+            <PagBtn
+              icon={<ChevronRight className="h-4 w-4" />}
+              onClick={() => setCurrentPage((p) => p + 1)}
+              disabled={safePage === totalPages}
+            />
+            <PagBtn
+              icon={<ChevronsRight className="h-4 w-4" />}
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={safePage === totalPages}
+            />
           </div>
         </div>
-
       </div>
 
       <ContaPagarForm
         isOpen={formOpen}
         onOpenChange={setFormOpen}
-        onSubmit={handleSubmit}
+        onSaved={fetchData}
         conta={contaEdit}
       />
 
       <ModalExclusaoConta
         isOpen={deleteOpen}
-        onOpenChange={setDeleteOpen}
+        onOpenChange={(open) => {
+          if (!isDeleting) setDeleteOpen(open);
+        }}
         onConfirm={handleDeleteConfirm}
         conta={contaAlvo}
+        isDeleting={isDeleting}
       />
     </div>
   );
@@ -381,9 +517,7 @@ interface ResumoCardProps {
 function ResumoCard({ label, value, icon, bg, textColor }: ResumoCardProps) {
   return (
     <div className="bg-primary rounded-2xl border border-white/10 p-5 flex items-center gap-4">
-      <div className={`${bg} rounded-xl p-3 flex-shrink-0`}>
-        {icon}
-      </div>
+      <div className={`${bg} rounded-xl p-3 flex-shrink-0`}>{icon}</div>
       <div className="min-w-0">
         <p className="text-xs text-white/40 font-medium">{label}</p>
         <p className={`text-lg font-bold mt-0.5 truncate ${textColor}`}>{value}</p>
