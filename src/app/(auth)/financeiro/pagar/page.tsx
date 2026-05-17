@@ -35,6 +35,7 @@ import {
 import type { CategoriaPagar, StatusConta } from "@/services/api/enums";
 import { ContaPagarItem } from "@/components/financeiro/conta-pagar-item";
 import { ModalExclusaoConta } from "@/components/financeiro/modal-exclusao-conta";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { ContaPagarForm } from "./_components/conta-pagar-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -393,14 +394,7 @@ export default function ContasPagarPage() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-16">
-                    <div className="flex items-center justify-center gap-2 text-white/60">
-                      <Loader2 className="w-4 h-4 animate-spin text-green-400" />
-                      <span className="text-sm">Carregando...</span>
-                    </div>
-                  </TableCell>
-                </TableRow>
+                <TableSkeleton columns={7} />
               ) : paginatedData.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-16">

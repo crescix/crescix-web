@@ -19,6 +19,7 @@ import { ModalExclusaoOrcamento } from "@/components/vendas/modal-exclusao-orcam
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { extractApiError } from "@/lib/utils/api-errors";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import {
   Table, TableBody, TableCell,
   TableHead, TableHeader, TableRow,
@@ -230,14 +231,7 @@ export default function OrcamentosPage() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-16">
-                    <div className="flex flex-col items-center gap-3">
-                      <Loader2 className="w-8 h-8 text-green-400 animate-spin" />
-                      <p className="text-white/40 text-sm">Carregando orçamentos...</p>
-                    </div>
-                  </TableCell>
-                </TableRow>
+                <TableSkeleton columns={7} />
               ) : paginatedData.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-16">

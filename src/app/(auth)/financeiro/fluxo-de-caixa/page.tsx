@@ -29,6 +29,7 @@ import { listContasReceber } from "@/services/contas-receber";
 import { listPedidos } from "@/services/pedidos";
 import { listMovimentos } from "@/services/movimentos-estoque";
 import { ORIGEM_LABEL } from "@/lib/data/financeiro";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { extractApiError } from "@/lib/utils/api-errors";
 
 type PeriodoPreset = "hoje" | "7d" | "30d" | "mes" | "tudo" | "custom";
@@ -430,11 +431,7 @@ export default function FluxoDeCaixaPage() {
             </TableHeader>
             <TableBody>
               {!mounted ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-16 text-white/40 text-sm">
-                    Carregando...
-                  </TableCell>
-                </TableRow>
+                <TableSkeleton columns={7} />
               ) : filtered.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-16">
