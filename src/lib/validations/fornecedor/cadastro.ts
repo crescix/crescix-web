@@ -24,7 +24,16 @@ export const fornecedorSchema = z.object({
   nomeVendedor: z.string().min(3, "Nome do vendedor é obrigatório"),
   whatsappVendedor: z.string().min(10, "WhatsApp inválido"),
   emailVendedor: z.string().email("E-mail inválido"),
-  siteCatalogo: z.string().url("URL inválida").optional().or(z.literal("")),
+  // Aceita "www.exemplo.com", "exemplo.com.br" ou "https://exemplo.com".
+  // Antes de enviar pro backend, normalizeUrl() adiciona https:// se faltar.
+  siteCatalogo: z
+    .string()
+    .refine(
+      (v) => v === "" || /^([a-z]+:\/\/)?[a-z0-9.-]+\.[a-z]{2,}([/?#].*)?$/i.test(v.trim()),
+      "Informe um endereço válido (ex.: www.exemplo.com.br)"
+    )
+    .optional()
+    .or(z.literal("")),
 
   // Dados Bancários
   chavePix: z.string().min(1, "Chave Pix é obrigatória"),
