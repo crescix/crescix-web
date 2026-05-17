@@ -3,15 +3,13 @@
 import { Copy, Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { Orcamento } from "@/lib/data/orcamentos";
+import {
+  Orcamento,
+  STATUS_ORCAMENTO_LABEL,
+  STATUS_ORCAMENTO_STYLES,
+  isoToDisplay,
+} from "@/lib/data/orcamentos";
 import Link from "next/link";
-
-const STATUS_STYLES: Record<string, string> = {
-  Aberto:   "bg-green-500/15 text-green-400 border-green-500/25",
-  Aprovado: "bg-green-500/15 text-green-400 border-green-500/25",
-  Recusado: "bg-red-500/15 text-red-400 border-red-500/25",
-  Expirado: "bg-white/10 text-white/40 border-white/15",
-};
 
 interface OrcamentoItemProps {
   data: Orcamento;
@@ -19,26 +17,27 @@ interface OrcamentoItemProps {
 }
 
 export function OrcamentoItem({ data, onDelete }: OrcamentoItemProps) {
+  const valor = Number(data.valorTotal);
   return (
     <TableRow className="border-b border-white/5 hover:bg-white/5 transition-colors">
       <TableCell className="text-white font-mono font-medium text-sm">
         {data.numero}
       </TableCell>
-      <TableCell className="text-white/70 text-sm">{data.data}</TableCell>
+      <TableCell className="text-white/70 text-sm">{isoToDisplay(data.data)}</TableCell>
       <TableCell className="text-sm">
-        <span className={data.status === "Expirado" ? "text-red-400/70" : "text-white/70"}>
-          {data.validade}
+        <span className={data.status === "EXPIRADO" ? "text-red-400/70" : "text-white/70"}>
+          {isoToDisplay(data.validade)}
         </span>
       </TableCell>
-      <TableCell className="text-white text-sm font-medium">{data.cliente}</TableCell>
+      <TableCell className="text-white text-sm font-medium">{data.clienteNome}</TableCell>
       <TableCell className="text-white text-sm font-semibold text-right tabular-nums">
-        R$ {data.valor_total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+        R$ {valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
       </TableCell>
       <TableCell>
         <Badge
-          className={`${STATUS_STYLES[data.status] ?? "bg-white/10 text-white/60 border-white/20"} border text-xs font-medium`}
+          className={`${STATUS_ORCAMENTO_STYLES[data.status] ?? "bg-white/10 text-white/60 border-white/20"} border text-xs font-medium`}
         >
-          {data.status}
+          {STATUS_ORCAMENTO_LABEL[data.status] ?? data.status}
         </Badge>
       </TableCell>
       <TableCell>
