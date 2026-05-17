@@ -16,6 +16,7 @@ import {
   getPerfil, setPerfil, getIniciais,
 } from "@/lib/data/perfil";
 import { useAuth } from "@/context/auth-context";
+import { maskPhone } from "@/lib/utils/masks";
 
 const schema = z.object({
   nome: z.string().min(2, "Nome obrigatório (mín. 2 caracteres)"),
@@ -40,6 +41,7 @@ export default function PerfilPage() {
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors, isDirty },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -54,7 +56,7 @@ export default function PerfilPage() {
     const initial = {
       nome: perfil.nome || user?.name || "",
       email: perfil.email || user?.email || "",
-      telefone: perfil.telefone || user?.phone || "",
+      telefone: maskPhone(perfil.telefone || user?.phone || ""),
       tipo_comercio: perfil.tipo_comercio || "",
     };
     reset(initial);
@@ -211,8 +213,10 @@ export default function PerfilPage() {
                 error={errors.telefone?.message}
               >
                 <Input
-                  {...register("telefone")}
-                  placeholder="(11) 99999-9999"
+                  value={watch("telefone") ?? ""}
+                  onChange={(e) => setValue("telefone", maskPhone(e.target.value), { shouldDirty: true })}
+                  placeholder="+55 (11) 99999-9999"
+                  inputMode="numeric"
                   className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-green-500/50 h-10 text-sm"
                 />
               </Field>

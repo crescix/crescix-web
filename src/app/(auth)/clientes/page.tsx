@@ -14,6 +14,7 @@ import {
   type Cliente,
   type ClienteUpdate,
 } from "@/services/clientes";
+import { maskCPF, maskPhone } from "@/lib/utils/masks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -262,8 +263,8 @@ function ModalEditar({
 }) {
   const [form, setForm] = useState<ClienteUpdate>({
     nome: cliente.nome,
-    cpf: cliente.cpf ?? "",
-    telefone: cliente.telefone ?? "",
+    cpf: cliente.cpf ? maskCPF(cliente.cpf) : "",
+    telefone: cliente.telefone ? maskPhone(cliente.telefone) : "",
     email: cliente.email ?? "",
     status: cliente.status,
   });
@@ -318,8 +319,9 @@ function ModalEditar({
             <label className="text-white/50 text-xs font-medium">CPF</label>
             <input
               value={form.cpf ?? ""}
-              onChange={(e) => setForm({ ...form, cpf: e.target.value })}
+              onChange={(e) => setForm({ ...form, cpf: maskCPF(e.target.value) })}
               placeholder="000.000.000-00"
+              inputMode="numeric"
               className={inputClass}
             />
           </div>
@@ -328,8 +330,9 @@ function ModalEditar({
               <label className="text-white/50 text-xs font-medium">Telefone</label>
               <input
                 value={form.telefone ?? ""}
-                onChange={(e) => setForm({ ...form, telefone: e.target.value })}
-                placeholder="(11) 99999-9999"
+                onChange={(e) => setForm({ ...form, telefone: maskPhone(e.target.value) })}
+                placeholder="+55 (11) 99999-9999"
+                inputMode="numeric"
                 className={inputClass}
               />
             </div>

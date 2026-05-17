@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import axios from "axios";
 import { createFornecedor } from "@/services/fornecedores";
+import { maskCNPJ, maskPhone } from "@/lib/utils/masks";
 
 function Field({ label, required, error, children, className = "" }: {
   label: string; required?: boolean; error?: string; children: React.ReactNode; className?: string;
@@ -49,9 +50,12 @@ export default function CadastroFornecedor() {
   const router = useRouter();
   const [modal, setModal] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FornecedorFormData>({
+  const { register, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = useForm<FornecedorFormData>({
     resolver: zodResolver(fornecedorSchema),
   });
+
+  const cnpj = watch("cnpj") ?? "";
+  const whatsapp = watch("whatsappVendedor") ?? "";
 
   const onSubmit = async (data: FornecedorFormData) => {
     setSubmitError(null);
@@ -114,7 +118,13 @@ export default function CadastroFornecedor() {
               </Field>
 
               <Field label="CNPJ" required error={errors.cnpj?.message}>
-                <input {...register("cnpj")} placeholder="00.000.000/0000-00" className={inputClass} />
+                <input
+                  value={cnpj}
+                  onChange={(e) => setValue("cnpj", maskCNPJ(e.target.value), { shouldValidate: false })}
+                  placeholder="00.000.000/0000-00"
+                  inputMode="numeric"
+                  className={inputClass}
+                />
               </Field>
 
               <Field label="Tipo" required error={errors.type?.message}>
@@ -175,7 +185,13 @@ export default function CadastroFornecedor() {
               </Field>
 
               <Field label="WhatsApp" required error={errors.whatsappVendedor?.message}>
-                <input {...register("whatsappVendedor")} placeholder="(00) 00000-0000" className={inputClass} />
+                <input
+                  value={whatsapp}
+                  onChange={(e) => setValue("whatsappVendedor", maskPhone(e.target.value), { shouldValidate: false })}
+                  placeholder="+55 (00) 00000-0000"
+                  inputMode="numeric"
+                  className={inputClass}
+                />
               </Field>
 
               <Field label="E-mail" required error={errors.emailVendedor?.message}>

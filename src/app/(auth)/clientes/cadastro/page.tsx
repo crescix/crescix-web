@@ -8,6 +8,7 @@ import {
   User, ChevronLeft, Save, X, CheckCircle2, AlertCircle, Loader2,
 } from "lucide-react";
 import { createCliente } from "@/services/clientes";
+import { maskCPF, maskPhone } from "@/lib/utils/masks";
 
 const inputClass =
   "w-full px-3.5 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/25 focus:outline-none focus:border-green-500/50 transition-colors";
@@ -106,8 +107,9 @@ export default function CadastroCliente() {
                 <label className="block text-xs font-bold text-white/50 uppercase tracking-wider">CPF</label>
                 <input
                   value={form.cpf}
-                  onChange={(e) => setForm({ ...form, cpf: e.target.value })}
+                  onChange={(e) => setForm({ ...form, cpf: maskCPF(e.target.value) })}
                   placeholder="000.000.000-00"
+                  inputMode="numeric"
                   className={inputClass}
                 />
               </div>
@@ -115,8 +117,9 @@ export default function CadastroCliente() {
                 <label className="block text-xs font-bold text-white/50 uppercase tracking-wider">Telefone</label>
                 <input
                   value={form.telefone}
-                  onChange={(e) => setForm({ ...form, telefone: e.target.value })}
-                  placeholder="(11) 99999-9999"
+                  onChange={(e) => setForm({ ...form, telefone: maskPhone(e.target.value) })}
+                  placeholder="+55 (11) 99999-9999"
+                  inputMode="numeric"
                   className={inputClass}
                 />
               </div>
