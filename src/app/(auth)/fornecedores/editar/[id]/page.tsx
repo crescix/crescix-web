@@ -1,18 +1,26 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useParams, useRouter } from "next/navigation";
+import axios from "axios";
 import {
   Building2, User, CreditCard, Save, X, Upload, ChevronLeft,
+  Loader2, AlertCircle,
 } from "lucide-react";
-import { fornecedorSchema, FornecedorFormData } from "@/lib/validations/fornecedor/cadastro";
-import { fornecedoresData } from "@/lib/data/fornecedores";
+import {
+  fornecedorSchema,
+  FornecedorFormData,
+} from "@/lib/validations/fornecedor/cadastro";
+import {
+  getFornecedor,
+  updateFornecedor,
+  type Fornecedor,
+} from "@/services/fornecedores";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-// ─── Campo reutilizável ───────────────────────────────────────────────────────
 function Field({
   label, required, error, children, className = "",
 }: {
@@ -40,7 +48,6 @@ const inputClass =
 const selectClass =
   "w-full px-3.5 py-2.5 text-sm bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-green-500/50 transition-colors cursor-pointer";
 
-// ─── Seção ────────────────────────────────────────────────────────────────────
 function Section({
   icon: Icon, title, number, children,
 }: {
@@ -65,12 +72,14 @@ function Section({
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 export default function EditarFornecedor() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
 
-  const fornecedor = fornecedoresData.find((f) => f.id === id);
+  const [fornecedor, setFornecedor] = useState<Fornecedor | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
     register,
@@ -81,37 +90,70 @@ export default function EditarFornecedor() {
     resolver: zodResolver(fornecedorSchema),
   });
 
+  // ─── Carrega o fornecedor da API ──────────────────────────────────────────
   useEffect(() => {
-    if (fornecedor) {
-      reset({
-        razaoSocial:       fornecedor.razaoSocial       ?? "",
-        cnpj:              fornecedor.cnpj              ?? "",
-        endereco:          fornecedor.endereco          ?? "",
-        bairro:            fornecedor.bairro            ?? "",
-        numero:            fornecedor.numero            ?? "",
-        ramoAtividade:     fornecedor.ramoAtividade     ?? "",
-        nomeVendedor:      fornecedor.nomeVendedor      ?? "",
-        whatsappVendedor:  fornecedor.whatsappVendedor  ?? "",
-        emailVendedor:     fornecedor.emailVendedor     ?? "",
-        siteCatalogo:      fornecedor.siteCatalogo      ?? "",
-        chavePix:          fornecedor.chavePix          ?? "",
-        banco:             fornecedor.banco             ?? "",
-        agencia:           fornecedor.agencia           ?? "",
-        conta:             fornecedor.conta             ?? "",
-        condicaoPagamento: fornecedor.condicaoPagamento ?? "",
+    if (!id) return;
+    let cancelled = false;
+    setLoading(true);
+    setLoadError(null);
+    getFornecedor(id)
+      .then((data) => {
+        if (cancelled) return;
+        setFornecedor(data);
+        reset({
+          razaoSocial:       data.razaoSocial,
+          cnpj:              data.cnpj,
+          endereco:          data.endereco,
+          type:              data.type,
+          bairro:            data.bairro ?? "",
+          numero:            data.numero ?? "",
+          ramoAtividade:     data.ramoAtividade ?? "",
+          nomeVendedor:      data.nomeVendedor ?? "",
+          whatsappVendedor:  data.whatsappVendedor ?? "",
+          emailVendedor:     data.emailVendedor ?? "",
+          siteCatalogo:      data.siteCatalogo ?? "",
+          chavePix:          data.chavePix ?? "",
+          banco:             data.banco ?? "",
+          agencia:           data.agencia ?? "",
+          conta:             data.conta ?? "",
+          condicaoPagamento: data.condicaoPagamento ?? "",
+        });
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        const message =
+          axios.isAxiosError(err) && err.response?.status === 404
+            ? "Fornecedor não encontrado."
+            : "Erro ao carregar o fornecedor.";
+        setLoadError(message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
       });
-    }
-  }, [fornecedor, reset]);
+    return () => { cancelled = true; };
+  }, [id, reset]);
 
-  // Fornecedor não encontrado
-  if (!fornecedor) {
+  // ─── Loading state ───────────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <div className="w-full min-h-screen bg-secondary flex items-center justify-center p-8">
+        <div className="flex items-center gap-3 text-white/60">
+          <Loader2 className="w-5 h-5 animate-spin text-green-400" />
+          <span className="text-sm">Carregando fornecedor...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Erro de carga / não encontrado ──────────────────────────────────────
+  if (loadError || !fornecedor) {
     return (
       <div className="w-full min-h-screen bg-secondary flex items-center justify-center p-8">
         <div className="text-center space-y-4">
           <div className="bg-red-500/10 rounded-2xl p-6 inline-block">
             <Building2 className="w-8 h-8 text-red-400 mx-auto" />
           </div>
-          <p className="text-white/80 font-medium">Fornecedor não encontrado.</p>
+          <p className="text-white/80 font-medium">{loadError ?? "Fornecedor não encontrado."}</p>
           <Link
             href="/fornecedores"
             className="inline-flex items-center gap-2 text-green-400 hover:underline text-sm"
@@ -124,10 +166,36 @@ export default function EditarFornecedor() {
     );
   }
 
+  // ─── Submit ──────────────────────────────────────────────────────────────
   const onSubmit = async (data: FornecedorFormData) => {
-    console.log("Dados atualizados:", data);
-    // Chamada para API quando disponível: await api.put(`/fornecedores/${id}`, data)
-    router.push("/fornecedores");
+    setSubmitError(null);
+    try {
+      await updateFornecedor(id, {
+        razaoSocial: data.razaoSocial,
+        cnpj: data.cnpj,
+        endereco: data.endereco,
+        type: data.type,
+        bairro: data.bairro,
+        numero: data.numero,
+        ramoAtividade: data.ramoAtividade,
+        nomeVendedor: data.nomeVendedor,
+        whatsappVendedor: data.whatsappVendedor,
+        emailVendedor: data.emailVendedor,
+        siteCatalogo: data.siteCatalogo || undefined,
+        chavePix: data.chavePix,
+        banco: data.banco,
+        agencia: data.agencia,
+        conta: data.conta,
+        condicaoPagamento: data.condicaoPagamento,
+      });
+      router.push("/fornecedores");
+    } catch (err) {
+      const message =
+        axios.isAxiosError(err) && err.response?.data?.message
+          ? err.response.data.message
+          : "Erro ao salvar as alterações. Tente novamente.";
+      setSubmitError(message);
+    }
   };
 
   return (
@@ -184,14 +252,23 @@ export default function EditarFornecedor() {
                 />
               </Field>
 
+              <Field label="Tipo" required error={errors.type?.message}>
+                <select {...register("type")} className={selectClass}>
+                  <option value="">Selecione...</option>
+                  <option value="COMERCIO">Comércio</option>
+                  <option value="INDUSTRIA">Indústria</option>
+                  <option value="SERVICO">Serviço</option>
+                </select>
+              </Field>
+
               <Field label="Ramo de Atividade" required error={errors.ramoAtividade?.message}>
                 <select {...register("ramoAtividade")} className={selectClass}>
-                  <option value="" className="bg-primary">Selecione...</option>
-                  <option value="alimentos" className="bg-primary">Alimentos</option>
-                  <option value="tecnologia" className="bg-primary">Tecnologia</option>
-                  <option value="servicos" className="bg-primary">Serviços</option>
-                  <option value="industria" className="bg-primary">Indústria</option>
-                  <option value="comercio" className="bg-primary">Comércio</option>
+                  <option value="">Selecione...</option>
+                  <option value="alimentos">Alimentos</option>
+                  <option value="tecnologia">Tecnologia</option>
+                  <option value="servicos">Serviços</option>
+                  <option value="industria">Indústria</option>
+                  <option value="comercio">Comércio</option>
                 </select>
               </Field>
 
@@ -211,7 +288,7 @@ export default function EditarFornecedor() {
                 <input {...register("numero")} className={inputClass} />
               </Field>
 
-              {/* Upload de logo */}
+              {/* Upload de logo (placeholder) */}
               <div className="md:col-span-4">
                 <label className="block text-xs font-bold text-white/50 uppercase tracking-wider mb-1.5">
                   Logo da Empresa
@@ -301,6 +378,23 @@ export default function EditarFornecedor() {
             </div>
           </Section>
 
+          {/* Erro do submit */}
+          {submitError && (
+            <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+              <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-red-400 text-sm font-medium">{submitError}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSubmitError(null)}
+                className="text-red-400/60 hover:text-red-400"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+
           {/* BOTÕES */}
           <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
             <Link href="/fornecedores">
@@ -318,7 +412,11 @@ export default function EditarFornecedor() {
               disabled={isSubmitting || !isDirty}
               className="w-full sm:w-auto bg-green-500 hover:bg-green-400 text-white font-bold rounded-full px-6 transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
-              <Save className="mr-2 h-4 w-4" />
+              {isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
               {isSubmitting ? "Salvando..." : "Salvar Alterações"}
             </Button>
           </div>

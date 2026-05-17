@@ -1,10 +1,13 @@
 "use client";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Building2, User, CreditCard, Save, X, Upload, ChevronLeft, CheckCircle2 } from "lucide-react";
+import { Building2, User, CreditCard, Save, X, Upload, ChevronLeft, CheckCircle2, AlertCircle } from "lucide-react";
 import { fornecedorSchema, FornecedorFormData } from "@/lib/validations/fornecedor/cadastro";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import axios from "axios";
+import { createFornecedor } from "@/services/fornecedores";
 
 function Field({ label, required, error, children, className = "" }: {
   label: string; required?: boolean; error?: string; children: React.ReactNode; className?: string;
@@ -43,14 +46,42 @@ function Section({ icon: Icon, title, number, children }: {
 }
 
 export default function CadastroFornecedor() {
+  const router = useRouter();
   const [modal, setModal] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FornecedorFormData>({
     resolver: zodResolver(fornecedorSchema),
   });
 
   const onSubmit = async (data: FornecedorFormData) => {
-    console.log("Dados do Fornecedor:", data);
-    setModal(true);
+    setSubmitError(null);
+    try {
+      await createFornecedor({
+        razaoSocial: data.razaoSocial,
+        cnpj: data.cnpj,
+        endereco: data.endereco,
+        type: data.type,
+        bairro: data.bairro,
+        numero: data.numero,
+        ramoAtividade: data.ramoAtividade,
+        nomeVendedor: data.nomeVendedor,
+        whatsappVendedor: data.whatsappVendedor,
+        emailVendedor: data.emailVendedor,
+        siteCatalogo: data.siteCatalogo || undefined,
+        chavePix: data.chavePix,
+        banco: data.banco,
+        agencia: data.agencia,
+        conta: data.conta,
+        condicaoPagamento: data.condicaoPagamento,
+      });
+      setModal(true);
+    } catch (err) {
+      const message =
+        axios.isAxiosError(err) && err.response?.data?.message
+          ? err.response.data.message
+          : "Erro ao cadastrar o fornecedor. Tente novamente.";
+      setSubmitError(message);
+    }
   };
 
   return (
@@ -86,14 +117,23 @@ export default function CadastroFornecedor() {
                 <input {...register("cnpj")} placeholder="00.000.000/0000-00" className={inputClass} />
               </Field>
 
+              <Field label="Tipo" required error={errors.type?.message}>
+                <select {...register("type")} defaultValue="" className={selectClass}>
+                  <option value="" disabled>Selecione...</option>
+                  <option value="COMERCIO">Comércio</option>
+                  <option value="INDUSTRIA">Indústria</option>
+                  <option value="SERVICO">Serviço</option>
+                </select>
+              </Field>
+
               <Field label="Ramo de Atividade" required error={errors.ramoAtividade?.message}>
-                <select {...register("ramoAtividade")} className={selectClass}>
-                  <option value="" className="bg-[#0f2f52]">Selecione...</option>
-                  <option value="alimentos" className="bg-[#0f2f52]">Alimentos</option>
-                  <option value="tecnologia" className="bg-[#0f2f52]">Tecnologia</option>
-                  <option value="servicos" className="bg-[#0f2f52]">Serviços</option>
-                  <option value="industria" className="bg-[#0f2f52]">Indústria</option>
-                  <option value="comercio" className="bg-[#0f2f52]">Comércio</option>
+                <select {...register("ramoAtividade")} defaultValue="" className={selectClass}>
+                  <option value="" disabled>Selecione...</option>
+                  <option value="alimentos">Alimentos</option>
+                  <option value="tecnologia">Tecnologia</option>
+                  <option value="servicos">Serviços</option>
+                  <option value="industria">Indústria</option>
+                  <option value="comercio">Comércio</option>
                 </select>
               </Field>
 
@@ -176,6 +216,23 @@ export default function CadastroFornecedor() {
             </div>
           </Section>
 
+          {/* Erro do submit */}
+          {submitError && (
+            <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+              <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-red-400 text-sm font-medium">{submitError}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSubmitError(null)}
+                className="text-red-400/60 hover:text-red-400"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+
           {/* BOTÕES */}
           <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
             <Link href="/fornecedores">
@@ -185,7 +242,7 @@ export default function CadastroFornecedor() {
               </button>
             </Link>
             <button type="submit" disabled={isSubmitting}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-2.5 rounded-xl bg-green-500 hover:bg-green-400 text-white text-sm font-bold transition-all active:scale-95 disabled:opacity-60">
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-2.5 rounded-xl bg-green-500 hover:bg-green-400 text-white text-sm font-bold transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed">
               <Save className="w-4 h-4" />
               {isSubmitting ? "Cadastrando..." : "Cadastrar Fornecedor"}
             </button>
@@ -204,9 +261,10 @@ export default function CadastroFornecedor() {
               </div>
             </div>
             <h2 className="text-white font-bold text-lg">Fornecedor cadastrado com sucesso!</h2>
-            <button onClick={() => setModal(false)}
+            <button
+              onClick={() => { setModal(false); router.push("/fornecedores"); }}
               className="w-full h-10 rounded-xl bg-green-500 hover:bg-green-400 text-white text-sm font-bold transition-all active:scale-95">
-              OK
+              Ver lista
             </button>
           </div>
         </div>
