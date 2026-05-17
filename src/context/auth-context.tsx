@@ -8,12 +8,12 @@ import {
   ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
 import {
   api,
   STORAGE_TOKEN_KEY,
   STORAGE_USER_KEY,
 } from "@/services/api/axios-config";
+import { extractApiError } from "@/lib/utils/api-errors";
 import {
   AuthContextData,
   AuthResponse,
@@ -23,21 +23,6 @@ import {
 } from "@/types/auth";
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
-
-/**
- * Extrai mensagem amigável de um erro da API.
- * O backend devolve { error, message, statusCode } padronizado.
- */
-function extractApiError(err: unknown, fallback: string): string {
-  if (axios.isAxiosError(err)) {
-    const data = err.response?.data as
-      | { message?: string; error?: string }
-      | undefined;
-    return data?.message || err.message || fallback;
-  }
-  if (err instanceof Error) return err.message;
-  return fallback;
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
