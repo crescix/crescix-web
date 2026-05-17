@@ -18,17 +18,11 @@ import { OrcamentoItem } from "@/components/vendas/orcamento-item";
 import { ModalExclusaoOrcamento } from "@/components/vendas/modal-exclusao-orcamento";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { extractApiError } from "@/lib/utils/api-errors";
 import {
   Table, TableBody, TableCell,
   TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-
-function extractMessage(err: unknown, fallback: string): string {
-  if (axios.isAxiosError(err) && err.response?.data?.message) {
-    return err.response.data.message;
-  }
-  return fallback;
-}
 
 const ITEMS_PER_PAGE = 8;
 
@@ -59,7 +53,7 @@ export default function OrcamentosPage() {
         });
         setData(result.data);
       } catch (err) {
-        setError(extractMessage(err, "Não foi possível carregar os orçamentos."));
+        setError(extractApiError(err, "Não foi possível carregar os orçamentos."));
       }
     },
     []
@@ -109,7 +103,7 @@ export default function OrcamentosPage() {
       setOrcamentoAlvo(null);
       setModalOpen(false);
     } catch (err) {
-      setError(extractMessage(err, "Erro ao excluir o orçamento."));
+      setError(extractApiError(err, "Erro ao excluir o orçamento."));
     } finally {
       setIsDeleting(false);
     }
@@ -144,7 +138,7 @@ export default function OrcamentosPage() {
         </div>
 
         {error && (
-          <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+          <div className="flex flex-wrap items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
             <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
               <p className="text-red-400 text-sm font-medium">{error}</p>

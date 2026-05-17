@@ -38,6 +38,7 @@ import { ModalExclusaoConta } from "@/components/financeiro/modal-exclusao-conta
 import { ContaReceberForm } from "./_components/conta-receber-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { extractApiError } from "@/lib/utils/api-errors";
 import {
   Table,
   TableBody,
@@ -48,13 +49,6 @@ import {
 } from "@/components/ui/table";
 
 const ITEMS_PER_PAGE = 8;
-
-function extractMessage(err: unknown, fallback: string): string {
-  if (axios.isAxiosError(err) && err.response?.data?.message) {
-    return err.response.data.message;
-  }
-  return fallback;
-}
 
 export default function ContasReceberPage() {
   const [data, setData] = useState<ContaReceber[]>([]);
@@ -98,7 +92,7 @@ export default function ContasReceberPage() {
       });
       setData(res.data);
     } catch (err) {
-      setLoadError(extractMessage(err, "Erro ao carregar contas a receber."));
+      setLoadError(extractApiError(err, "Erro ao carregar contas a receber."));
     } finally {
       setLoading(false);
     }
@@ -171,7 +165,7 @@ export default function ContasReceberPage() {
       setDeleteOpen(false);
       fetchData();
     } catch (err) {
-      setLoadError(extractMessage(err, "Erro ao excluir conta."));
+      setLoadError(extractApiError(err, "Erro ao excluir conta."));
     } finally {
       setIsDeleting(false);
     }
@@ -186,7 +180,7 @@ export default function ContasReceberPage() {
       });
       fetchData();
     } catch (err) {
-      setLoadError(extractMessage(err, "Erro ao marcar como recebido."));
+      setLoadError(extractApiError(err, "Erro ao marcar como recebido."));
     } finally {
       setMarkingReceivedId(null);
     }
@@ -228,7 +222,7 @@ export default function ContasReceberPage() {
 
         {/* Erro */}
         {loadError && (
-          <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+          <div className="flex flex-wrap items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
             <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
             <p className="flex-1 text-red-400 text-sm font-medium">{loadError}</p>
             <button

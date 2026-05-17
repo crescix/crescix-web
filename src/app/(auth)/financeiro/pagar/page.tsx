@@ -38,6 +38,7 @@ import { ModalExclusaoConta } from "@/components/financeiro/modal-exclusao-conta
 import { ContaPagarForm } from "./_components/conta-pagar-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { extractApiError } from "@/lib/utils/api-errors";
 import {
   Table,
   TableBody,
@@ -48,13 +49,6 @@ import {
 } from "@/components/ui/table";
 
 const ITEMS_PER_PAGE = 8;
-
-function extractMessage(err: unknown, fallback: string): string {
-  if (axios.isAxiosError(err) && err.response?.data?.message) {
-    return err.response.data.message;
-  }
-  return fallback;
-}
 
 export default function ContasPagarPage() {
   const [data, setData] = useState<ContaPagar[]>([]);
@@ -96,7 +90,7 @@ export default function ContasPagarPage() {
       });
       setData(res.data);
     } catch (err) {
-      setLoadError(extractMessage(err, "Erro ao carregar contas a pagar."));
+      setLoadError(extractApiError(err, "Erro ao carregar contas a pagar."));
     } finally {
       setLoading(false);
     }
@@ -169,7 +163,7 @@ export default function ContasPagarPage() {
       setDeleteOpen(false);
       fetchData();
     } catch (err) {
-      setLoadError(extractMessage(err, "Erro ao excluir conta."));
+      setLoadError(extractApiError(err, "Erro ao excluir conta."));
     } finally {
       setIsDeleting(false);
     }
@@ -184,7 +178,7 @@ export default function ContasPagarPage() {
       });
       fetchData();
     } catch (err) {
-      setLoadError(extractMessage(err, "Erro ao marcar como pago."));
+      setLoadError(extractApiError(err, "Erro ao marcar como pago."));
     } finally {
       setMarkingPaidId(null);
     }
@@ -226,7 +220,7 @@ export default function ContasPagarPage() {
 
         {/* Erro */}
         {loadError && (
-          <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+          <div className="flex flex-wrap items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
             <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
             <p className="flex-1 text-red-400 text-sm font-medium">{loadError}</p>
             <button

@@ -8,16 +8,10 @@ import {
   Package, ChevronLeft, Save, X, CheckCircle2, AlertCircle, Loader2,
 } from "lucide-react";
 import { createProduto } from "@/services/produtos";
+import { extractApiError } from "@/lib/utils/api-errors";
 
 const inputClass =
   "w-full px-3.5 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/25 focus:outline-none focus:border-green-500/50 transition-colors";
-
-function extractMessage(err: unknown, fallback: string): string {
-  if (axios.isAxiosError(err) && err.response?.data?.message) {
-    return err.response.data.message;
-  }
-  return fallback;
-}
 
 export default function CadastroProduto() {
   const router = useRouter();
@@ -52,7 +46,7 @@ export default function CadastroProduto() {
       });
       setSuccess(true);
     } catch (err) {
-      setError(extractMessage(err, "Erro ao cadastrar o produto. Tente novamente."));
+      setError(extractApiError(err, "Erro ao cadastrar o produto. Tente novamente."));
     } finally {
       setSaving(false);
     }
@@ -143,7 +137,7 @@ export default function CadastroProduto() {
           </div>
 
           {error && (
-            <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+            <div className="flex flex-wrap items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
               <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
               <p className="text-red-400 text-sm font-medium flex-1">{error}</p>
               <button type="button" onClick={() => setError(null)} className="text-red-400/60 hover:text-red-400">

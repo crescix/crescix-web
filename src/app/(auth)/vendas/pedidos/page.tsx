@@ -20,6 +20,7 @@ import { listPedidos, deletePedido } from "@/services/pedidos";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { extractApiError } from "@/lib/utils/api-errors";
 import {
   Table, TableBody, TableCell,
   TableHead, TableHeader, TableRow,
@@ -29,13 +30,6 @@ function formatBRL(value: string | number): string {
   const n = typeof value === "string" ? parseFloat(value) : value;
   if (Number.isNaN(n)) return "0,00";
   return n.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
-}
-
-function extractMessage(err: unknown, fallback: string): string {
-  if (axios.isAxiosError(err) && err.response?.data?.message) {
-    return err.response.data.message;
-  }
-  return fallback;
 }
 
 const ITEMS_PER_PAGE = 8;
@@ -65,7 +59,7 @@ export default function PedidosPage() {
         });
         setData(result.data);
       } catch (err) {
-        setError(extractMessage(err, "Não foi possível carregar os pedidos."));
+        setError(extractApiError(err, "Não foi possível carregar os pedidos."));
       }
     },
     []
@@ -114,7 +108,7 @@ export default function PedidosPage() {
       setData((prev) => prev.filter((p) => p.id !== excluindo.id));
       setExcluindo(null);
     } catch (err) {
-      setError(extractMessage(err, "Erro ao excluir o pedido."));
+      setError(extractApiError(err, "Erro ao excluir o pedido."));
     } finally {
       setIsDeleting(false);
     }
@@ -149,7 +143,7 @@ export default function PedidosPage() {
         </div>
 
         {error && (
-          <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+          <div className="flex flex-wrap items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
             <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
               <p className="text-red-400 text-sm font-medium">{error}</p>

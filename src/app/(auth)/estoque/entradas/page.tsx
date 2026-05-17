@@ -30,13 +30,7 @@ import {
 } from "@/services/movimentos-estoque";
 import { listProdutos, type Produto } from "@/services/produtos";
 import { listFornecedores, type Fornecedor } from "@/services/fornecedores";
-
-function extractMessage(err: unknown, fallback: string): string {
-  if (axios.isAxiosError(err) && err.response?.data?.message) {
-    return err.response.data.message;
-  }
-  return fallback;
-}
+import { extractApiError } from "@/lib/utils/api-errors";
 
 const inputClass =
   "w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:outline-none focus:border-green-500/50 text-sm transition-colors";
@@ -136,7 +130,7 @@ export default function EntradasEstoque() {
       setProdutos(prodRes.data);
       setFornecedores(fornRes.data);
     } catch (err) {
-      setLoadError(extractMessage(err, "Erro ao carregar entradas."));
+      setLoadError(extractApiError(err, "Erro ao carregar entradas."));
     } finally {
       setLoading(false);
     }
@@ -177,7 +171,7 @@ export default function EntradasEstoque() {
       setSucesso("Entrada registrada com sucesso!");
       fetchData();
     } catch (err) {
-      setSubmitError(extractMessage(err, "Erro ao registrar entrada."));
+      setSubmitError(extractApiError(err, "Erro ao registrar entrada."));
     } finally {
       setSubmitting(false);
     }
@@ -192,7 +186,7 @@ export default function EntradasEstoque() {
       setSucesso("Entrada excluída com sucesso!");
       fetchData();
     } catch (err) {
-      setLoadError(extractMessage(err, "Erro ao excluir entrada."));
+      setLoadError(extractApiError(err, "Erro ao excluir entrada."));
     } finally {
       setIsDeleting(false);
     }
@@ -210,7 +204,7 @@ export default function EntradasEstoque() {
     <div className="w-full min-h-screen bg-secondary p-4 md:p-8 flex flex-col items-center">
       <div className="w-full max-w-6xl space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.back()}
@@ -242,7 +236,7 @@ export default function EntradasEstoque() {
 
         {/* Erro de load */}
         {loadError && (
-          <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+          <div className="flex flex-wrap items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
             <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
             <p className="flex-1 text-red-400 text-sm font-medium">{loadError}</p>
             <button

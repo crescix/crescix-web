@@ -35,6 +35,7 @@ import {
 import { listClientes, type Cliente } from "@/services/clientes";
 import { listProdutos, type Produto } from "@/services/produtos";
 import { getOrcamento, type Orcamento } from "@/services/orcamentos";
+import { extractApiError } from "@/lib/utils/api-errors";
 
 interface PedidoFormProps {
   mode: "novo" | "editar";
@@ -62,13 +63,6 @@ function newItem(): ItemForm {
 
 function formatBRL(v: number): string {
   return v.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
-}
-
-function extractMessage(err: unknown, fallback: string): string {
-  if (axios.isAxiosError(err) && err.response?.data?.message) {
-    return err.response.data.message;
-  }
-  return fallback;
 }
 
 export function PedidoForm({ mode, pedidoId }: PedidoFormProps) {
@@ -167,7 +161,7 @@ export function PedidoForm({ mode, pedidoId }: PedidoFormProps) {
         const message =
           mode === "editar" && axios.isAxiosError(err) && err.response?.status === 404
             ? "Pedido não encontrado."
-            : extractMessage(err, "Erro ao carregar dados do pedido.");
+            : extractApiError(err, "Erro ao carregar dados do pedido.");
         setLoadError(message);
       })
       .finally(() => {
@@ -276,7 +270,7 @@ export function PedidoForm({ mode, pedidoId }: PedidoFormProps) {
       router.push("/vendas/pedidos");
     } catch (err) {
       setSubmitError(
-        extractMessage(
+        extractApiError(
           err,
           mode === "novo" ? "Erro ao criar o pedido." : "Erro ao salvar as alterações."
         )
@@ -411,7 +405,7 @@ export function PedidoForm({ mode, pedidoId }: PedidoFormProps) {
         )}
 
         {submitError && (
-          <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+          <div className="flex flex-wrap items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
             <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
             <p className="flex-1 text-red-400 text-sm font-medium">{submitError}</p>
             <button
