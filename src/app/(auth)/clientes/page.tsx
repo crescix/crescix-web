@@ -1,371 +1,412 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Search, X, Pencil, Trash2, AlertCircle, Users, ChevronLeft } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import axios from "axios";
+import {
+  Plus, Search, X, Pencil, Trash2, AlertCircle, Users,
+  Loader2, AlertTriangle, Save,
+} from "lucide-react";
+import {
+  listClientes,
+  updateCliente,
+  deleteCliente,
+  type Cliente,
+  type ClienteUpdate,
+} from "@/services/clientes";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
-type Cliente = {
-id: number;
-cpf: string;
-nome: string;
-telefone: string;
-status: "ativo" | "inativo";
-};
+const inputClass =
+  "w-full h-10 px-3 rounded-lg bg-white/5 text-white border border-white/10 placeholder:text-white/25 focus:outline-none focus:border-green-500/50 text-sm transition-colors";
+const selectClass =
+  "w-full h-10 px-3 rounded-lg bg-white/5 text-white border border-white/10 focus:outline-none focus:border-green-500/50 text-sm transition-colors";
 
-export default function Clientes() {
-const router = useRouter();
-
-const [clientes, setClientes] = useState<Cliente[]>(() => {
-if (typeof window === "undefined") return [];
-
-const dados = localStorage.getItem("clientes");
-if (dados) return JSON.parse(dados);
-
-const mock: Cliente[] = [
-    { id: 123, cpf: "123.456.789-10", nome: "Ana Silva", telefone: "(11) 2222-3333", status: "ativo" },
-    { id: 456, cpf: "987.654.321-00", nome: "Bruno Souza", telefone: "(21) 4444-5555", status: "inativo" },
-    { id: 789, cpf: "111.222.333-44", nome: "Ana Paula", telefone: "(11) 9999-8888", status: "ativo" },
-];
-
-localStorage.setItem("clientes", JSON.stringify(mock));
-return mock;
-});
-
-const [resultado, setResultado] = useState<Cliente[]>([]);
-const [buscou, setBuscou] = useState(false);
-const [modalEditar, setModalEditar] = useState(false);
-const [clienteEditando, setClienteEditando] = useState<Cliente | null>(null);
-const [modalExcluir, setModalExcluir] = useState<"confirmar" | "final" | null>(null);
-const [clienteParaExcluir, setClienteParaExcluir] = useState<Cliente | null>(null);
-
-function buscarClientes(e: React.FormEvent) {
-e.preventDefault();
-const nome = (document.getElementById("nome") as HTMLInputElement).value.toLowerCase();
-const cpf = (document.getElementById("cpf") as HTMLInputElement).value;
-const situacao = (document.getElementById("situacao") as HTMLSelectElement).value;
-
-const filtrados = clientes.filter((cliente) => {
-    const matchNome = nome === "" || cliente.nome.toLowerCase().includes(nome) || cliente.id.toString().includes(nome);
-    const matchCpf = cpf === "" || cliente.cpf.includes(cpf);
-    const matchStatus = situacao === "" || cliente.status === situacao;
-    return matchNome && matchCpf && matchStatus;
-});
-
-setResultado(filtrados);
-setBuscou(true);
+function extractMessage(err: unknown, fallback: string): string {
+  if (axios.isAxiosError(err) && err.response?.data?.message) {
+    return err.response.data.message;
+  }
+  return fallback;
 }
 
-function limparFiltros() {
-setResultado([]);
-setBuscou(false);
-(document.getElementById("nome") as HTMLInputElement).value = "";
-(document.getElementById("cpf") as HTMLInputElement).value = "";
-(document.getElementById("situacao") as HTMLSelectElement).value = "";
-}
+export default function ClientesPage() {
+  const [lista, setLista] = useState<Cliente[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState<"" | "ATIVO" | "INATIVO">("");
+  const [editando, setEditando] = useState<Cliente | null>(null);
+  const [excluindo, setExcluindo] = useState<Cliente | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-function salvarAlteracao(e: React.FormEvent) {
-e.preventDefault();
-if (!clienteEditando) return;
+  const doFetch = useCallback(async (s: string, st: "" | "ATIVO" | "INATIVO") => {
+    setError(null);
+    try {
+      const result = await listClientes({
+        limit: 100,
+        ...(s.trim() && { search: s.trim() }),
+        ...(st && { status: st }),
+      });
+      setLista(result.data);
+    } catch (err) {
+      setError(extractMessage(err, "Não foi possível carregar os clientes."));
+    }
+  }, []);
 
-const atualizados = clientes.map((c) => c.id === clienteEditando.id ? clienteEditando : c);
-setClientes(atualizados);
-setResultado(atualizados);
-localStorage.setItem("clientes", JSON.stringify(atualizados));
-setModalEditar(false);
-setClienteEditando(null);
-}
+  useEffect(() => {
+    setLoading(true);
+    doFetch("", "").finally(() => setLoading(false));
+  }, [doFetch]);
 
-const abrirModalExcluir = (cliente: Cliente) => {
-setClienteParaExcluir(cliente);
-setModalExcluir("confirmar");
-};
+  useEffect(() => {
+    if (loading) return;
+    const h = setTimeout(() => doFetch(search, status), 300);
+    return () => clearTimeout(h);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, status]);
 
-const excluirClienteDefinitivo = () => {
-if (!clienteParaExcluir) return;
-const atualizados = clientes.filter((c) => c.id !== clienteParaExcluir.id);
-setClientes(atualizados);
-setResultado(atualizados);
-localStorage.setItem("clientes", JSON.stringify(atualizados));
-setModalExcluir(null);
-setClienteParaExcluir(null);
-};
+  async function confirmarExclusao() {
+    if (!excluindo) return;
+    setIsDeleting(true);
+    try {
+      await deleteCliente(excluindo.id);
+      setLista((prev) => prev.filter((c) => c.id !== excluindo.id));
+      setExcluindo(null);
+    } catch (err) {
+      setError(extractMessage(err, "Erro ao excluir o cliente."));
+    } finally {
+      setIsDeleting(false);
+    }
+  }
 
-return (
-<div className="w-full min-h-screen bg-secondary p-4 md:p-8 flex flex-col items-center">
-    <div className="w-full max-w-5xl space-y-6">
+  return (
+    <>
+      {editando && (
+        <ModalEditar
+          cliente={editando}
+          onClose={() => setEditando(null)}
+          onSaved={(updated) => {
+            setLista((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+            setEditando(null);
+          }}
+        />
+      )}
 
-    {/* Header */}
-    <div className="flex items-center gap-4">
-        <button
-        onClick={() => router.back()}
-        className="p-2 rounded-xl text-white/50 hover:bg-white/10 border border-transparent hover:border-white/10 transition-all"
-        >
-        <ChevronLeft className="w-5 h-5" />
-        </button>
-        <div>
-        <p className="text-white/40 text-xs font-medium uppercase tracking-widest mb-1">
-            Cadastros / Clientes
-        </p>
-        <h1 className="text-3xl font-black text-white tracking-tighter">
-            Filtro de Clientes
-        </h1>
-        </div>
-    </div>
+      {excluindo && (
+        <ModalExcluir
+          cliente={excluindo}
+          isDeleting={isDeleting}
+          onConfirm={confirmarExclusao}
+          onCancel={() => setExcluindo(null)}
+        />
+      )}
 
-    {/* Card de Filtro */}
-    <div className="bg-primary rounded-2xl border border-white/10 p-6 space-y-5">
-        <div className="flex items-center gap-3">
-        <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 text-xs font-bold flex items-center justify-center">
-            <Search className="h-3 w-3" />
-        </span>
-        <h2 className="text-base font-bold text-white">Buscar clientes</h2>
-        </div>
+      <div className="w-full min-h-screen bg-secondary p-4 md:p-8 flex flex-col items-center">
+        <div className="w-full max-w-6xl space-y-6">
 
-        <form onSubmit={buscarClientes} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <p className="text-white/60 text-xs font-medium uppercase tracking-widest mb-1">Cadastros</p>
+              <h1 className="text-3xl font-black text-white tracking-tighter">Clientes</h1>
+              <p className="text-sm text-white/40 mt-1">
+                {loading ? "Carregando..." : `${lista.length} ${lista.length === 1 ? "cliente" : "clientes"}`}
+              </p>
+            </div>
+            <Link href="/clientes/cadastro">
+              <Button className="bg-green-500 hover:bg-green-400 text-white font-bold rounded-full px-5 transition-all hover:scale-105 active:scale-95">
+                <Plus className="mr-2 h-4 w-4" />
+                Novo Cliente
+              </Button>
+            </Link>
+          </div>
+
+          {error && (
+            <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+              <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-red-400 text-sm font-medium">{error}</p>
+                <button
+                  onClick={() => {
+                    setError(null);
+                    setLoading(true);
+                    doFetch(search, status).finally(() => setLoading(false));
+                  }}
+                  className="text-xs text-red-300 hover:underline mt-1"
+                >
+                  Tentar novamente
+                </button>
+              </div>
+              <button onClick={() => setError(null)} className="text-red-400/60 hover:text-red-400">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_200px] gap-3 bg-primary p-4 rounded-2xl border border-white/5">
             <div className="space-y-1.5">
-            <label className="text-white/50 text-xs font-medium">Nome ou Código</label>
-            <input
-                id="nome"
-                placeholder="Busca por nome ou código"
-                className="w-full h-10 px-3 rounded-lg bg-white/5 text-white border border-white/10 placeholder:text-white/25 focus:outline-none focus:border-green-500/50 text-sm transition-colors"
-            />
+              <label className="text-white/50 text-xs font-medium block">Buscar por nome, CPF ou e-mail</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30" />
+                <Input
+                  placeholder="Buscar..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-8 bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-green-500/50 h-9 text-sm"
+                />
+              </div>
             </div>
-
             <div className="space-y-1.5">
-            <label className="text-white/50 text-xs font-medium">CPF</label>
-            <input
-                id="cpf"
-                placeholder="000.000.000-00"
-                className="w-full h-10 px-3 rounded-lg bg-white/5 text-white border border-white/10 placeholder:text-white/25 focus:outline-none focus:border-green-500/50 text-sm transition-colors"
-            />
+              <label className="text-white/50 text-xs font-medium block">Situação</label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as "" | "ATIVO" | "INATIVO")}
+                className={selectClass}
+              >
+                <option value="">Todos</option>
+                <option value="ATIVO">Ativo</option>
+                <option value="INATIVO">Inativo</option>
+              </select>
             </div>
-        </div>
+          </div>
 
-        <div className="space-y-1.5">
-            <label className="text-white/50 text-xs font-medium">Situação</label>
-            <select
-            id="situacao"
-            className="w-full h-10 px-3 rounded-lg bg-white/5 text-white border border-white/10 focus:outline-none focus:border-green-500/50 text-sm transition-colors"
-            >
-            <option value="" className="bg-[#0f2f52]">Todos</option>
-            <option value="ativo" className="bg-[#0f2f52]">Ativo</option>
-            <option value="inativo" className="bg-[#0f2f52]">Inativo</option>
-            </select>
-        </div>
-
-        <div className="flex justify-end gap-3 pt-1">
-            <button
-            type="button"
-            onClick={limparFiltros}
-            className="flex items-center gap-2 px-5 h-10 rounded-xl bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 text-sm font-semibold transition-all active:scale-95"
-            >
-            <X className="h-4 w-4" />
-            Limpar
-            </button>
-
-            <button
-            type="submit"
-            className="flex items-center gap-2 px-6 h-10 rounded-xl bg-green-500 hover:bg-green-400 text-white text-sm font-bold transition-all active:scale-95"
-            >
-            <Search className="h-4 w-4" />
-            Buscar
-            </button>
-        </div>
-        </form>
-    </div>
-
-    {/* Resultados */}
-    {buscou && (
-        <div className="bg-primary rounded-2xl border border-white/10 overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-            <div className="flex items-center gap-3">
-            <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 text-xs font-bold flex items-center justify-center">
-                <Users className="h-3 w-3" />
-            </span>
-            <h2 className="text-base font-bold text-white">Resultados</h2>
+          {loading ? (
+            <div className="bg-primary rounded-2xl border border-white/10 p-16 text-center">
+              <Loader2 className="w-8 h-8 text-green-400 mx-auto mb-3 animate-spin" />
+              <p className="text-sm text-white/40">Carregando clientes...</p>
             </div>
-            <span className="text-white/40 text-xs">
-            {resultado.length} {resultado.length === 1 ? "cliente encontrado" : "clientes encontrados"}
-            </span>
-        </div>
-
-        {resultado.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <Users className="h-8 w-8 text-white/15" />
-            <p className="text-white/30 text-sm">Nenhum cliente encontrado</p>
+          ) : lista.length === 0 && !error ? (
+            <div className="bg-primary rounded-2xl border border-white/10 p-16 text-center">
+              <Users className="w-10 h-10 text-white/15 mx-auto mb-3" />
+              <p className="text-sm text-white/40">
+                {search || status
+                  ? "Nenhum cliente encontrado para os filtros."
+                  : "Você ainda não cadastrou nenhum cliente."}
+              </p>
+              {!search && !status && (
+                <Link href="/clientes/cadastro" className="inline-block mt-3">
+                  <Button size="sm" className="bg-green-500 hover:bg-green-400 text-white font-bold">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Cadastrar primeiro
+                  </Button>
+                </Link>
+              )}
             </div>
-        ) : (
-            <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-                <thead>
-                <tr className="bg-white/5 border-b border-white/10">
-                    <th className="text-white/40 text-xs font-semibold text-left px-6 py-3">Código</th>
-                    <th className="text-white/40 text-xs font-semibold text-left px-4 py-3">CPF</th>
-                    <th className="text-white/40 text-xs font-semibold text-left px-4 py-3">Nome</th>
-                    <th className="text-white/40 text-xs font-semibold text-left px-4 py-3">Telefone</th>
-                    <th className="text-white/40 text-xs font-semibold text-center px-4 py-3">Status</th>
-                    <th className="text-white/40 text-xs font-semibold text-center px-6 py-3">Ações</th>
-                </tr>
-                </thead>
-                <tbody>
-                {resultado.map((cliente) => (
-                    <tr key={cliente.id} className="border-t border-white/5 hover:bg-white/5 transition-colors">
-                    <td className="px-6 py-4 text-white/40 font-mono text-xs">{cliente.id}</td>
-                    <td className="px-4 py-4 text-white/70">{cliente.cpf}</td>
-                    <td className="px-4 py-4 text-white font-medium">{cliente.nome}</td>
-                    <td className="px-4 py-4 text-white/70">{cliente.telefone}</td>
-                    <td className="px-4 py-4 text-center">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase ${
-                        cliente.status === "ativo"
-                            ? "bg-green-500/20 text-green-400"
-                            : "bg-red-500/20 text-red-400"
-                        }`}>
-                        {cliente.status}
-                        </span>
-                    </td>
-                    <td className="px-6 py-4">
-                        <div className="flex justify-center gap-2">
-                        <button
-                            onClick={() => { setClienteEditando(cliente); setModalEditar(true); }}
-                            className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-green-500/10 hover:bg-green-500/20 text-green-400 text-xs font-semibold transition-all active:scale-95"
-                        >
-                            <Pencil className="h-3 w-3" />
-                            Alterar
-                        </button>
-                        <button
-                            onClick={() => abrirModalExcluir(cliente)}
-                            className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold transition-all active:scale-95"
-                        >
-                            <Trash2 className="h-3 w-3" />
-                            Excluir
-                        </button>
-                        </div>
-                    </td>
+          ) : (
+            <div className="rounded-2xl border border-white/10 overflow-hidden bg-primary">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-white/5 border-b border-white/10">
+                      <th className="text-left px-6 py-3 text-xs font-semibold text-white/50 uppercase tracking-wider">Nome</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-white/50 uppercase tracking-wider">CPF</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-white/50 uppercase tracking-wider">Telefone</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-white/50 uppercase tracking-wider">E-mail</th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold text-white/50 uppercase tracking-wider">Status</th>
+                      <th className="text-right px-6 py-3 text-xs font-semibold text-white/50 uppercase tracking-wider">Ações</th>
                     </tr>
-                ))}
-                </tbody>
-            </table>
+                  </thead>
+                  <tbody>
+                    {lista.map((c) => (
+                      <tr key={c.id} className="border-b border-white/5 last:border-b-0 hover:bg-white/5 transition-colors">
+                        <td className="px-6 py-4 text-white font-medium">{c.nome}</td>
+                        <td className="px-4 py-4 text-white/70 font-mono text-xs">{c.cpf ?? "—"}</td>
+                        <td className="px-4 py-4 text-white/70">{c.telefone ?? "—"}</td>
+                        <td className="px-4 py-4 text-white/70">{c.email ?? "—"}</td>
+                        <td className="px-4 py-4 text-center">
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            c.status === "ATIVO"
+                              ? "bg-green-500/20 text-green-400"
+                              : "bg-red-500/20 text-red-400"
+                          }`}>
+                            {c.status === "ATIVO" ? "Ativo" : "Inativo"}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              onClick={() => setEditando(c)}
+                              title="Editar"
+                              className="p-2 rounded-lg text-white/40 hover:text-green-400 hover:bg-green-500/10 transition-colors"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => setExcluindo(c)}
+                              title="Excluir"
+                              className="p-2 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-        )}
-        </div>
-    )}
-    </div>
+          )}
 
-    {/* MODAL EDITAR */}
-    {modalEditar && clienteEditando && (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-        <div className="bg-primary w-full max-w-md rounded-2xl border border-white/10 p-6 space-y-5">
-        <div className="flex items-center gap-3">
-            <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center">
-            <Pencil className="h-3 w-3" />
-            </span>
-            <h2 className="text-base font-bold text-white">Alterar Cliente</h2>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function ModalEditar({
+  cliente, onClose, onSaved,
+}: {
+  cliente: Cliente;
+  onClose: () => void;
+  onSaved: (c: Cliente) => void;
+}) {
+  const [form, setForm] = useState<ClienteUpdate>({
+    nome: cliente.nome,
+    cpf: cliente.cpf ?? "",
+    telefone: cliente.telefone ?? "",
+    email: cliente.email ?? "",
+    status: cliente.status,
+  });
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setErr(null);
+    try {
+      const updated = await updateCliente(cliente.id, {
+        nome: form.nome,
+        cpf: form.cpf || undefined,
+        telefone: form.telefone || undefined,
+        email: form.email || undefined,
+        status: form.status,
+      });
+      onSaved(updated);
+    } catch (e2) {
+      setErr(extractMessage(e2, "Erro ao salvar o cliente."));
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="bg-primary border border-white/10 text-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+        <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
+          <div className="flex items-center gap-3">
+            <div className="w-7 h-7 rounded-full bg-green-500/20 flex items-center justify-center">
+              <Pencil className="w-3.5 h-3.5 text-green-400" />
+            </div>
+            <h2 className="text-base font-bold">Editar Cliente</h2>
+          </div>
+          <button onClick={onClose} disabled={saving} className="text-white/50 hover:text-white">
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
-        <form onSubmit={salvarAlteracao} className="space-y-4">
-            <div className="space-y-1.5">
-            <label className="text-white/50 text-xs font-medium">Nome</label>
+        <form onSubmit={submit} className="p-6 space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-white/50 text-xs font-medium">Nome *</label>
             <input
-                value={clienteEditando.nome}
-                onChange={(e) => setClienteEditando({ ...clienteEditando, nome: e.target.value })}
-                className="w-full h-10 px-3 rounded-lg bg-white/5 text-white border border-white/10 focus:outline-none focus:border-green-500/50 text-sm transition-colors"
+              value={form.nome ?? ""}
+              onChange={(e) => setForm({ ...form, nome: e.target.value })}
+              required
+              className={inputClass}
             />
-            </div>
-
-            <div className="space-y-1.5">
+          </div>
+          <div className="space-y-1.5">
             <label className="text-white/50 text-xs font-medium">CPF</label>
             <input
-                value={clienteEditando.cpf}
-                onChange={(e) => setClienteEditando({ ...clienteEditando, cpf: e.target.value })}
-                className="w-full h-10 px-3 rounded-lg bg-white/5 text-white border border-white/10 focus:outline-none focus:border-green-500/50 text-sm transition-colors"
+              value={form.cpf ?? ""}
+              onChange={(e) => setForm({ ...form, cpf: e.target.value })}
+              placeholder="000.000.000-00"
+              className={inputClass}
             />
-            </div>
-
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-            <label className="text-white/50 text-xs font-medium">Telefone</label>
+              <label className="text-white/50 text-xs font-medium">Telefone</label>
+              <input
+                value={form.telefone ?? ""}
+                onChange={(e) => setForm({ ...form, telefone: e.target.value })}
+                placeholder="(11) 99999-9999"
+                className={inputClass}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-white/50 text-xs font-medium">Status</label>
+              <select
+                value={form.status ?? "ATIVO"}
+                onChange={(e) => setForm({ ...form, status: e.target.value as "ATIVO" | "INATIVO" })}
+                className={selectClass}
+              >
+                <option value="ATIVO">Ativo</option>
+                <option value="INATIVO">Inativo</option>
+              </select>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-white/50 text-xs font-medium">E-mail</label>
             <input
-                value={clienteEditando.telefone}
-                onChange={(e) => setClienteEditando({ ...clienteEditando, telefone: e.target.value })}
-                className="w-full h-10 px-3 rounded-lg bg-white/5 text-white border border-white/10 focus:outline-none focus:border-green-500/50 text-sm transition-colors"
+              type="email"
+              value={form.email ?? ""}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              placeholder="email@dominio.com"
+              className={inputClass}
             />
-            </div>
+          </div>
 
-            <div className="space-y-1.5">
-            <label className="text-white/50 text-xs font-medium">Status</label>
-            <select
-                value={clienteEditando.status}
-                onChange={(e) => setClienteEditando({ ...clienteEditando, status: e.target.value as "ativo" | "inativo" })}
-                className="w-full h-10 px-3 rounded-lg bg-white/5 text-white border border-white/10 focus:outline-none focus:border-green-500/50 text-sm transition-colors"
-            >
-                <option value="ativo" className="bg-[#0f2f52]">Ativo</option>
-                <option value="inativo" className="bg-[#0f2f52]">Inativo</option>
-            </select>
+          {err && (
+            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-sm text-red-400">
+              {err}
             </div>
+          )}
 
-            <div className="flex justify-end gap-3 pt-2">
-            <button
-                type="button"
-                onClick={() => setModalEditar(false)}
-                className="px-5 h-10 rounded-xl bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 text-sm font-semibold transition-all active:scale-95"
-            >
-                Cancelar
-            </button>
-            <button
-                type="submit"
-                className="px-6 h-10 rounded-xl bg-green-500 hover:bg-green-400 text-white text-sm font-bold transition-all active:scale-95"
-            >
-                Salvar
-            </button>
-            </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <Button type="button" variant="ghost" onClick={onClose} disabled={saving} className="border border-white/10 text-white hover:bg-white/10">
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={saving} className="bg-green-500 hover:bg-green-400 text-white font-bold">
+              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              {saving ? "Salvando..." : "Salvar"}
+            </Button>
+          </div>
         </form>
-        </div>
+      </div>
     </div>
-    )}
+  );
+}
 
-    {/* MODAL EXCLUIR */}
-    {modalExcluir && clienteParaExcluir && (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-        <div className="bg-primary w-full max-w-sm rounded-2xl border border-red-500/30 p-6 space-y-4">
+function ModalExcluir({
+  cliente, isDeleting, onConfirm, onCancel,
+}: {
+  cliente: Cliente;
+  isDeleting: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={onCancel}>
+      <div onClick={(e) => e.stopPropagation()} className="bg-primary border border-red-500/30 text-white w-full max-w-sm rounded-2xl p-6 space-y-4 shadow-2xl">
         <div className="flex flex-col items-center gap-3 text-center">
-            <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
-            <AlertCircle className="h-6 w-6 text-red-400" />
-            </div>
-
-            {modalExcluir === "confirmar" ? (
-            <>
-                <h2 className="text-white font-bold text-lg">Excluir cliente?</h2>
-                <p className="text-white/50 text-sm">
-                Deseja excluir <span className="text-white font-semibold">{clienteParaExcluir.nome}</span>? Esta ação não pode ser desfeita.
-                </p>
-            </>
-            ) : (
-            <>
-                <h2 className="text-red-400 font-bold text-lg">Confirmação Final</h2>
-                <p className="text-white/50 text-sm">
-                Tem certeza absoluta que deseja excluir este cliente?
-                </p>
-            </>
-            )}
+          <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
+            <AlertTriangle className="h-6 w-6 text-red-400" />
+          </div>
+          <h2 className="text-white font-bold text-lg">Excluir cliente?</h2>
+          <p className="text-white/60 text-sm">
+            Deseja excluir <span className="text-white font-semibold">{cliente.nome}</span>? Esta ação não poderá ser desfeita.
+          </p>
         </div>
-
         <div className="flex gap-3 pt-2">
-            <button
-            onClick={() => modalExcluir === "confirmar" ? setModalExcluir(null) : setModalExcluir("confirmar")}
-            className="flex-1 h-10 rounded-xl bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 text-sm font-semibold transition-all active:scale-95"
-            >
-            {modalExcluir === "confirmar" ? "Cancelar" : "Voltar"}
-            </button>
-            <button
-            onClick={() => modalExcluir === "confirmar" ? setModalExcluir("final") : excluirClienteDefinitivo()}
-            className="flex-1 h-10 rounded-xl bg-red-500 hover:bg-red-400 text-white text-sm font-bold transition-all active:scale-95"
-            >
-            {modalExcluir === "confirmar" ? "Excluir" : "Sim, excluir"}
-            </button>
+          <Button type="button" variant="ghost" onClick={onCancel} disabled={isDeleting} className="flex-1 border border-white/10 text-white hover:bg-white/10">
+            Cancelar
+          </Button>
+          <Button type="button" variant="destructive" onClick={onConfirm} disabled={isDeleting} className="flex-1">
+            {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+            {isDeleting ? "Excluindo..." : "Sim, excluir"}
+          </Button>
         </div>
-        </div>
+      </div>
     </div>
-    )}
-</div>
-);
+  );
 }
