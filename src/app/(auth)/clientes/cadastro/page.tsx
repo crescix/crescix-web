@@ -153,7 +153,7 @@ export default function CadastroCliente() {
           </div>
 
           {error && (
-            <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+            <div className="flex flex-wrap items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
               <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
               <p className="text-red-400 text-sm font-medium flex-1">{error}</p>
               <button type="button" onClick={() => setError(null)} className="text-red-400/60 hover:text-red-400">

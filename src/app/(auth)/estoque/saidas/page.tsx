@@ -196,7 +196,7 @@ export default function SaidasEstoque() {
   return (
     <div className="w-full min-h-screen bg-secondary p-4 md:p-8 flex flex-col items-center">
       <div className="w-full max-w-6xl space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.back()}
@@ -227,7 +227,7 @@ export default function SaidasEstoque() {
         </div>
 
         {loadError && (
-          <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+          <div className="flex flex-wrap items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
             <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
             <p className="flex-1 text-red-400 text-sm font-medium">{loadError}</p>
             <button

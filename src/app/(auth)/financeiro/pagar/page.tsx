@@ -220,7 +220,7 @@ export default function ContasPagarPage() {
 
         {/* Erro */}
         {loadError && (
-          <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+          <div className="flex flex-wrap items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
             <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
             <p className="flex-1 text-red-400 text-sm font-medium">{loadError}</p>
             <button
