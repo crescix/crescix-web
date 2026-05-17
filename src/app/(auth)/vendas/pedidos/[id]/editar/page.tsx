@@ -1,7 +1,11 @@
-import { Suspense } from "react";
-import { PedidoForm } from "../_components/pedido-form";
+"use client";
 
-export default function NovoPedidoPage() {
+import { Suspense } from "react";
+import { useParams } from "next/navigation";
+import { PedidoForm } from "../../_components/pedido-form";
+
+export default function EditarPedidoPage() {
+  const { id } = useParams<{ id: string }>();
   return (
     <Suspense
       fallback={
@@ -10,7 +14,7 @@ export default function NovoPedidoPage() {
         </div>
       }
     >
-      <PedidoForm mode="novo" />
+      <PedidoForm mode="editar" pedidoId={id} />
     </Suspense>
   );
 }
