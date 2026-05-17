@@ -2,30 +2,45 @@
 
 import { useState, useEffect, useMemo } from "react";
 import {
-  Search, X, ClipboardList, ChevronLeft,
-  AlertCircle, SlidersHorizontal, TrendingUp, TrendingDown, Minus,
+  Search,
+  X,
+  ClipboardList,
+  ChevronLeft,
+  AlertCircle,
+  SlidersHorizontal,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Loader2,
+  RefreshCw,
+  Clock,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
+import {
+  MovimentoEstoque,
+  MOTIVO_MOVIMENTO_LABEL,
+  formatDateBR,
+} from "@/lib/data/estoque";
+import {
+  listMovimentos,
+  createMovimento,
+} from "@/services/movimentos-estoque";
+import { listProdutos, type Produto } from "@/services/produtos";
 
-/* ─── Tipos ─────────────────────────────────────────────────── */
-type Entrada = { id: number; produto: string; quantidade: number };
-type Saida   = { id: number; produto: string; quantidade: number };
-
-type Ajuste = {
-  id: number;
-  produto: string;
-  quantidadeAnterior: number;
-  quantidadeNova: number;
-  motivo: string;
-  data: string;
-};
+function extractMessage(err: unknown, fallback: string): string {
+  if (axios.isAxiosError(err) && err.response?.data?.message) {
+    return err.response.data.message;
+  }
+  return fallback;
+}
 
 type LinhaInventario = {
-  produto: string;
+  produtoId: string;
+  produtoNome: string;
   totalEntradas: number;
   totalSaidas: number;
-  saldoCalculado: number;
-  ajustes: number;       // soma dos ajustes manuais
+  totalAjustes: number; // delta liquido dos ajustes (positivo ou negativo)
   saldoFinal: number;
 };
 
@@ -37,189 +52,231 @@ const MOTIVOS_AJUSTE = [
   "Outros",
 ];
 
-/* ─── localStorage helpers ───────────────────────────────────── */
-function getLS<T>(key: string, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return fallback;
-    return JSON.parse(raw) as T;
-  } catch { return fallback; }
-}
-function setLS<T>(key: string, value: T) {
-  localStorage.setItem(key, JSON.stringify(value));
-}
+const inputClass =
+  "w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:outline-none focus:border-green-500/50 text-sm transition-colors";
+const selectClass =
+  "w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-green-500/50 text-sm transition-colors cursor-pointer";
 
-/* ─── CSS helpers ────────────────────────────────────────────── */
-const inputClass  = "w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:outline-none focus:border-green-500/50 text-sm transition-colors";
-const selectClass = "w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-green-500/50 text-sm transition-colors cursor-pointer";
-
-function Field({ label, required, children, className = "" }: {
-  label: string; required?: boolean; children: React.ReactNode; className?: string;
+function Field({
+  label,
+  required,
+  children,
+  className = "",
+}: {
+  label: string;
+  required?: boolean;
+  children: React.ReactNode;
+  className?: string;
 }) {
   return (
     <div className={`space-y-1.5 ${className}`}>
       <label className="text-white/50 text-xs font-semibold uppercase tracking-wide">
-        {label}{required && <span className="text-red-400 ml-1">*</span>}
+        {label}
+        {required && <span className="text-red-400 ml-1">*</span>}
       </label>
       {children}
     </div>
   );
 }
 
-/* ─── Seed de ajustes ────────────────────────────────────────── */
-const SEED_AJUSTES: Ajuste[] = [
-  { id: 1, produto: "Camiseta Preta",   quantidadeAnterior: 40, quantidadeNova: 38, motivo: "Contagem física",   data: "2026-05-10" },
-  { id: 2, produto: "Tênis Branco",     quantidadeAnterior: 8,  quantidadeNova: 7,  motivo: "Produto danificado", data: "2026-05-12" },
-];
-
-/* ─── Componente ─────────────────────────────────────────────── */
 export default function Inventario() {
   const router = useRouter();
 
-  const [entradas, setEntradas] = useState<Entrada[]>([]);
-  const [saidas,   setSaidas]   = useState<Saida[]>([]);
-  const [ajustes,  setAjustes]  = useState<Ajuste[]>([]);
+  const [movimentos, setMovimentos] = useState<MovimentoEstoque[]>([]);
+  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  const [busca,       setBusca]       = useState("");
-  const [filtroSaldo, setFiltroSaldo] = useState<"todos" | "ok" | "baixo" | "zerado">("todos");
+  const [busca, setBusca] = useState("");
+  const [filtroSaldo, setFiltroSaldo] =
+    useState<"todos" | "ok" | "baixo" | "zerado">("todos");
 
   // Modal de ajuste
-  const [modalAjuste,   setModalAjuste]   = useState(false);
-  const [produtoAlvo,   setProdutoAlvo]   = useState<LinhaInventario | null>(null);
-  const [novaQtd,       setNovaQtd]       = useState("");
-  const [motivoAjuste,  setMotivoAjuste]  = useState("");
-  const [erros,         setErros]         = useState<{ qtd?: string; motivo?: string }>({});
+  const [modalAjuste, setModalAjuste] = useState(false);
+  const [produtoAlvo, setProdutoAlvo] = useState<LinhaInventario | null>(null);
+  const [novaQtd, setNovaQtd] = useState("");
+  const [motivoAjuste, setMotivoAjuste] = useState("");
+  const [observacoesAjuste, setObservacoesAjuste] = useState("");
+  const [erros, setErros] = useState<{ qtd?: string; motivo?: string }>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Modal histórico de ajustes
+  // Modal histórico
   const [modalHistorico, setModalHistorico] = useState(false);
-  const [produtoHistorico, setProdutoHistorico] = useState<string | null>(null);
-
-  // Modal confirmação ajuste
-  const [modalConfirma, setModalConfirma] = useState(false);
+  const [produtoHistorico, setProdutoHistorico] =
+    useState<LinhaInventario | null>(null);
 
   const [sucesso, setSucesso] = useState<string | null>(null);
 
-  /* ── Fecha sucesso automaticamente ── */
   useEffect(() => {
     if (!sucesso) return;
     const t = setTimeout(() => setSucesso(null), 2000);
     return () => clearTimeout(t);
   }, [sucesso]);
 
-  /* ── Carrega dados ── */
-  useEffect(() => {
-    setEntradas(getLS<Entrada[]>("entradas_estoque", []));
-    setSaidas(getLS<Saida[]>("saidas_estoque", []));
+  async function fetchData() {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const [movRes, prodRes] = await Promise.all([
+        listMovimentos({ limit: 500 }),
+        listProdutos({ limit: 500 }),
+      ]);
+      setMovimentos(movRes.data);
+      setProdutos(prodRes.data);
+    } catch (err) {
+      setLoadError(extractMessage(err, "Erro ao carregar inventário."));
+    } finally {
+      setLoading(false);
+    }
+  }
 
-    let aj = getLS<Ajuste[]>("ajustes_estoque", []);
-    if (aj.length === 0) { setLS("ajustes_estoque", SEED_AJUSTES); aj = SEED_AJUSTES; }
-    setAjustes(aj);
+  useEffect(() => {
+    fetchData();
   }, []);
 
-  /* ── Calcula inventário ── */
+  /* ── Calcula inventário a partir dos movimentos ── */
   const inventario = useMemo<LinhaInventario[]>(() => {
-    const produtos = Array.from(new Set([
-      ...entradas.map((e) => e.produto),
-      ...saidas.map((s) => s.produto),
-      ...ajustes.map((a) => a.produto),
-    ])).filter(Boolean).sort();
+    // Inicia com todos os produtos cadastrados (pra mostrar mesmo os sem movimento)
+    const map = new Map<string, LinhaInventario>();
+    for (const p of produtos) {
+      map.set(p.id, {
+        produtoId: p.id,
+        produtoNome: p.nome,
+        totalEntradas: 0,
+        totalSaidas: 0,
+        totalAjustes: 0,
+        saldoFinal: 0,
+      });
+    }
 
-    return produtos.map((produto) => {
-      const totalEntradas  = entradas.filter((e) => e.produto === produto).reduce((s, e) => s + e.quantidade, 0);
-      const totalSaidas    = saidas.filter((s) => s.produto === produto).reduce((s, e) => s + e.quantidade, 0);
-      const saldoCalculado = totalEntradas - totalSaidas;
+    for (const m of movimentos) {
+      const linha = map.get(m.produtoId);
+      if (!linha) continue;
 
-      // Soma de ajustes: (nova - anterior) por produto
-      const ajustesProduto = ajustes.filter((a) => a.produto === produto);
-      const deltaAjustes   = ajustesProduto.reduce((s, a) => s + (a.quantidadeNova - a.quantidadeAnterior), 0);
+      const sinal = m.tipo === "ENTRADA" ? 1 : -1;
+      if (m.motivo === "AJUSTE_MANUAL") {
+        linha.totalAjustes += sinal * m.quantidade;
+      } else if (m.tipo === "ENTRADA") {
+        linha.totalEntradas += m.quantidade;
+      } else {
+        linha.totalSaidas += m.quantidade;
+      }
+      linha.saldoFinal += sinal * m.quantidade;
+    }
 
-      return {
-        produto,
-        totalEntradas,
-        totalSaidas,
-        saldoCalculado,
-        ajustes: deltaAjustes,
-        saldoFinal: saldoCalculado + deltaAjustes,
-      };
-    });
-  }, [entradas, saidas, ajustes]);
+    return Array.from(map.values()).sort((a, b) =>
+      a.produtoNome.localeCompare(b.produtoNome)
+    );
+  }, [movimentos, produtos]);
 
-  /* ── Filtros ── */
   const inventarioFiltrado = useMemo(() => {
     return inventario.filter((linha) => {
-      const mBusca = !busca || linha.produto.toLowerCase().includes(busca.toLowerCase());
+      const mBusca =
+        !busca || linha.produtoNome.toLowerCase().includes(busca.toLowerCase());
       const mSaldo =
-        filtroSaldo === "todos"  ? true :
-        filtroSaldo === "zerado" ? linha.saldoFinal === 0 :
-        filtroSaldo === "baixo"  ? linha.saldoFinal > 0 && linha.saldoFinal <= 5 :
-        linha.saldoFinal > 5;
+        filtroSaldo === "todos"
+          ? true
+          : filtroSaldo === "zerado"
+          ? linha.saldoFinal <= 0
+          : filtroSaldo === "baixo"
+          ? linha.saldoFinal > 0 && linha.saldoFinal <= 5
+          : linha.saldoFinal > 5;
       return mBusca && mSaldo;
     });
   }, [inventario, busca, filtroSaldo]);
 
-  /* ── Totais do resumo ── */
-  const totalProdutos  = inventario.length;
-  const totalUnidades  = inventario.reduce((s, l) => s + l.saldoFinal, 0);
-  const produtosBaixo  = inventario.filter((l) => l.saldoFinal > 0 && l.saldoFinal <= 5).length;
+  const totalProdutos = inventario.length;
+  const totalUnidades = inventario.reduce((s, l) => s + l.saldoFinal, 0);
+  const produtosBaixo = inventario.filter(
+    (l) => l.saldoFinal > 0 && l.saldoFinal <= 5
+  ).length;
   const produtosZerado = inventario.filter((l) => l.saldoFinal <= 0).length;
 
-  /* ── Ajuste manual ── */
   function abrirAjuste(linha: LinhaInventario) {
     setProdutoAlvo(linha);
     setNovaQtd(String(linha.saldoFinal));
     setMotivoAjuste("");
+    setObservacoesAjuste("");
     setErros({});
+    setSubmitError(null);
     setModalAjuste(true);
   }
 
   function validarAjuste(): boolean {
     const e: typeof erros = {};
-    if (novaQtd === "" || Number(novaQtd) < 0) e.qtd    = "Informe uma quantidade válida (≥ 0)";
-    if (!motivoAjuste)                          e.motivo = "Selecione um motivo";
+    if (novaQtd === "" || Number(novaQtd) < 0)
+      e.qtd = "Informe uma quantidade válida (≥ 0)";
+    if (!motivoAjuste) e.motivo = "Selecione um motivo";
     setErros(e);
     return Object.keys(e).length === 0;
   }
 
-  function confirmarAjuste() {
-    if (!produtoAlvo) return;
-    const novo: Ajuste = {
-      id:                 Date.now(),
-      produto:            produtoAlvo.produto,
-      quantidadeAnterior: produtoAlvo.saldoFinal,
-      quantidadeNova:     Number(novaQtd),
-      motivo:             motivoAjuste,
-      data:               new Date().toISOString().split("T")[0],
-    };
-    const atualizados = [novo, ...ajustes];
-    setLS("ajustes_estoque", atualizados);
-    setAjustes(atualizados);
-    setModalAjuste(false);
-    setModalConfirma(false);
-    setProdutoAlvo(null);
-    setSucesso(`Ajuste de "${novo.produto}" registrado com sucesso!`);
+  async function confirmarAjuste() {
+    if (!produtoAlvo || !validarAjuste()) return;
+    const delta = Number(novaQtd) - produtoAlvo.saldoFinal;
+    if (delta === 0) {
+      setSubmitError("A quantidade nova é igual ao saldo atual.");
+      return;
+    }
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const obs = [motivoAjuste, observacoesAjuste].filter(Boolean).join(" — ");
+      await createMovimento({
+        produtoId: produtoAlvo.produtoId,
+        tipo: delta > 0 ? "ENTRADA" : "SAIDA",
+        motivo: "AJUSTE_MANUAL",
+        quantidade: Math.abs(delta),
+        observacoes: obs,
+      });
+      setModalAjuste(false);
+      setProdutoAlvo(null);
+      setSucesso(`Ajuste de "${produtoAlvo.produtoNome}" registrado!`);
+      fetchData();
+    } catch (err) {
+      setSubmitError(extractMessage(err, "Erro ao salvar ajuste."));
+    } finally {
+      setSubmitting(false);
+    }
   }
 
-  function handleSolicitarAjuste() {
-    if (!validarAjuste()) return;
-    setModalAjuste(false);
-    setModalConfirma(true);
+  function abrirHistorico(linha: LinhaInventario) {
+    setProdutoHistorico(linha);
+    setModalHistorico(true);
   }
 
-  /* ── Histórico ── */
-  const ajustesHistorico = ajustes.filter((a) => a.produto === produtoHistorico);
+  const ajustesHistorico = produtoHistorico
+    ? movimentos
+        .filter(
+          (m) =>
+            m.produtoId === produtoHistorico.produtoId &&
+            m.motivo === "AJUSTE_MANUAL"
+        )
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    : [];
 
-  /* ── Badge de saldo ── */
   function saldoBadge(saldo: number) {
-    if (saldo <= 0)  return { cls: "bg-red-500/10 text-red-400 border-red-500/20",       label: "Zerado"  };
-    if (saldo <= 5)  return { cls: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20", label: "Baixo" };
-    return               { cls: "bg-green-500/10 text-green-400 border-green-500/20",    label: "OK"      };
+    if (saldo <= 0)
+      return {
+        cls: "bg-red-500/10 text-red-400 border-red-500/20",
+        label: "Zerado",
+      };
+    if (saldo <= 5)
+      return {
+        cls: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
+        label: "Baixo",
+      };
+    return {
+      cls: "bg-green-500/10 text-green-400 border-green-500/20",
+      label: "OK",
+    };
   }
 
   return (
     <div className="w-full min-h-screen bg-secondary p-4 md:p-8 flex flex-col items-center">
       <div className="w-full max-w-6xl space-y-6">
-
-        {/* ── Header ── */}
+        {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
@@ -229,23 +286,71 @@ export default function Inventario() {
               <ChevronLeft className="w-5 h-5" />
             </button>
             <div>
-              <p className="text-white/40 text-xs font-medium uppercase tracking-widest mb-1">Estoque</p>
-              <h1 className="text-3xl font-black text-white tracking-tighter">Inventário</h1>
+              <p className="text-white/40 text-xs font-medium uppercase tracking-widest mb-1">
+                Estoque
+              </p>
+              <h1 className="text-3xl font-black text-white tracking-tighter">
+                Inventário
+              </h1>
             </div>
           </div>
         </div>
 
-        {/* ── Cards de resumo ── */}
+        {loadError && (
+          <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+            <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+            <p className="flex-1 text-red-400 text-sm font-medium">{loadError}</p>
+            <button
+              onClick={fetchData}
+              className="text-red-400 hover:text-red-300 text-sm font-medium flex items-center gap-1"
+            >
+              <RefreshCw className="h-3.5 w-3.5" /> Tentar novamente
+            </button>
+            <button
+              onClick={() => setLoadError(null)}
+              className="text-red-400/60 hover:text-red-400"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Cards de resumo */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { label: "Produtos",        value: totalProdutos,  color: "text-white",        icon: <ClipboardList className="h-4 w-4" /> },
-            { label: "Total unidades",  value: totalUnidades,  color: "text-green-400",     icon: <TrendingUp className="h-4 w-4" /> },
-            { label: "Estoque baixo",   value: produtosBaixo,  color: "text-yellow-400",   icon: <Minus className="h-4 w-4" /> },
-            { label: "Zerados",         value: produtosZerado, color: "text-red-400",       icon: <TrendingDown className="h-4 w-4" /> },
+            {
+              label: "Produtos",
+              value: totalProdutos,
+              color: "text-white",
+              icon: <ClipboardList className="h-4 w-4" />,
+            },
+            {
+              label: "Total unidades",
+              value: totalUnidades,
+              color: "text-green-400",
+              icon: <TrendingUp className="h-4 w-4" />,
+            },
+            {
+              label: "Estoque baixo",
+              value: produtosBaixo,
+              color: "text-yellow-400",
+              icon: <Minus className="h-4 w-4" />,
+            },
+            {
+              label: "Zerados",
+              value: produtosZerado,
+              color: "text-red-400",
+              icon: <TrendingDown className="h-4 w-4" />,
+            },
           ].map((c) => (
-            <div key={c.label} className="bg-primary rounded-2xl border border-white/10 p-5 flex flex-col gap-2">
+            <div
+              key={c.label}
+              className="bg-primary rounded-2xl border border-white/10 p-5 flex flex-col gap-2"
+            >
               <div className="flex items-center justify-between">
-                <span className="text-white/40 text-xs font-semibold uppercase tracking-wide">{c.label}</span>
+                <span className="text-white/40 text-xs font-semibold uppercase tracking-wide">
+                  {c.label}
+                </span>
                 <span className={`${c.color} opacity-60`}>{c.icon}</span>
               </div>
               <span className={`text-3xl font-black ${c.color}`}>{c.value}</span>
@@ -253,7 +358,7 @@ export default function Inventario() {
           ))}
         </div>
 
-        {/* ── Filtros ── */}
+        {/* Filtros */}
         <div className="bg-primary rounded-2xl border border-white/10 p-6 space-y-4">
           <div className="flex items-center gap-3">
             <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center">
@@ -275,92 +380,108 @@ export default function Inventario() {
             <Field label="Status do saldo">
               <select
                 value={filtroSaldo}
-                onChange={(e) => setFiltroSaldo(e.target.value as typeof filtroSaldo)}
+                onChange={(e) =>
+                  setFiltroSaldo(e.target.value as typeof filtroSaldo)
+                }
                 className={selectClass}
               >
-                <option value="todos"  className="bg-[#0f2f52]">Todos</option>
-                <option value="ok"     className="bg-[#0f2f52]">OK (acima de 5)</option>
-                <option value="baixo"  className="bg-[#0f2f52]">Baixo (1 a 5)</option>
-                <option value="zerado" className="bg-[#0f2f52]">Zerado</option>
+                <option value="todos" className="bg-[#0f2f52]">
+                  Todos
+                </option>
+                <option value="ok" className="bg-[#0f2f52]">
+                  OK (&gt; 5)
+                </option>
+                <option value="baixo" className="bg-[#0f2f52]">
+                  Estoque baixo (1–5)
+                </option>
+                <option value="zerado" className="bg-[#0f2f52]">
+                  Zerados / negativos
+                </option>
               </select>
             </Field>
           </div>
-
-          {(busca || filtroSaldo !== "todos") && (
-            <div className="flex justify-end">
-              <button
-                onClick={() => { setBusca(""); setFiltroSaldo("todos"); }}
-                className="flex items-center gap-2 px-5 h-10 rounded-xl bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 text-sm font-semibold transition-all active:scale-95"
-              >
-                <X className="h-4 w-4" /> Limpar
-              </button>
-            </div>
-          )}
         </div>
 
-        {/* ── Tabela ── */}
+        {/* Tabela */}
         <div className="bg-primary rounded-2xl border border-white/10 overflow-hidden">
           <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-            <div className="flex items-center gap-3">
-              <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center">
-                <ClipboardList className="h-3 w-3" />
-              </span>
-              <h2 className="text-base font-bold text-white">Posição do Estoque</h2>
-            </div>
+            <h2 className="text-base font-bold text-white">Saldo por produto</h2>
             <span className="text-white/40 text-xs">
-              {inventarioFiltrado.length} {inventarioFiltrado.length === 1 ? "produto" : "produtos"}
+              {inventarioFiltrado.length}{" "}
+              {inventarioFiltrado.length === 1 ? "produto" : "produtos"}
             </span>
           </div>
 
-          {inventarioFiltrado.length === 0 ? (
+          {loading ? (
+            <div className="py-16 flex items-center justify-center gap-2 text-white/60">
+              <Loader2 className="h-4 w-4 animate-spin text-green-400" />
+              <span className="text-sm">Carregando...</span>
+            </div>
+          ) : inventarioFiltrado.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
               <ClipboardList className="h-8 w-8 text-white/15" />
-              <p className="text-white/30 text-sm">Nenhum produto encontrado</p>
+              <p className="text-white/30 text-sm">
+                {produtos.length === 0
+                  ? "Cadastre produtos primeiro pra ver o inventário"
+                  : "Nenhum produto com esses filtros"}
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-white/5 border-b border-white/10">
-                    <th className="text-white/40 text-xs font-semibold text-left px-6 py-3">Produto</th>
-                    <th className="text-white/40 text-xs font-semibold text-center px-4 py-3">Entradas</th>
-                    <th className="text-white/40 text-xs font-semibold text-center px-4 py-3">Saídas</th>
-                    <th className="text-white/40 text-xs font-semibold text-center px-4 py-3">Saldo Calc.</th>
-                    <th className="text-white/40 text-xs font-semibold text-center px-4 py-3">Ajustes</th>
-                    <th className="text-white/40 text-xs font-semibold text-center px-4 py-3">Saldo Final</th>
-                    <th className="text-white/40 text-xs font-semibold text-center px-4 py-3">Status</th>
-                    <th className="text-white/40 text-xs font-semibold text-center px-6 py-3">Ações</th>
+                    <th className="text-white/40 text-xs font-semibold text-left px-6 py-3">
+                      Produto
+                    </th>
+                    <th className="text-white/40 text-xs font-semibold text-center px-4 py-3">
+                      Entradas
+                    </th>
+                    <th className="text-white/40 text-xs font-semibold text-center px-4 py-3">
+                      Saídas
+                    </th>
+                    <th className="text-white/40 text-xs font-semibold text-center px-4 py-3">
+                      Ajustes
+                    </th>
+                    <th className="text-white/40 text-xs font-semibold text-center px-4 py-3">
+                      Saldo
+                    </th>
+                    <th className="text-white/40 text-xs font-semibold text-center px-4 py-3">
+                      Status
+                    </th>
+                    <th className="text-white/40 text-xs font-semibold text-center px-6 py-3">
+                      Ações
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {inventarioFiltrado.map((linha) => {
                     const badge = saldoBadge(linha.saldoFinal);
                     return (
-                      <tr key={linha.produto} className="border-t border-white/5 hover:bg-white/5 transition-colors">
-                        <td className="px-6 py-4 text-white font-medium">{linha.produto}</td>
-                        <td className="px-4 py-4 text-center text-green-400 font-semibold">
+                      <tr
+                        key={linha.produtoId}
+                        className="border-t border-white/5 hover:bg-white/5 transition-colors"
+                      >
+                        <td className="px-6 py-4 text-white font-medium">
+                          {linha.produtoNome}
+                        </td>
+                        <td className="px-4 py-4 text-center text-green-400 tabular-nums">
                           +{linha.totalEntradas}
                         </td>
-                        <td className="px-4 py-4 text-center text-red-400 font-semibold">
-                          -{linha.totalSaidas}
+                        <td className="px-4 py-4 text-center text-red-400 tabular-nums">
+                          −{linha.totalSaidas}
                         </td>
-                        <td className="px-4 py-4 text-center text-white/60 font-mono">
-                          {linha.saldoCalculado}
+                        <td className="px-4 py-4 text-center text-cyan-400 tabular-nums">
+                          {linha.totalAjustes > 0 ? "+" : ""}
+                          {linha.totalAjustes}
                         </td>
-                        <td className="px-4 py-4 text-center font-mono">
-                          {linha.ajustes === 0 ? (
-                            <span className="text-white/30">—</span>
-                          ) : (
-                            <span className={linha.ajustes > 0 ? "text-green-400" : "text-orange-400"}>
-                              {linha.ajustes > 0 ? "+" : ""}{linha.ajustes}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-center text-white font-black text-base">
+                        <td className="px-4 py-4 text-center text-white font-bold tabular-nums">
                           {linha.saldoFinal}
                         </td>
                         <td className="px-4 py-4 text-center">
-                          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${badge.cls}`}>
+                          <span
+                            className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${badge.cls}`}
+                          >
                             {badge.label}
                           </span>
                         </td>
@@ -373,10 +494,10 @@ export default function Inventario() {
                               <SlidersHorizontal className="h-3 w-3" /> Ajustar
                             </button>
                             <button
-                              onClick={() => { setProdutoHistorico(linha.produto); setModalHistorico(true); }}
-                              className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-white/5 hover:bg-white/10 text-white/50 hover:text-white text-xs font-semibold transition-all active:scale-95"
+                              onClick={() => abrirHistorico(linha)}
+                              className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 text-xs font-semibold transition-all active:scale-95"
                             >
-                              <ClipboardList className="h-3 w-3" /> Histórico
+                              <Clock className="h-3 w-3" /> Histórico
                             </button>
                           </div>
                         </td>
@@ -390,50 +511,61 @@ export default function Inventario() {
         </div>
       </div>
 
-      {/* ── MODAL AJUSTE ── */}
+      {/* MODAL AJUSTE */}
       {modalAjuste && produtoAlvo && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-primary w-full max-w-md rounded-2xl border border-white/10">
+          <div className="bg-primary w-full max-w-md rounded-2xl border border-white/10 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
               <div className="flex items-center gap-3">
                 <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center">
                   <SlidersHorizontal className="h-3 w-3" />
                 </span>
-                <h2 className="text-base font-bold text-white">Ajuste Manual</h2>
+                <h2 className="text-base font-bold text-white">Ajustar saldo</h2>
               </div>
-              <button onClick={() => setModalAjuste(false)} className="text-white/30 hover:text-white/70 transition">
+              <button
+                onClick={() => !submitting && setModalAjuste(false)}
+                disabled={submitting}
+                className="text-white/30 hover:text-white/70 transition disabled:opacity-30"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             <div className="p-6 space-y-4">
-              {/* Info do produto */}
-              <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center justify-between">
-                <div>
-                  <p className="text-white/50 text-xs font-semibold uppercase tracking-wide mb-1">Produto</p>
-                  <p className="text-white font-bold">{produtoAlvo.produto}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-white/50 text-xs font-semibold uppercase tracking-wide mb-1">Saldo atual</p>
-                  <p className="text-2xl font-black text-white">{produtoAlvo.saldoFinal}</p>
-                </div>
+              <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                <p className="text-white/50 text-xs uppercase tracking-wide mb-1">
+                  Produto
+                </p>
+                <p className="text-white font-medium">{produtoAlvo.produtoNome}</p>
+                <p className="text-white/40 text-xs mt-2">
+                  Saldo atual:{" "}
+                  <span className="text-white font-semibold">
+                    {produtoAlvo.saldoFinal} un
+                  </span>
+                </p>
               </div>
 
-              <Field label="Nova quantidade" required>
+              {submitError && (
+                <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-3">
+                  <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <p className="flex-1 text-red-400 text-sm font-medium">
+                    {submitError}
+                  </p>
+                </div>
+              )}
+
+              <Field label="Quantidade real (nova)" required>
                 <input
-                  type="number" min={0}
+                  type="number"
+                  min={0}
                   value={novaQtd}
                   onChange={(e) => setNovaQtd(e.target.value)}
-                  placeholder="0"
-                  className={`${inputClass} ${erros.qtd ? "border-red-400/50" : ""}`}
+                  className={`${inputClass} ${
+                    erros.qtd ? "border-red-400/50" : ""
+                  }`}
                 />
-                {erros.qtd && <p className="text-red-400 text-xs">{erros.qtd}</p>}
-                {novaQtd !== "" && Number(novaQtd) !== produtoAlvo.saldoFinal && (
-                  <p className={`text-xs font-semibold mt-1 ${Number(novaQtd) > produtoAlvo.saldoFinal ? "text-green-400" : "text-orange-400"}`}>
-                    {Number(novaQtd) > produtoAlvo.saldoFinal
-                      ? `+${Number(novaQtd) - produtoAlvo.saldoFinal} unidades`
-                      : `${Number(novaQtd) - produtoAlvo.saldoFinal} unidades`}
-                  </p>
+                {erros.qtd && (
+                  <p className="text-red-400 text-xs">{erros.qtd}</p>
                 )}
               </Field>
 
@@ -441,144 +573,139 @@ export default function Inventario() {
                 <select
                   value={motivoAjuste}
                   onChange={(e) => setMotivoAjuste(e.target.value)}
-                  className={`${selectClass} ${erros.motivo ? "border-red-400/50" : ""}`}
+                  className={`${selectClass} ${
+                    erros.motivo ? "border-red-400/50" : ""
+                  }`}
                 >
-                  <option value="" className="bg-[#0f2f52]">Selecione...</option>
+                  <option value="" className="bg-[#0f2f52]">
+                    Selecione...
+                  </option>
                   {MOTIVOS_AJUSTE.map((m) => (
-                    <option key={m} value={m} className="bg-[#0f2f52]">{m}</option>
+                    <option key={m} value={m} className="bg-[#0f2f52]">
+                      {m}
+                    </option>
                   ))}
                 </select>
-                {erros.motivo && <p className="text-red-400 text-xs">{erros.motivo}</p>}
+                {erros.motivo && (
+                  <p className="text-red-400 text-xs">{erros.motivo}</p>
+                )}
+              </Field>
+
+              <Field label="Observações">
+                <textarea
+                  value={observacoesAjuste}
+                  onChange={(e) => setObservacoesAjuste(e.target.value)}
+                  rows={3}
+                  placeholder="Detalhes do ajuste..."
+                  className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:outline-none focus:border-green-500/50 text-sm transition-colors resize-none"
+                />
               </Field>
             </div>
 
             <div className="flex justify-end gap-3 px-6 pb-6 border-t border-white/10 pt-4">
               <button
-                onClick={() => setModalAjuste(false)}
-                className="px-5 h-10 rounded-xl bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 text-sm font-semibold transition-all active:scale-95"
+                onClick={() => !submitting && setModalAjuste(false)}
+                disabled={submitting}
+                className="px-5 h-10 rounded-xl bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 text-sm font-semibold transition-all active:scale-95 disabled:opacity-50"
               >
                 Cancelar
               </button>
               <button
-                onClick={handleSolicitarAjuste}
-                className="px-6 h-10 rounded-xl bg-green-500 hover:bg-green-400 text-white text-sm font-bold transition-all active:scale-95"
-              >
-                Revisar ajuste
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── MODAL CONFIRMAÇÃO AJUSTE ── */}
-      {modalConfirma && produtoAlvo && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-primary w-full max-w-sm rounded-2xl border border-white/10 p-6 space-y-5">
-            <div className="flex justify-center">
-              <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center">
-                <AlertCircle className="h-6 w-6 text-green-400" />
-              </div>
-            </div>
-            <div className="text-center space-y-1">
-              <h2 className="text-white font-bold text-lg">Confirmar ajuste?</h2>
-              <p className="text-white/50 text-sm">Esta operação ficará registrada no histórico.</p>
-            </div>
-
-            <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-white/50">Produto</span>
-                <span className="text-white font-semibold">{produtoAlvo.produto}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-white/50">Saldo anterior</span>
-                <span className="text-white font-mono">{produtoAlvo.saldoFinal}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-white/50">Novo saldo</span>
-                <span className={`font-mono font-bold ${Number(novaQtd) >= produtoAlvo.saldoFinal ? "text-green-400" : "text-orange-400"}`}>
-                  {novaQtd}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-white/50">Motivo</span>
-                <span className="text-white/80">{motivoAjuste}</span>
-              </div>
-            </div>
-
-            <div className="flex gap-3 pt-1">
-              <button
-                onClick={() => { setModalConfirma(false); setModalAjuste(true); }}
-                className="flex-1 h-10 rounded-xl bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 text-sm font-semibold transition-all active:scale-95"
-              >
-                Voltar
-              </button>
-              <button
                 onClick={confirmarAjuste}
-                className="flex-1 h-10 rounded-xl bg-green-500 hover:bg-green-400 text-white text-sm font-bold transition-all active:scale-95"
+                disabled={submitting}
+                className="flex items-center gap-2 px-6 h-10 rounded-xl bg-green-500 hover:bg-green-400 text-white text-sm font-bold transition-all active:scale-95 disabled:opacity-60"
               >
-                Confirmar
+                {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                {submitting ? "Salvando..." : "Confirmar ajuste"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── MODAL HISTÓRICO ── */}
+      {/* MODAL HISTÓRICO */}
       {modalHistorico && produtoHistorico && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-primary w-full max-w-lg rounded-2xl border border-white/10 max-h-[80vh] flex flex-col">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 shrink-0">
+          <div className="bg-primary w-full max-w-2xl rounded-2xl border border-white/10 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 sticky top-0 bg-primary z-10">
               <div className="flex items-center gap-3">
                 <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center">
-                  <ClipboardList className="h-3 w-3" />
+                  <Clock className="h-3 w-3" />
                 </span>
-                <div>
-                  <h2 className="text-base font-bold text-white">Histórico de Ajustes</h2>
-                  <p className="text-white/40 text-xs">{produtoHistorico}</p>
-                </div>
+                <h2 className="text-base font-bold text-white">
+                  Histórico de ajustes — {produtoHistorico.produtoNome}
+                </h2>
               </div>
-              <button onClick={() => setModalHistorico(false)} className="text-white/30 hover:text-white/70 transition">
+              <button
+                onClick={() => setModalHistorico(false)}
+                className="text-white/30 hover:text-white/70 transition"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="overflow-y-auto flex-1 p-6">
+            <div className="p-6">
               {ajustesHistorico.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-3">
-                  <ClipboardList className="h-8 w-8 text-white/15" />
-                  <p className="text-white/30 text-sm">Nenhum ajuste registrado</p>
+                  <Clock className="h-8 w-8 text-white/15" />
+                  <p className="text-white/30 text-sm">
+                    Nenhum ajuste registrado pra esse produto.
+                  </p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {ajustesHistorico.map((aj) => {
-                    const delta = aj.quantidadeNova - aj.quantidadeAnterior;
-                    return (
-                      <div key={aj.id} className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center justify-between gap-4">
-                        <div className="space-y-1 flex-1 min-w-0">
-                          <p className="text-white text-sm font-semibold">{aj.motivo}</p>
-                          <p className="text-white/40 text-xs font-mono">
-                            {new Date(aj.data + "T00:00:00").toLocaleDateString("pt-BR")}
-                          </p>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <p className="text-white/50 text-xs mb-1">
-                            {aj.quantidadeAnterior} → {aj.quantidadeNova}
-                          </p>
-                          <span className={`text-sm font-black ${delta > 0 ? "text-green-400" : delta < 0 ? "text-orange-400" : "text-white/40"}`}>
-                            {delta > 0 ? "+" : ""}{delta}
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-white/10">
+                      <th className="text-white/40 text-xs font-semibold text-left py-3">
+                        Data
+                      </th>
+                      <th className="text-white/40 text-xs font-semibold text-center py-3">
+                        Tipo
+                      </th>
+                      <th className="text-white/40 text-xs font-semibold text-center py-3">
+                        Qtd
+                      </th>
+                      <th className="text-white/40 text-xs font-semibold text-left py-3">
+                        Observações
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ajustesHistorico.map((a) => (
+                      <tr
+                        key={a.id}
+                        className="border-t border-white/5 hover:bg-white/5 transition-colors"
+                      >
+                        <td className="py-3 text-white/60 font-mono text-xs">
+                          {formatDateBR(a.createdAt)}
+                        </td>
+                        <td className="py-3 text-center">
+                          <span
+                            className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${
+                              a.tipo === "ENTRADA"
+                                ? "bg-green-500/10 text-green-400 border-green-500/20"
+                                : "bg-red-500/10 text-red-400 border-red-500/20"
+                            }`}
+                          >
+                            {a.tipo === "ENTRADA" ? "+ Entrada" : "− Saída"}
                           </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                        </td>
+                        <td className="py-3 text-center text-white font-semibold tabular-nums">
+                          {a.quantidade}
+                        </td>
+                        <td className="py-3 text-white/70 text-xs">
+                          {a.observacoes ?? MOTIVO_MOVIMENTO_LABEL[a.motivo]}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               )}
             </div>
           </div>
         </div>
       )}
 
-      {/* ── SUCESSO ── */}
       {sucesso && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-primary w-full max-w-xs rounded-2xl border border-white/10 p-6 space-y-4 text-center">
