@@ -26,6 +26,9 @@ import {
 } from "@/lib/data/financeiro";
 import { listContasPagar } from "@/services/contas-pagar";
 import { listContasReceber } from "@/services/contas-receber";
+import { listPedidos } from "@/services/pedidos";
+import { listMovimentos } from "@/services/movimentos-estoque";
+import { ORIGEM_LABEL } from "@/lib/data/financeiro";
 
 type PeriodoPreset = "hoje" | "7d" | "30d" | "mes" | "tudo" | "custom";
 
@@ -53,11 +56,21 @@ export default function FluxoDeCaixaPage() {
     setMounted(false);
     setLoadError(null);
     try {
-      const [pagarRes, receberRes] = await Promise.all([
-        listContasPagar({ limit: 500 }),
-        listContasReceber({ limit: 500 }),
-      ]);
-      setTransacoes(buildTransacoesFluxo(pagarRes.data, receberRes.data));
+      const [pagarRes, receberRes, pedidosRes, movimentosRes] =
+        await Promise.all([
+          listContasPagar({ limit: 500 }),
+          listContasReceber({ limit: 500 }),
+          listPedidos({ limit: 500 }),
+          listMovimentos({ limit: 500, tipo: "ENTRADA", motivo: "COMPRA" }),
+        ]);
+      setTransacoes(
+        buildTransacoesFluxo({
+          pagar: pagarRes.data,
+          receber: receberRes.data,
+          pedidos: pedidosRes.data,
+          movimentos: movimentosRes.data,
+        })
+      );
     } catch (err) {
       setLoadError(extractMessage(err, "Erro ao carregar transações."));
     } finally {
@@ -456,12 +469,12 @@ export default function FluxoDeCaixaPage() {
                       {t.contraparte ?? <span className="text-white/30">—</span>}
                     </TableCell>
                     <TableCell>
-                      <Badge className={
-                        t.origem === "Receber"
-                          ? "bg-green-500/15 text-green-400 border-green-500/25 border text-xs font-medium"
-                          : "bg-red-500/15 text-red-400 border-red-500/25 border text-xs font-medium"
-                      }>
-                        {t.origem === "Receber" ? "A Receber" : "A Pagar"}
+                      <Badge className={`${
+                        t.tipo === "entrada"
+                          ? "bg-green-500/15 text-green-400 border-green-500/25"
+                          : "bg-red-500/15 text-red-400 border-red-500/25"
+                      } border text-xs font-medium`}>
+                        {ORIGEM_LABEL[t.origem]}
                       </Badge>
                     </TableCell>
                     <TableCell>

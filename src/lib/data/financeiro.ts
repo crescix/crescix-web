@@ -35,6 +35,8 @@ export type {
 
 import type { ContaPagar } from "@/services/contas-pagar";
 import type { ContaReceber } from "@/services/contas-receber";
+import type { Pedido } from "@/services/pedidos";
+import type { MovimentoEstoque } from "@/services/movimentos-estoque";
 
 // ─── Labels e options ─────────────────────────────────────────────────────────
 
@@ -173,7 +175,21 @@ export interface TransacaoFluxo {
   valor: number;
   tipo: TipoTransacao;
   natureza: NaturezaTransacao;
-  origem: "Pagar" | "Receber";
+  origem: "Pagar" | "Receber" | "Venda" | "Compra";
+}
+
+export const ORIGEM_LABEL: Record<TransacaoFluxo["origem"], string> = {
+  Pagar:   "A Pagar",
+  Receber: "A Receber",
+  Venda:   "Venda",
+  Compra:  "Compra",
+};
+
+export interface FluxoSources {
+  pagar?: ContaPagar[];
+  receber?: ContaReceber[];
+  pedidos?: Pedido[];
+  movimentos?: MovimentoEstoque[];
 }
 
 export interface ResumoFluxo {
@@ -192,16 +208,24 @@ export interface PontoGrafico {
 }
 
 /**
- * Constrói o array de transações de fluxo de caixa a partir das contas
- * vindas da API. Função pura (sem fetch).
+ * Constrói o array de transações de fluxo de caixa a partir das fontes
+ * disponíveis: contas a pagar/receber, pedidos faturados e movimentos
+ * de estoque (compras). Função pura (sem fetch).
+ *
+ * Aceita ou (pagar, receber) — assinatura legada — ou um objeto
+ * `FluxoSources` com qualquer combinação.
  */
 export function buildTransacoesFluxo(
-  pagar: ContaPagar[],
-  receber: ContaReceber[]
+  pagarOrSources: ContaPagar[] | FluxoSources,
+  receber?: ContaReceber[]
 ): TransacaoFluxo[] {
+  const sources: FluxoSources = Array.isArray(pagarOrSources)
+    ? { pagar: pagarOrSources, receber: receber ?? [] }
+    : pagarOrSources;
+
   const out: TransacaoFluxo[] = [];
 
-  for (const p of pagar) {
+  for (const p of sources.pagar ?? []) {
     if (p.status === "CANCELADO") continue;
     const realizada = p.status === "PAGO" && !!p.dataPagamento;
     out.push({
@@ -219,7 +243,7 @@ export function buildTransacoesFluxo(
     });
   }
 
-  for (const r of receber) {
+  for (const r of sources.receber ?? []) {
     if (r.status === "CANCELADO") continue;
     const realizada = r.status === "RECEBIDO" && !!r.dataRecebimento;
     out.push({
@@ -234,6 +258,45 @@ export function buildTransacoesFluxo(
       tipo: "entrada",
       natureza: realizada ? "Realizada" : "Prevista",
       origem: "Receber",
+    });
+  }
+
+  // Vendas — pedidos faturados/pendentes entram como entrada no fluxo.
+  // FATURADO = Realizada; PENDENTE = Prevista; demais (ORCAMENTO/CANCELADO)
+  // são ignorados.
+  for (const ped of sources.pedidos ?? []) {
+    if (ped.status === "ORCAMENTO" || ped.status === "CANCELADO") continue;
+    const realizada = ped.status === "FATURADO";
+    out.push({
+      id: `ped-${ped.id}`,
+      data: ped.data.split("T")[0],
+      descricao: `Venda ${ped.numero}`,
+      categoria: "Venda",
+      contraparte: ped.clienteNome,
+      valor: Number(ped.valorTotal),
+      tipo: "entrada",
+      natureza: realizada ? "Realizada" : "Prevista",
+      origem: "Venda",
+    });
+  }
+
+  // Compras — movimentos de estoque tipo ENTRADA + motivo COMPRA entram
+  // como saída Realizada. Valor = quantidade × custoUnitario.
+  for (const m of sources.movimentos ?? []) {
+    if (m.tipo !== "ENTRADA" || m.motivo !== "COMPRA") continue;
+    const custo = Number(m.custoUnitario ?? 0);
+    if (!custo) continue;
+    const valor = m.quantidade * custo;
+    out.push({
+      id: `mov-${m.id}`,
+      data: m.createdAt.split("T")[0],
+      descricao: `Compra de ${m.produto?.nome ?? "produto"} (${m.quantidade}x)`,
+      categoria: "Compra",
+      contraparte: undefined,
+      valor,
+      tipo: "saida",
+      natureza: "Realizada",
+      origem: "Compra",
     });
   }
 
