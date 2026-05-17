@@ -89,7 +89,7 @@ export default function ContasReceberPage() {
     setLoadError(null);
     try {
       const res = await listContasReceber({
-        limit: 200,
+        limit: 100,
         ...(debouncedSearch && { search: debouncedSearch }),
         ...(statusFilter && { status: statusFilter }),
         ...(categoriaFilter && { categoria: categoriaFilter }),

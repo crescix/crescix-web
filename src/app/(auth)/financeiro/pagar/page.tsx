@@ -87,7 +87,7 @@ export default function ContasPagarPage() {
     setLoadError(null);
     try {
       const res = await listContasPagar({
-        limit: 200,
+        limit: 100,
         ...(debouncedSearch && { search: debouncedSearch }),
         ...(statusFilter && { status: statusFilter }),
         ...(categoriaFilter && { categoria: categoriaFilter }),
