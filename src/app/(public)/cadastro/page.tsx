@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { registerSchema, RegisterData } from "@/lib/validations/register";
 import { useAuth } from "@/context/auth-context";
 import { useEffect, useState } from "react";
+import { maskPhone } from "@/lib/utils/masks";
 
 export default function RegisterPage() {
     const { signUp, signOut } = useAuth();
@@ -26,11 +27,7 @@ export default function RegisterPage() {
     });
 
     const formatPhone = (e: React.FormEvent<HTMLInputElement>) => {
-        let value = e.currentTarget.value.replace(/\D/g, "");
-        value = value.replace(/^(\d{2})(\d)/g, "($1) $2");
-        value = value.replace(/(\d{5})(\d)/, "$1-$2");
-        value = value.slice(0, 15);
-        setValue("phone", value);
+        setValue("phone", maskPhone(e.currentTarget.value));
     };
 
     const onSubmit = async (data: RegisterData) => {
@@ -130,7 +127,8 @@ export default function RegisterPage() {
                                 <Input
                                     {...register("phone")}
                                     onInput={formatPhone}
-                                    placeholder="(00) 00000-0000"
+                                    inputMode="numeric"
+                                    placeholder="+55 (00) 00000-0000"
                                     className="pl-8 border-t-0 border-x-0 border-b-2 border-primary md:border-gray-300 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-primary transition-colors text-primary"
                                 />
                                 {errors.phone && (

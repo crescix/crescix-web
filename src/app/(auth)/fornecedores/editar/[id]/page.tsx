@@ -20,6 +20,7 @@ import {
 } from "@/services/fornecedores";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { maskCNPJ, maskPhone } from "@/lib/utils/masks";
 
 function Field({
   label, required, error, children, className = "",
@@ -85,10 +86,15 @@ export default function EditarFornecedor() {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<FornecedorFormData>({
     resolver: zodResolver(fornecedorSchema),
   });
+
+  const cnpj = watch("cnpj") ?? "";
+  const whatsapp = watch("whatsappVendedor") ?? "";
 
   // ─── Carrega o fornecedor da API ──────────────────────────────────────────
   useEffect(() => {
@@ -102,14 +108,14 @@ export default function EditarFornecedor() {
         setFornecedor(data);
         reset({
           razaoSocial:       data.razaoSocial,
-          cnpj:              data.cnpj,
+          cnpj:              maskCNPJ(data.cnpj),
           endereco:          data.endereco,
           type:              data.type,
           bairro:            data.bairro ?? "",
           numero:            data.numero ?? "",
           ramoAtividade:     data.ramoAtividade ?? "",
           nomeVendedor:      data.nomeVendedor ?? "",
-          whatsappVendedor:  data.whatsappVendedor ?? "",
+          whatsappVendedor:  data.whatsappVendedor ? maskPhone(data.whatsappVendedor) : "",
           emailVendedor:     data.emailVendedor ?? "",
           siteCatalogo:      data.siteCatalogo ?? "",
           chavePix:          data.chavePix ?? "",
@@ -246,8 +252,10 @@ export default function EditarFornecedor() {
 
               <Field label="CNPJ" required error={errors.cnpj?.message}>
                 <input
-                  {...register("cnpj")}
+                  value={cnpj}
+                  onChange={(e) => setValue("cnpj", maskCNPJ(e.target.value), { shouldDirty: true })}
                   placeholder="00.000.000/0000-00"
+                  inputMode="numeric"
                   className={inputClass}
                 />
               </Field>
@@ -316,8 +324,10 @@ export default function EditarFornecedor() {
 
               <Field label="WhatsApp" required error={errors.whatsappVendedor?.message}>
                 <input
-                  {...register("whatsappVendedor")}
-                  placeholder="(00) 00000-0000"
+                  value={whatsapp}
+                  onChange={(e) => setValue("whatsappVendedor", maskPhone(e.target.value), { shouldDirty: true })}
+                  placeholder="+55 (00) 00000-0000"
+                  inputMode="numeric"
                   className={inputClass}
                 />
               </Field>
