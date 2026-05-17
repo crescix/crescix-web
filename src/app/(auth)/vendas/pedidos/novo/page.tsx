@@ -10,7 +10,8 @@ import {
   produtosData,
   ItemVenda,
 } from "@/lib/data/cadastro-vendas";
-import { orcamentosData, Orcamento } from "@/lib/data/orcamentos";
+import type { Orcamento, ItemOrcamento } from "@/lib/data/orcamentos";
+import { getOrcamento } from "@/services/orcamentos";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -43,18 +44,18 @@ function findClienteIdByName(nome: string): string {
   return match?.id ?? clientesData[0]?.id ?? "";
 }
 
-function buildItemFromOrcamento(item: Orcamento["itens"] extends Array<infer T> | undefined ? T : never): ItemVenda {
+function buildItemFromOrcamento(item: ItemOrcamento): ItemVenda {
   const produtoNoCatalogo = produtosData.find(
-    (p) => p.nome.toLowerCase() === item.produto.toLowerCase()
+    (p) => p.nome.toLowerCase() === item.produtoNome.toLowerCase()
   );
-  const preco = item.preco_unitario;
-  const desconto = item.desconto_item;
+  const preco = Number(item.precoUnitario);
+  const desconto = Number(item.descontoItem);
   const subtotal = preco * item.quantidade * (1 - desconto / 100);
   return {
     id: `item-${item.id}-${Date.now()}`,
     produto: produtoNoCatalogo ?? {
       id: `prod-${item.id}`,
-      nome: item.produto,
+      nome: item.produtoNome,
       sku: "",
       preco,
     },
@@ -102,18 +103,22 @@ function NovoPedidoForm() {
   // ─── Pre-preenche a partir de orçamento (se ?orcamento= na URL) ─────────────
   useEffect(() => {
     if (!orcamentoIdParam) return;
-    const orc = orcamentosData.find((o) => o.id === orcamentoIdParam);
-    if (!orc) return;
+    let cancelled = false;
 
-    setOrcamentoOrigem(orc);
+    getOrcamento(orcamentoIdParam)
+      .then((orc) => {
+        if (cancelled) return;
+        setOrcamentoOrigem(orc);
+        setClienteId(findClienteIdByName(orc.clienteNome));
+        if (orc.itens && orc.itens.length > 0) {
+          setItens(orc.itens.map(buildItemFromOrcamento));
+        }
+      })
+      .catch(() => {
+        // Orçamento não encontrado — apenas ignora a pre-prefilling
+      });
 
-    // Pré-preenche cliente tentando casar pelo nome
-    setClienteId(findClienteIdByName(orc.cliente));
-
-    // Pré-preenche itens do orçamento
-    if (orc.itens && orc.itens.length > 0) {
-      setItens(orc.itens.map(buildItemFromOrcamento));
-    }
+    return () => { cancelled = true; };
   }, [orcamentoIdParam]);
 
   const handleDesvincular = () => {
