@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Mail, Lock, User, Phone, Loader2, AlertCircle, ArrowRight } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -112,6 +113,50 @@ export default function RegisterPage() {
                     error={errors.confirmPassword?.message}
                     {...register("confirmPassword")}
                 />
+
+                {/* ── Consentimento LGPD ─────────────────────────────────
+                    Checkbox obrigatória pra ter consentimento explícito
+                    do tratamento de dados, conforme art. 7º, I da LGPD. */}
+                <div className="pt-2">
+                    <label className="flex items-start gap-3 cursor-pointer group">
+                        <input
+                            type="checkbox"
+                            {...register("aceitouTermos")}
+                            className="
+                                mt-0.5 h-4 w-4
+                                rounded
+                                border-white/20 bg-elevated
+                                accent-brand
+                                cursor-pointer
+                                flex-shrink-0
+                            "
+                        />
+                        <span className="text-xs text-white/65 leading-relaxed group-hover:text-white/85 transition-colors">
+                            Li e concordo com os{" "}
+                            <Link
+                                href="/termos"
+                                target="_blank"
+                                className="text-brand hover:text-brand-strong underline underline-offset-2"
+                            >
+                                Termos de uso
+                            </Link>{" "}
+                            e a{" "}
+                            <Link
+                                href="/privacidade"
+                                target="_blank"
+                                className="text-brand hover:text-brand-strong underline underline-offset-2"
+                            >
+                                Política de Privacidade
+                            </Link>
+                            .
+                        </span>
+                    </label>
+                    {errors.aceitouTermos && (
+                        <p className="text-xs text-red-400 mt-1.5 pl-7">
+                            {errors.aceitouTermos.message}
+                        </p>
+                    )}
+                </div>
 
                 {submitError && (
                     <div className="flex items-start gap-2 bg-red-500/10 border border-red-400/30 rounded-lg p-3 text-red-300 text-sm">
