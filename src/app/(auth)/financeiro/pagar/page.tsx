@@ -3,7 +3,6 @@
 import {
   Plus,
   Search,
-  Calendar,
   FileText,
   ChevronLeft,
   ChevronRight,
@@ -36,6 +35,11 @@ import type { CategoriaPagar, StatusConta } from "@/services/api/enums";
 import { ContaPagarItem } from "@/components/financeiro/conta-pagar-item";
 import { ModalExclusaoConta } from "@/components/financeiro/modal-exclusao-conta";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
+import {
+  PeriodoPresets,
+  resolveRange,
+  type PeriodoPreset,
+} from "@/components/ui/periodo-presets";
 import { ContaPagarForm } from "./_components/conta-pagar-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,10 +63,16 @@ export default function ContasPagarPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [periodo, setPeriodo] = useState<PeriodoPreset>("tudo");
   const [dateStart, setDateStart] = useState("");
   const [dateEnd, setDateEnd] = useState("");
   const [statusFilter, setStatusFilter] = useState<"" | StatusConta>("");
   const [categoriaFilter, setCategoriaFilter] = useState<"" | CategoriaPagar>("");
+
+  const { from: rangeFrom, to: rangeTo } = useMemo(
+    () => resolveRange(periodo, dateStart, dateEnd),
+    [periodo, dateStart, dateEnd]
+  );
 
   const [formOpen, setFormOpen] = useState(false);
   const [contaEdit, setContaEdit] = useState<ContaPagar | null>(null);
@@ -86,8 +96,8 @@ export default function ContasPagarPage() {
         ...(debouncedSearch && { search: debouncedSearch }),
         ...(statusFilter && { status: statusFilter }),
         ...(categoriaFilter && { categoria: categoriaFilter }),
-        ...(dateStart && { vencimentoFrom: dateStart }),
-        ...(dateEnd && { vencimentoTo: dateEnd }),
+        ...(rangeFrom && { vencimentoFrom: rangeFrom }),
+        ...(rangeTo && { vencimentoTo: rangeTo }),
       });
       setData(res.data);
     } catch (err) {
@@ -95,7 +105,7 @@ export default function ContasPagarPage() {
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearch, statusFilter, categoriaFilter, dateStart, dateEnd]);
+  }, [debouncedSearch, statusFilter, categoriaFilter, rangeFrom, rangeTo]);
 
   useEffect(() => {
     fetchData();
@@ -189,13 +199,14 @@ export default function ContasPagarPage() {
     setSearchTerm("");
     setStatusFilter("");
     setCategoriaFilter("");
+    setPeriodo("tudo");
     setDateStart("");
     setDateEnd("");
     setCurrentPage(1);
   };
 
   const hasFilters =
-    searchTerm || statusFilter || categoriaFilter || dateStart || dateEnd;
+    searchTerm || statusFilter || categoriaFilter || periodo !== "tudo";
 
   return (
     <div className="w-full min-h-screen bg-secondary p-4 md:p-8 flex flex-col items-center">
@@ -273,89 +284,56 @@ export default function ContasPagarPage() {
         </div>
 
         {/* Filtros */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-3 bg-primary p-4 rounded-2xl border border-white/5">
-          <div className="md:col-span-2 space-y-1.5">
-            <label className="text-white/50 text-xs font-medium block">
-              Descrição / Fornecedor
-            </label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30" />
-              <Input
-                placeholder="Buscar..."
-                value={searchTerm}
+        <div className="bg-primary p-4 rounded-2xl border border-white/5 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="md:col-span-1 space-y-1.5">
+              <label className="text-white/50 text-xs font-medium block">
+                Descrição / Fornecedor
+              </label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30" />
+                <Input
+                  placeholder="Buscar..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="pl-8 bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-green-500/50 h-9 text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-white/50 text-xs font-medium block">Status</label>
+              <select
+                value={statusFilter}
                 onChange={(e) => {
-                  setSearchTerm(e.target.value);
+                  setStatusFilter(e.target.value as "" | StatusConta);
                   setCurrentPage(1);
                 }}
-                className="pl-8 bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-green-500/50 h-9 text-sm"
-              />
+                className="w-full bg-white/5 border border-white/10 text-white focus:border-green-500/50 h-9 px-3 rounded-md focus:outline-none text-sm"
+              >
+                <option value="">Todos</option>
+                {STATUS_CONTA_PAGAR_OPTIONS.map((s) => (
+                  <option key={s} value={s}>
+                    {STATUS_CONTA_LABEL[s]}
+                  </option>
+                ))}
+              </select>
             </div>
-          </div>
 
-          <div className="space-y-1.5">
-            <label className="text-white/50 text-xs font-medium block">
-              Vencimento de
-            </label>
-            <div className="relative">
-              <Input
-                type="date"
-                value={dateStart}
+            <div className="space-y-1.5">
+              <label className="text-white/50 text-xs font-medium block">
+                Categoria
+              </label>
+              <select
+                value={categoriaFilter}
                 onChange={(e) => {
-                  setDateStart(e.target.value);
+                  setCategoriaFilter(e.target.value as "" | CategoriaPagar);
                   setCurrentPage(1);
                 }}
-                className="bg-white/5 border-white/10 text-white focus:border-green-500/50 h-9 text-sm pr-9"
-              />
-              <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30 pointer-events-none" />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-white/50 text-xs font-medium block">Até</label>
-            <div className="relative">
-              <Input
-                type="date"
-                value={dateEnd}
-                onChange={(e) => {
-                  setDateEnd(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="bg-white/5 border-white/10 text-white focus:border-green-500/50 h-9 text-sm pr-9"
-              />
-              <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30 pointer-events-none" />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-white/50 text-xs font-medium block">Status</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value as "" | StatusConta);
-                setCurrentPage(1);
-              }}
-              className="w-full bg-white/5 border border-white/10 text-white focus:border-green-500/50 h-9 px-3 rounded-md focus:outline-none text-sm"
-            >
-              <option value="">Todos</option>
-              {STATUS_CONTA_PAGAR_OPTIONS.map((s) => (
-                <option key={s} value={s}>
-                  {STATUS_CONTA_LABEL[s]}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="md:col-span-5 lg:col-span-1 space-y-1.5 lg:col-start-5">
-            <label className="text-white/50 text-xs font-medium block">
-              Categoria
-            </label>
-            <select
-              value={categoriaFilter}
-              onChange={(e) => {
-                setCategoriaFilter(e.target.value as "" | CategoriaPagar);
-                setCurrentPage(1);
-              }}
-              className="w-full bg-white/5 border border-white/10 text-white focus:border-green-500/50 h-9 px-3 rounded-md focus:outline-none text-sm"
+                className="w-full bg-white/5 border border-white/10 text-white focus:border-green-500/50 h-9 px-3 rounded-md focus:outline-none text-sm"
             >
               <option value="">Todas</option>
               {CATEGORIA_PAGAR_OPTIONS.map((c) => (
@@ -364,6 +342,27 @@ export default function ContasPagarPage() {
                 </option>
               ))}
             </select>
+            </div>
+          </div>
+
+          <div className="pt-1">
+            <label className="text-white/50 text-xs font-medium block mb-2">
+              Vencimento
+            </label>
+            <PeriodoPresets
+              preset={periodo}
+              dateStart={dateStart}
+              dateEnd={dateEnd}
+              onPresetChange={(p) => {
+                setPeriodo(p);
+                setCurrentPage(1);
+              }}
+              onCustomDateChange={(field, value) => {
+                if (field === "start") setDateStart(value);
+                else setDateEnd(value);
+                setCurrentPage(1);
+              }}
+            />
           </div>
         </div>
 
