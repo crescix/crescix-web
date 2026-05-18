@@ -3,44 +3,55 @@ import * as z from "zod";
 /**
  * Schema do formulário de fornecedor (cadastro e edição).
  *
- * Os valores de `type` espelham o enum `TipoFornecedor` do Prisma
- * (COMERCIO/INDUSTRIA/SERVICO em maiúsculo). A camada de display
- * usa `FORNECEDOR_TYPE_LABEL` de `@/lib/data/fornecedores` para
- * mostrar com acentuação ("Comércio", etc.).
+ * Espelha o `fornecedorCreateSchema` da API (crescix-api). Lá, só 4 campos
+ * são obrigatórios — todos os demais são opcionais. O formulário antigo
+ * estava forçando 16 campos required no client-side por motivo errado;
+ * agora segue o backend, e o que é opcional pra API é opcional no form.
+ *
+ * `type` espelha o enum `TipoFornecedor` do Prisma (COMERCIO/INDUSTRIA/
+ * SERVICO em maiúsculo). A camada de display usa `FORNECEDOR_TYPE_LABEL`
+ * de `@/lib/data/fornecedores` pra mostrar com acentuação.
  */
 export const fornecedorSchema = z.object({
-  // Dados da Empresa
-  razaoSocial: z.string().min(3, "Razão Social deve ter no mínimo 3 caracteres"),
+  // ── Obrigatórios (alinhados com fornecedorCreateSchema da API) ────────────
+  razaoSocial: z.string().min(2, "Informe o nome da empresa"),
   cnpj: z.string().min(14, "CNPJ inválido"),
-  endereco: z.string().min(5, "Endereço completo é obrigatório"),
+  endereco: z.string().min(2, "Informe o endereço"),
   type: z.enum(["COMERCIO", "INDUSTRIA", "SERVICO"], {
     message: "Selecione o tipo do fornecedor",
   }),
-  ramoAtividade: z.string().min(1, "Selecione um ramo de atividade"),
-  bairro: z.string().min(2, "Bairro é obrigatório"),
-  numero: z.string().min(1, "Número é obrigatório"),
 
-  // Dados do Representante
-  nomeVendedor: z.string().min(3, "Nome do vendedor é obrigatório"),
-  whatsappVendedor: z.string().min(10, "WhatsApp inválido"),
-  emailVendedor: z.string().email("E-mail inválido"),
+  // ── Opcionais (todos devem aceitar string vazia ou serem omitidos) ───────
+  // O backend espera optional; aqui usamos `.optional().or(z.literal(""))`
+  // pra que o input controlado com "" seja aceito sem erro.
+  bairro: z.string().max(120).optional().or(z.literal("")),
+  numero: z.string().max(20).optional().or(z.literal("")),
+  ramoAtividade: z.string().max(120).optional().or(z.literal("")),
+  nomeVendedor: z.string().max(120).optional().or(z.literal("")),
+  whatsappVendedor: z.string().max(20).optional().or(z.literal("")),
+  emailVendedor: z
+    .string()
+    .refine(
+      (v) => v === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+      "E-mail inválido"
+    )
+    .optional()
+    .or(z.literal("")),
   // Aceita "www.exemplo.com", "exemplo.com.br" ou "https://exemplo.com".
-  // Antes de enviar pro backend, normalizeUrl() adiciona https:// se faltar.
+  // `normalizeUrl()` adiciona https:// antes de enviar pro backend.
   siteCatalogo: z
     .string()
     .refine(
       (v) => v === "" || /^([a-z]+:\/\/)?[a-z0-9.-]+\.[a-z]{2,}([/?#].*)?$/i.test(v.trim()),
-      "Informe um endereço válido (ex.: www.exemplo.com.br)"
+      "Endereço inválido (ex.: www.exemplo.com.br)"
     )
     .optional()
     .or(z.literal("")),
-
-  // Dados Bancários
-  chavePix: z.string().min(1, "Chave Pix é obrigatória"),
-  agencia: z.string().min(1, "Agência é obrigatória"),
-  banco: z.string().min(1, "Banco é obrigatório"),
-  conta: z.string().min(1, "Número da conta é obrigatório"),
-  condicaoPagamento: z.string().min(1, "Condição de pagamento é obrigatória"),
+  chavePix: z.string().max(120).optional().or(z.literal("")),
+  banco: z.string().max(80).optional().or(z.literal("")),
+  agencia: z.string().max(20).optional().or(z.literal("")),
+  conta: z.string().max(30).optional().or(z.literal("")),
+  condicaoPagamento: z.string().max(120).optional().or(z.literal("")),
 });
 
 export type FornecedorFormData = z.infer<typeof fornecedorSchema>;

@@ -47,8 +47,8 @@ function ModalExclusao({
               <AlertTriangle className="w-5 h-5 text-red-400" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white">Confirmar Exclusão</h2>
-              <p className="text-xs text-white/40 mt-0.5">Esta ação não poderá ser desfeita</p>
+              <h2 className="text-base font-bold text-white">Excluir fornecedor?</h2>
+              <p className="text-xs text-white/40 mt-0.5">Essa ação não tem volta.</p>
             </div>
           </div>
           <button
@@ -77,8 +77,7 @@ function ModalExclusao({
           </div>
 
           <p className="text-sm text-white/60">
-            Tem certeza que deseja excluir{" "}
-            <strong className="text-white">{fornecedor.razaoSocial}</strong>?
+            Vai sumir da lista e dos relatórios. Tem certeza?
           </p>
         </div>
 
@@ -212,22 +211,21 @@ export default function FornecedoresPage() {
           {/* Header */}
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
-              <p className="text-white/60 text-xs font-medium uppercase tracking-widest mb-1">
-                Cadastros
-              </p>
-              <h1 className="text-3xl font-black text-white tracking-tighter">
+              <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
                 Fornecedores
               </h1>
-              <p className="text-sm text-white/40 mt-1">
+              <p className="text-sm text-white/45 mt-1">
                 {loading
                   ? "Carregando..."
-                  : `${lista.length} ${lista.length === 1 ? "parceiro cadastrado" : "parceiros cadastrados"}`}
+                  : lista.length === 0
+                    ? "Quem te abastece, num só lugar."
+                    : `${lista.length} ${lista.length === 1 ? "cadastrado" : "cadastrados"}`}
               </p>
             </div>
             <Link href="/fornecedores/cadastro">
-              <Button className="bg-green-500 hover:bg-green-400 text-white font-bold rounded-full px-5 transition-all hover:scale-105 active:scale-95">
+              <Button className="bg-brand hover:bg-brand-strong text-white font-semibold rounded-lg px-5 glow-brand glow-brand-hover transition-base">
                 <Plus className="mr-2 h-4 w-4" />
-                Novo Fornecedor
+                Adicionar
               </Button>
             </Link>
           </div>
@@ -280,23 +278,27 @@ export default function FornecedoresPage() {
 
           {/* Lista agrupada */}
           {!loading && tipos.length === 0 && !error && (
-            <div className="bg-primary rounded-2xl border border-white/10 p-16 text-center">
+            <div className="bg-primary rounded-2xl border border-white/10 p-12 md:p-16 text-center">
               <Building2 className="w-10 h-10 text-white/15 mx-auto mb-3" />
-              <p className="text-sm text-white/40">
-                {busca
-                  ? "Nenhum fornecedor encontrado para a busca."
-                  : "Você ainda não cadastrou nenhum fornecedor."}
-              </p>
-              {!busca && (
-                <Link href="/fornecedores/cadastro" className="inline-block mt-3">
-                  <Button
-                    size="sm"
-                    className="bg-green-500 hover:bg-green-400 text-white font-bold"
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Cadastrar primeiro
-                  </Button>
-                </Link>
+              {busca ? (
+                <p className="text-sm text-white/40">
+                  Nada encontrado pra <span className="text-white/60">&quot;{busca}&quot;</span>.
+                </p>
+              ) : (
+                <>
+                  <h3 className="text-base font-semibold text-white">
+                    Nenhum fornecedor por aqui ainda
+                  </h3>
+                  <p className="text-sm text-white/45 mt-1.5 max-w-sm mx-auto">
+                    Cadastre quem te abastece pra usar nos pedidos de compra e relatórios.
+                  </p>
+                  <Link href="/fornecedores/cadastro" className="inline-block mt-5">
+                    <Button className="bg-brand hover:bg-brand-strong text-white font-semibold">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Cadastrar o primeiro
+                    </Button>
+                  </Link>
+                </>
               )}
             </div>
           )}
