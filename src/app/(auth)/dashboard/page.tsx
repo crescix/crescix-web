@@ -21,6 +21,7 @@ import { listContasPagar, type ContaPagar } from "@/services/contas-pagar";
 import { listContasReceber, type ContaReceber } from "@/services/contas-receber";
 import { listPedidos, type Pedido } from "@/services/pedidos";
 import { listMovimentos, type MovimentoEstoque } from "@/services/movimentos-estoque";
+import { OnboardingCard } from "@/components/dashboard/onboarding-card";
 
 function saudacao(): string {
   const hora = new Date().getHours();
@@ -224,6 +225,16 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* ── Onboarding (só pra usuário novo) ─────────────────────────────── */}
+        {/* Conta lançamentos brutos pra detectar se o usuário já registrou
+            algo. Se >0, esconde a etapa "mande primeira mensagem". */}
+        <OnboardingCard
+          totalLancamentos={
+            contasPagar.length + contasReceber.length + pedidos.length
+          }
+          mounted={mounted}
+        />
 
         {/* ── KPI cards principais ─────────────────────────────────────────── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
