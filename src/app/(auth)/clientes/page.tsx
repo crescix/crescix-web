@@ -101,16 +101,19 @@ export default function ClientesPage() {
 
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
-              <p className="text-white/60 text-xs font-medium uppercase tracking-widest mb-1">Cadastros</p>
-              <h1 className="text-3xl font-black text-white tracking-tighter">Clientes</h1>
-              <p className="text-sm text-white/40 mt-1">
-                {loading ? "Carregando..." : `${lista.length} ${lista.length === 1 ? "cliente" : "clientes"}`}
+              <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Clientes</h1>
+              <p className="text-sm text-white/45 mt-1">
+                {loading
+                  ? "Carregando..."
+                  : lista.length === 0
+                    ? "Quem compra de você, num só lugar."
+                    : `${lista.length} ${lista.length === 1 ? "cadastrado" : "cadastrados"}`}
               </p>
             </div>
             <Link href="/clientes/cadastro">
-              <Button className="bg-green-500 hover:bg-green-400 text-white font-bold rounded-full px-5 transition-all hover:scale-105 active:scale-95">
+              <Button className="bg-brand hover:bg-brand-strong text-white font-semibold rounded-lg px-5 glow-brand glow-brand-hover transition-base">
                 <Plus className="mr-2 h-4 w-4" />
-                Novo Cliente
+                Adicionar
               </Button>
             </Link>
           </div>
@@ -170,20 +173,27 @@ export default function ClientesPage() {
               <p className="text-sm text-white/40">Carregando clientes...</p>
             </div>
           ) : lista.length === 0 && !error ? (
-            <div className="bg-primary rounded-2xl border border-white/10 p-16 text-center">
+            <div className="bg-primary rounded-2xl border border-white/10 p-12 md:p-16 text-center">
               <Users className="w-10 h-10 text-white/15 mx-auto mb-3" />
-              <p className="text-sm text-white/40">
-                {search || status
-                  ? "Nenhum cliente encontrado para os filtros."
-                  : "Você ainda não cadastrou nenhum cliente."}
-              </p>
-              {!search && !status && (
-                <Link href="/clientes/cadastro" className="inline-block mt-3">
-                  <Button size="sm" className="bg-green-500 hover:bg-green-400 text-white font-bold">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Cadastrar primeiro
-                  </Button>
-                </Link>
+              {search || status ? (
+                <p className="text-sm text-white/40">
+                  Nada encontrado com os filtros atuais.
+                </p>
+              ) : (
+                <>
+                  <h3 className="text-base font-semibold text-white">
+                    Nenhum cliente por aqui ainda
+                  </h3>
+                  <p className="text-sm text-white/45 mt-1.5 max-w-sm mx-auto">
+                    Cadastre seus clientes pra ligar pedidos a quem compra de você.
+                  </p>
+                  <Link href="/clientes/cadastro" className="inline-block mt-5">
+                    <Button className="bg-brand hover:bg-brand-strong text-white font-semibold">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Cadastrar o primeiro
+                    </Button>
+                  </Link>
+                </>
               )}
             </div>
           ) : (

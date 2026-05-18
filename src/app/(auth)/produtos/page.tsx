@@ -102,16 +102,19 @@ export default function ProdutosPage() {
 
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
-              <p className="text-white/60 text-xs font-medium uppercase tracking-widest mb-1">Cadastros</p>
-              <h1 className="text-3xl font-black text-white tracking-tighter">Produtos</h1>
-              <p className="text-sm text-white/40 mt-1">
-                {loading ? "Carregando..." : `${lista.length} ${lista.length === 1 ? "produto" : "produtos"}`}
+              <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Produtos</h1>
+              <p className="text-sm text-white/45 mt-1">
+                {loading
+                  ? "Carregando..."
+                  : lista.length === 0
+                    ? "O que você vende, num só lugar."
+                    : `${lista.length} ${lista.length === 1 ? "cadastrado" : "cadastrados"}`}
               </p>
             </div>
             <Link href="/produtos/cadastro">
-              <Button className="bg-green-500 hover:bg-green-400 text-white font-bold rounded-full px-5 transition-all hover:scale-105 active:scale-95">
+              <Button className="bg-brand hover:bg-brand-strong text-white font-semibold rounded-lg px-5 glow-brand glow-brand-hover transition-base">
                 <Plus className="mr-2 h-4 w-4" />
-                Novo Produto
+                Adicionar
               </Button>
             </Link>
           </div>
@@ -155,20 +158,27 @@ export default function ProdutosPage() {
               <p className="text-sm text-white/40">Carregando produtos...</p>
             </div>
           ) : lista.length === 0 && !error ? (
-            <div className="bg-primary rounded-2xl border border-white/10 p-16 text-center">
+            <div className="bg-primary rounded-2xl border border-white/10 p-12 md:p-16 text-center">
               <Package className="w-10 h-10 text-white/15 mx-auto mb-3" />
-              <p className="text-sm text-white/40">
-                {search
-                  ? "Nenhum produto encontrado para a busca."
-                  : "Você ainda não cadastrou nenhum produto."}
-              </p>
-              {!search && (
-                <Link href="/produtos/cadastro" className="inline-block mt-3">
-                  <Button size="sm" className="bg-green-500 hover:bg-green-400 text-white font-bold">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Cadastrar primeiro
-                  </Button>
-                </Link>
+              {search ? (
+                <p className="text-sm text-white/40">
+                  Nada encontrado pra <span className="text-white/60">&quot;{search}&quot;</span>.
+                </p>
+              ) : (
+                <>
+                  <h3 className="text-base font-semibold text-white">
+                    Nenhum produto por aqui ainda
+                  </h3>
+                  <p className="text-sm text-white/45 mt-1.5 max-w-sm mx-auto">
+                    Cadastre o que você vende pra usar nos pedidos, no estoque e nos relatórios.
+                  </p>
+                  <Link href="/produtos/cadastro" className="inline-block mt-5">
+                    <Button className="bg-brand hover:bg-brand-strong text-white font-semibold">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Cadastrar o primeiro
+                    </Button>
+                  </Link>
+                </>
               )}
             </div>
           ) : (
@@ -178,9 +188,9 @@ export default function ProdutosPage() {
                   <thead>
                     <tr className="bg-white/5 border-b border-white/10">
                       <th className="text-left px-6 py-3 text-xs font-semibold text-white/50 uppercase tracking-wider">Nome</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-white/50 uppercase tracking-wider">SKU</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-white/50 uppercase tracking-wider">Código</th>
                       <th className="text-right px-4 py-3 text-xs font-semibold text-white/50 uppercase tracking-wider">Preço</th>
-                      <th className="text-center px-4 py-3 text-xs font-semibold text-white/50 uppercase tracking-wider">Estoque mín.</th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold text-white/50 uppercase tracking-wider">Aviso</th>
                       <th className="text-right px-6 py-3 text-xs font-semibold text-white/50 uppercase tracking-wider">Ações</th>
                     </tr>
                   </thead>
@@ -264,10 +274,10 @@ function ModalEditar({
       <div onClick={(e) => e.stopPropagation()} className="bg-primary border border-white/10 text-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
         <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
           <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-full bg-green-500/20 flex items-center justify-center">
-              <Pencil className="w-3.5 h-3.5 text-green-400" />
+            <div className="w-7 h-7 rounded-full bg-brand/20 flex items-center justify-center">
+              <Pencil className="w-3.5 h-3.5 text-brand" />
             </div>
-            <h2 className="text-base font-bold">Editar Produto</h2>
+            <h2 className="text-base font-bold">Editar produto</h2>
           </div>
           <button onClick={onClose} disabled={saving} className="text-white/50 hover:text-white">
             <X className="w-5 h-5" />
@@ -276,7 +286,9 @@ function ModalEditar({
 
         <form onSubmit={submit} className="p-6 space-y-4">
           <div className="space-y-1.5">
-            <label className="text-white/50 text-xs font-medium">Nome *</label>
+            <label className="text-white/55 text-xs font-semibold uppercase tracking-wider">
+              Nome <span className="text-brand">*</span>
+            </label>
             <input
               value={form.nome}
               onChange={(e) => setForm({ ...form, nome: e.target.value })}
@@ -284,39 +296,42 @@ function ModalEditar({
               className={inputClass}
             />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-white/50 text-xs font-medium">SKU</label>
+              <label className="text-white/55 text-xs font-semibold uppercase tracking-wider">Código</label>
               <input
                 value={form.sku}
                 onChange={(e) => setForm({ ...form, sku: e.target.value })}
-                placeholder="TEN-001"
+                placeholder="Opcional"
                 className={inputClass}
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-white/50 text-xs font-medium">Preço (R$)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={form.preco}
-                onChange={(e) => setForm({ ...form, preco: e.target.value as unknown as string })}
-                className={inputClass}
-              />
+              <label className="text-white/55 text-xs font-semibold uppercase tracking-wider">Preço</label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-sm">R$</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={form.preco}
+                  onChange={(e) => setForm({ ...form, preco: e.target.value as unknown as string })}
+                  className={`${inputClass} pl-9`}
+                />
+              </div>
             </div>
           </div>
           <div className="space-y-1.5">
-            <label className="text-white/50 text-xs font-medium">Descrição</label>
+            <label className="text-white/55 text-xs font-semibold uppercase tracking-wider">Descrição</label>
             <textarea
               value={form.descricao}
               onChange={(e) => setForm({ ...form, descricao: e.target.value })}
               rows={3}
-              className="w-full px-3 py-2 rounded-lg bg-white/5 text-white border border-white/10 placeholder:text-white/25 focus:outline-none focus:border-green-500/50 text-sm transition-colors resize-none"
+              className={`${inputClass} resize-none`}
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-white/50 text-xs font-medium">Estoque mínimo</label>
+            <label className="text-white/55 text-xs font-semibold uppercase tracking-wider">Aviso de baixo estoque</label>
             <input
               type="number"
               min="0"
@@ -324,19 +339,20 @@ function ModalEditar({
               onChange={(e) => setForm({ ...form, estoqueMinimo: Number(e.target.value) })}
               className={inputClass}
             />
+            <p className="text-xs text-white/35">Te avisa quando sobrar essa quantidade ou menos.</p>
           </div>
 
           {err && (
-            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-sm text-red-400">
+            <div className="bg-red-500/10 border border-red-400/30 rounded-lg p-3 text-sm text-red-300">
               {err}
             </div>
           )}
 
           <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="ghost" onClick={onClose} disabled={saving} className="border border-white/10 text-white hover:bg-white/10">
+            <Button type="button" variant="ghost" onClick={onClose} disabled={saving} className="border border-white/10 text-white/70 hover:bg-white/5">
               Cancelar
             </Button>
-            <Button type="submit" disabled={saving} className="bg-green-500 hover:bg-green-400 text-white font-bold">
+            <Button type="submit" disabled={saving} className="bg-brand hover:bg-brand-strong text-white font-semibold glow-brand glow-brand-hover">
               {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
               {saving ? "Salvando..." : "Salvar"}
             </Button>
@@ -364,7 +380,7 @@ function ModalExcluir({
           </div>
           <h2 className="text-white font-bold text-lg">Excluir produto?</h2>
           <p className="text-white/60 text-sm">
-            Deseja excluir <span className="text-white font-semibold">{produto.nome}</span>? Esta ação não poderá ser desfeita.
+            <span className="text-white font-semibold">{produto.nome}</span> vai sumir da lista e dos pedidos. Essa ação não tem volta.
           </p>
         </div>
         <div className="flex gap-3 pt-2">
