@@ -54,6 +54,7 @@ export const NAVBAR_MENU: MenuItem[] = [
       { label: "Contas a Pagar", href: "/financeiro/pagar" },
       { label: "Contas a Receber", href: "/financeiro/receber" },
       { label: "Fluxo de Caixa", href: "/financeiro/fluxo-de-caixa" },
+      { label: "Análise IA", href: "/financeiro/insights" },
     ],
   },
 ];
