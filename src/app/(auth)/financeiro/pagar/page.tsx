@@ -214,19 +214,23 @@ export default function ContasPagarPage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
-            <p className="text-white/60 text-xs font-medium uppercase tracking-widest mb-1">
-              Financeiro
-            </p>
-            <h1 className="text-3xl font-black text-white tracking-tighter">
-              Contas a Pagar
+            <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+              Contas a pagar
             </h1>
+            <p className="text-sm text-white/45 mt-1">
+              {loading
+                ? "Carregando..."
+                : data.length === 0
+                  ? "Tudo que você precisa pagar, num só lugar."
+                  : `${data.length} ${data.length === 1 ? "conta" : "contas"}`}
+            </p>
           </div>
           <Button
             onClick={handleNovo}
-            className="bg-green-500 hover:bg-green-400 text-white font-bold rounded-full px-5 transition-all hover:scale-105 active:scale-95"
+            className="bg-brand hover:bg-brand-strong text-white font-semibold rounded-lg px-5 glow-brand glow-brand-hover transition-base"
           >
             <Plus className="mr-2 h-4 w-4" />
-            Nova Conta
+            Nova conta
           </Button>
         </div>
 
@@ -288,7 +292,7 @@ export default function ContasPagarPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="md:col-span-1 space-y-1.5">
               <label className="text-white/50 text-xs font-medium block">
-                Descrição / Fornecedor
+                Descrição ou fornecedor
               </label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30" />
@@ -299,7 +303,7 @@ export default function ContasPagarPage() {
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="pl-8 bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-green-500/50 h-9 text-sm"
+                  className="pl-8 bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-brand/50 h-9 text-sm"
                 />
               </div>
             </div>
@@ -312,7 +316,7 @@ export default function ContasPagarPage() {
                   setStatusFilter(e.target.value as "" | StatusConta);
                   setCurrentPage(1);
                 }}
-                className="w-full bg-white/5 border border-white/10 text-white focus:border-green-500/50 h-9 px-3 rounded-md focus:outline-none text-sm"
+                className="w-full bg-white/5 border border-white/10 text-white focus:border-brand/50 h-9 px-3 rounded-md focus:outline-none text-sm"
               >
                 <option value="">Todos</option>
                 {STATUS_CONTA_PAGAR_OPTIONS.map((s) => (
@@ -333,7 +337,7 @@ export default function ContasPagarPage() {
                   setCategoriaFilter(e.target.value as "" | CategoriaPagar);
                   setCurrentPage(1);
                 }}
-                className="w-full bg-white/5 border border-white/10 text-white focus:border-green-500/50 h-9 px-3 rounded-md focus:outline-none text-sm"
+                className="w-full bg-white/5 border border-white/10 text-white focus:border-brand/50 h-9 px-3 rounded-md focus:outline-none text-sm"
             >
               <option value="">Todas</option>
               {CATEGORIA_PAGAR_OPTIONS.map((c) => (
@@ -396,23 +400,39 @@ export default function ContasPagarPage() {
                 <TableSkeleton columns={7} />
               ) : paginatedData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-16">
+                  <TableCell colSpan={7} className="text-center py-14 md:py-16">
                     <div className="flex flex-col items-center gap-3">
                       <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
                         <FileText className="h-5 w-5 text-white/20" />
                       </div>
-                      <p className="text-white/40 text-sm">
-                        {hasFilters
-                          ? "Nenhuma conta encontrada com esses filtros"
-                          : "Nenhuma conta a pagar cadastrada"}
-                      </p>
-                      {hasFilters && (
-                        <button
-                          onClick={resetFilters}
-                          className="text-green-400 text-xs hover:underline"
-                        >
-                          Limpar filtros
-                        </button>
+                      {hasFilters ? (
+                        <>
+                          <p className="text-white/40 text-sm">
+                            Nada encontrado com os filtros atuais.
+                          </p>
+                          <button
+                            onClick={resetFilters}
+                            className="text-brand text-xs hover:text-brand-strong"
+                          >
+                            Limpar filtros
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <h3 className="text-base font-semibold text-white">
+                            Nenhuma conta a pagar por aqui ainda
+                          </h3>
+                          <p className="text-sm text-white/45 max-w-sm">
+                            Adicione aluguel, energia, fornecedores, etc. Vence próximo? A gente avisa.
+                          </p>
+                          <Button
+                            onClick={handleNovo}
+                            className="mt-1 bg-brand hover:bg-brand-strong text-white font-semibold"
+                          >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Cadastrar a primeira
+                          </Button>
+                        </>
                       )}
                     </div>
                   </TableCell>
@@ -454,7 +474,7 @@ export default function ContasPagarPage() {
               onClick={() => setCurrentPage((p) => p - 1)}
               disabled={safePage === 1}
             />
-            <div className="px-4 h-9 rounded-lg border border-green-500/30 bg-green-500/10 text-green-400 text-sm font-medium flex items-center gap-1">
+            <div className="px-4 h-9 rounded-lg border border-brand/30 bg-brand/10 text-brand text-sm font-medium flex items-center gap-1">
               <span>{safePage}</span>
               <span className="text-white/30">/</span>
               <span className="text-white/40">{totalPages}</span>
