@@ -59,8 +59,10 @@ export function ModalExclusaoConta({
       >
         <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
           <div>
-            <h2 className="text-xl font-bold">Confirmar Exclusão</h2>
-            <p className="text-white/60 text-sm mt-1">Esta ação é irreversível.</p>
+            <h2 className="text-xl font-bold">
+              Excluir conta a {tipo === "receber" ? "receber" : "pagar"}?
+            </h2>
+            <p className="text-white/60 text-sm mt-1">Essa ação não tem volta.</p>
           </div>
           <button
             onClick={() => !isDeleting && onOpenChange(false)}
@@ -72,18 +74,18 @@ export function ModalExclusaoConta({
         </div>
 
         <div className="p-6">
-          <div className="flex gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-400">
+          <div className="flex gap-3 bg-red-500/10 border border-red-400/30 rounded-xl p-4 text-red-300">
             <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
-            <p className="text-sm font-medium">
-              Você tem certeza que deseja excluir esta conta a{" "}
-              {tipo === "receber" ? "receber" : "pagar"}? Esta ação não poderá
-              ser desfeita.
+            <p className="text-sm">
+              Essa conta vai sumir da lista e dos relatórios. Se já foi{" "}
+              {tipo === "receber" ? "recebida" : "paga"}, o fluxo de caixa do
+              período também muda.
             </p>
           </div>
 
           <div className="mt-6">
             <p className="text-xs font-bold text-white/60 uppercase tracking-widest mb-4">
-              Dados da Conta
+              Dados da conta
             </p>
             <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-3">
               <div className="grid grid-cols-[110px_1fr] gap-3">
