@@ -21,6 +21,7 @@ import {
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { maskCNPJ, maskPhone, normalizeUrl } from "@/lib/utils/masks";
+import { useUnsavedChanges } from "@/lib/hooks/use-unsaved-changes";
 
 function Field({
   label, required, error, children, className = "",
@@ -95,6 +96,8 @@ export default function EditarFornecedor() {
 
   const cnpj = watch("cnpj") ?? "";
   const whatsapp = watch("whatsappVendedor") ?? "";
+
+  useUnsavedChanges(isDirty);
 
   // ─── Carrega o fornecedor da API ──────────────────────────────────────────
   useEffect(() => {
