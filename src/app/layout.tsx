@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Poppins } from "next/font/google";
 import { AuthProvider } from "@/context/auth-context";
+import { ToastProvider } from "@/components/ui/toast";
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -29,7 +30,9 @@ export default function RootLayout({
       <body
         className={`${plusJakartaSans.variable} ${poppins.variable} antialiased dark`}
       >
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </AuthProvider>
       </body>
     </html>
   );

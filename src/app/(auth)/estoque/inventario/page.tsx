@@ -28,6 +28,7 @@ import {
 } from "@/services/movimentos-estoque";
 import { listProdutos, type Produto } from "@/services/produtos";
 import { extractApiError } from "@/lib/utils/api-errors";
+import { useToast } from "@/components/ui/toast";
 
 type LinhaInventario = {
   produtoId: string;
@@ -100,13 +101,7 @@ export default function Inventario() {
   const [produtoHistorico, setProdutoHistorico] =
     useState<LinhaInventario | null>(null);
 
-  const [sucesso, setSucesso] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!sucesso) return;
-    const t = setTimeout(() => setSucesso(null), 2000);
-    return () => clearTimeout(t);
-  }, [sucesso]);
+  const toast = useToast();
 
   async function fetchData() {
     setLoading(true);
@@ -226,7 +221,7 @@ export default function Inventario() {
       });
       setModalAjuste(false);
       setProdutoAlvo(null);
-      setSucesso(`Ajuste de "${produtoAlvo.produtoNome}" registrado!`);
+      toast.success(`Ajuste de "${produtoAlvo.produtoNome}" registrado!`);
       fetchData();
     } catch (err) {
       setSubmitError(extractApiError(err, "Erro ao salvar ajuste."));
@@ -700,19 +695,6 @@ export default function Inventario() {
         </div>
       )}
 
-      {sucesso && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-primary w-full max-w-xs rounded-2xl border border-white/10 p-6 space-y-4 text-center">
-            <div className="flex justify-center">
-              <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center">
-                <ClipboardList className="h-6 w-6 text-green-400" />
-              </div>
-            </div>
-            <h2 className="text-white font-bold text-base">{sucesso}</h2>
-            <p className="text-xs text-white/30">Fechando automaticamente…</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

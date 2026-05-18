@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { extractApiError } from "@/lib/utils/api-errors";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import {
   Table, TableBody, TableCell,
   TableHead, TableHeader, TableRow,
@@ -233,14 +234,7 @@ export default function PedidosPage() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-16">
-                    <div className="flex flex-col items-center gap-3">
-                      <Loader2 className="w-8 h-8 text-green-400 animate-spin" />
-                      <p className="text-white/40 text-sm">Carregando pedidos...</p>
-                    </div>
-                  </TableCell>
-                </TableRow>
+                <TableSkeleton columns={6} />
               ) : paginatedData.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-16">

@@ -31,6 +31,7 @@ import {
 import { listProdutos, type Produto } from "@/services/produtos";
 import { listFornecedores, type Fornecedor } from "@/services/fornecedores";
 import { extractApiError } from "@/lib/utils/api-errors";
+import { useToast } from "@/components/ui/toast";
 
 const inputClass =
   "w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:outline-none focus:border-green-500/50 text-sm transition-colors";
@@ -102,13 +103,7 @@ export default function EntradasEstoque() {
   const [modalForm, setModalForm] = useState(false);
   const [modalExcluir, setModalExcluir] = useState<MovimentoEstoque | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [sucesso, setSucesso] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!sucesso) return;
-    const t = setTimeout(() => setSucesso(null), 2000);
-    return () => clearTimeout(t);
-  }, [sucesso]);
+  const toast = useToast();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -168,7 +163,7 @@ export default function EntradasEstoque() {
       setModalForm(false);
       setForm(FORM_VAZIO);
       setFormErrors({});
-      setSucesso("Entrada registrada com sucesso!");
+      toast.success("Entrada registrada com sucesso!");
       fetchData();
     } catch (err) {
       setSubmitError(extractApiError(err, "Erro ao registrar entrada."));
@@ -183,7 +178,7 @@ export default function EntradasEstoque() {
     try {
       await deleteMovimento(modalExcluir.id);
       setModalExcluir(null);
-      setSucesso("Entrada excluída com sucesso!");
+      toast.success("Entrada excluída com sucesso!");
       fetchData();
     } catch (err) {
       setLoadError(extractApiError(err, "Erro ao excluir entrada."));
@@ -654,20 +649,6 @@ export default function EntradasEstoque() {
         </div>
       )}
 
-      {/* SUCESSO */}
-      {sucesso && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-primary w-full max-w-xs rounded-2xl border border-white/10 p-6 space-y-4 text-center">
-            <div className="flex justify-center">
-              <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center">
-                <PackageCheck className="h-6 w-6 text-green-400" />
-              </div>
-            </div>
-            <h2 className="text-white font-bold text-base">{sucesso}</h2>
-            <p className="text-xs text-white/30">Fechando automaticamente…</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
