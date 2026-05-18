@@ -40,8 +40,8 @@ export function ModalExclusaoOrcamento({
       >
         <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
           <div>
-            <h2 className="text-xl font-bold">Confirmar Exclusão</h2>
-            <p className="text-white/60 text-sm mt-1">Esta ação é irreversível.</p>
+            <h2 className="text-xl font-bold">Excluir orçamento?</h2>
+            <p className="text-white/60 text-sm mt-1">Essa ação não tem volta.</p>
           </div>
           <button
             onClick={() => onOpenChange(false)}
@@ -53,20 +53,20 @@ export function ModalExclusaoOrcamento({
         </div>
 
         <div className="p-6">
-          <div className="flex gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-400">
+          <div className="flex gap-3 bg-red-500/10 border border-red-400/30 rounded-xl p-4 text-red-300">
             <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
-            <p className="text-sm font-medium">
-              Você tem certeza que deseja excluir este orçamento? Esta ação não poderá ser desfeita.
+            <p className="text-sm">
+              Esse orçamento vai sumir da lista. Se já virou pedido, o pedido continua intacto.
             </p>
           </div>
 
           <div className="mt-6">
             <p className="text-xs font-bold text-white/60 uppercase tracking-widest mb-4">
-              Dados do Orçamento
+              Dados do orçamento
             </p>
             <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-3">
               <div className="grid grid-cols-[110px_1fr] gap-3">
-                <span className="text-xs text-white/50 font-bold uppercase">Nº Orçamento</span>
+                <span className="text-xs text-white/50 font-bold uppercase">Número</span>
                 <span className="text-white font-mono font-medium">{orcamento.numero}</span>
               </div>
               <div className="grid grid-cols-[110px_1fr] gap-3">

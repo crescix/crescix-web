@@ -140,16 +140,19 @@ export default function PedidosPage() {
 
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
-            <p className="text-white/60 text-xs font-medium uppercase tracking-widest mb-1">Vendas</p>
-            <h1 className="text-3xl font-black text-white tracking-tighter">Histórico de Pedidos</h1>
-            <p className="text-sm text-white/40 mt-1">
-              {loading ? "Carregando..." : `${data.length} ${data.length === 1 ? "pedido" : "pedidos"}`}
+            <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Pedidos</h1>
+            <p className="text-sm text-white/45 mt-1">
+              {loading
+                ? "Carregando..."
+                : data.length === 0
+                  ? "Tudo que você vendeu, num só lugar."
+                  : `${data.length} ${data.length === 1 ? "pedido" : "pedidos"}`}
             </p>
           </div>
           <Link href="/vendas/pedidos/novo">
-            <Button className="bg-green-500 hover:bg-green-400 text-white font-bold rounded-full px-5 transition-all hover:scale-105 active:scale-95">
+            <Button className="bg-brand hover:bg-brand-strong text-white font-semibold rounded-lg px-5 glow-brand glow-brand-hover transition-base">
               <Plus className="mr-2 h-4 w-4" />
-              Novo Pedido
+              Novo pedido
             </Button>
           </Link>
         </div>
@@ -179,14 +182,14 @@ export default function PedidosPage() {
         <div className="bg-primary p-4 rounded-2xl border border-white/5 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-white/50 text-xs font-medium block">Cliente / Nº pedido</label>
+              <label className="text-white/50 text-xs font-medium block">Cliente ou número</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30" />
                 <Input
                   placeholder="Buscar..."
                   value={searchTerm}
                   onChange={handleSearchChange}
-                  className="pl-8 bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-green-500/50 h-9 text-sm"
+                  className="pl-8 bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-brand/50 h-9 text-sm"
                 />
               </div>
             </div>
@@ -241,20 +244,35 @@ export default function PedidosPage() {
                 <TableSkeleton columns={6} />
               ) : paginatedData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-16">
+                  <TableCell colSpan={6} className="text-center py-14 md:py-16">
                     <div className="flex flex-col items-center gap-3">
                       <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
                         <FileText className="h-5 w-5 text-white/20" />
                       </div>
-                      <p className="text-white/40 text-sm">
-                        {hasFilters
-                          ? "Nenhum pedido encontrado para os filtros."
-                          : "Você ainda não criou nenhum pedido."}
-                      </p>
-                      {hasFilters && (
-                        <button onClick={resetFilters} className="text-green-400 text-xs hover:underline">
-                          Limpar filtros
-                        </button>
+                      {hasFilters ? (
+                        <>
+                          <p className="text-white/40 text-sm">
+                            Nada encontrado com os filtros atuais.
+                          </p>
+                          <button onClick={resetFilters} className="text-brand text-xs hover:text-brand-strong">
+                            Limpar filtros
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <h3 className="text-base font-semibold text-white">
+                            Nenhum pedido por aqui ainda
+                          </h3>
+                          <p className="text-sm text-white/45 max-w-sm">
+                            Registre uma venda pra ver aparecer no fluxo de caixa e nos relatórios.
+                          </p>
+                          <Link href="/vendas/pedidos/novo" className="inline-block mt-1">
+                            <Button className="bg-brand hover:bg-brand-strong text-white font-semibold">
+                              <Plus className="mr-2 h-4 w-4" />
+                              Criar o primeiro
+                            </Button>
+                          </Link>
+                        </>
                       )}
                     </div>
                   </TableCell>
@@ -325,7 +343,7 @@ export default function PedidosPage() {
                 className="w-9 h-9 rounded-lg border border-white/15 text-white/60 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center justify-center">
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              <div className="px-4 h-9 rounded-lg border border-green-500/30 bg-green-500/10 text-green-400 text-sm font-medium flex items-center gap-1">
+              <div className="px-4 h-9 rounded-lg border border-brand/30 bg-brand/10 text-brand text-sm font-medium flex items-center gap-1">
                 <span>{safePage}</span>
                 <span className="text-white/30">/</span>
                 <span className="text-white/40">{totalPages}</span>
@@ -354,7 +372,7 @@ export default function PedidosPage() {
               </div>
               <h2 className="text-white font-bold text-lg">Excluir pedido?</h2>
               <p className="text-white/60 text-sm">
-                Deseja excluir o pedido <span className="text-white font-semibold">{excluindo.numero}</span>? Esta ação não poderá ser desfeita.
+                O pedido <span className="text-white font-semibold">{excluindo.numero}</span> vai sumir da lista e dos relatórios. Essa ação não tem volta.
               </p>
             </div>
             <div className="flex gap-3 pt-2">
