@@ -17,6 +17,7 @@ import {
 } from "@/lib/data/perfil";
 import { useAuth } from "@/context/auth-context";
 import { maskPhone } from "@/lib/utils/masks";
+import { TelegramPairingCard } from "./_components/telegram-pairing";
 
 const schema = z.object({
   nome: z.string().min(2, "Nome obrigatório (mín. 2 caracteres)"),
@@ -257,6 +258,9 @@ export default function PerfilPage() {
             </Button>
           </div>
         </form>
+
+        {/* Integração com Telegram */}
+        <TelegramPairingCard />
 
       </div>
     </div>
