@@ -71,7 +71,7 @@ export default function FluxoDeCaixaPage() {
         })
       );
     } catch (err) {
-      setLoadError(extractApiError(err, "Erro ao carregar transações."));
+      setLoadError(extractApiError(err, "Não consegui carregar as transações agora."));
     } finally {
       setMounted(true);
     }

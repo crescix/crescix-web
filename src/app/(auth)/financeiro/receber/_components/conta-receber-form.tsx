@@ -188,7 +188,7 @@ export function ContaReceberForm({
       setSubmitError(
         extractApiError(
           err,
-          isEdit ? "Erro ao salvar alterações." : "Erro ao criar conta."
+          isEdit ? "Não consegui salvar as alterações agora." : "Não consegui cadastrar a conta agora."
         )
       );
     } finally {

@@ -72,7 +72,7 @@ export default function PedidosPage() {
         });
         setData(result.data);
       } catch (err) {
-        setError(extractApiError(err, "Não foi possível carregar os pedidos."));
+        setError(extractApiError(err, "Não consegui carregar a lista agora."));
       }
     },
     []
@@ -121,7 +121,7 @@ export default function PedidosPage() {
       setData((prev) => prev.filter((p) => p.id !== excluindo.id));
       setExcluindo(null);
     } catch (err) {
-      setError(extractApiError(err, "Erro ao excluir o pedido."));
+      setError(extractApiError(err, "Não consegui excluir agora. Tente novamente."));
     } finally {
       setIsDeleting(false);
     }

@@ -123,7 +123,7 @@ export function OrcamentoForm({ mode, orcamentoId }: OrcamentoFormProps) {
         const message =
           mode === "editar" && axios.isAxiosError(err) && err.response?.status === 404
             ? "Orçamento não encontrado."
-            : extractApiError(err, "Erro ao carregar dados do orçamento.");
+            : extractApiError(err, "Não consegui carregar o orçamento agora.");
         setLoadError(message);
       })
       .finally(() => {
@@ -223,7 +223,7 @@ export function OrcamentoForm({ mode, orcamentoId }: OrcamentoFormProps) {
       setSubmitError(
         extractApiError(
           err,
-          mode === "novo" ? "Erro ao criar o orçamento." : "Erro ao salvar as alterações."
+          mode === "novo" ? "Não consegui criar o orçamento agora." : "Não consegui salvar as alterações agora."
         )
       );
     } finally {

@@ -51,7 +51,7 @@ export function TelegramPairingCard() {
       setPaired(status.paired);
       setTelegramId(status.telegramId);
     } catch (err) {
-      toast.error(extractApiError(err, "Erro ao carregar status do Telegram."));
+      toast.error(extractApiError(err, "Não consegui ver o status do Telegram agora."));
     } finally {
       setLoading(false);
     }
@@ -126,7 +126,7 @@ export function TelegramPairingCard() {
       setExpiresAt(new Date(res.expiresAt).getTime());
       setCopied(false);
     } catch (err) {
-      toast.error(extractApiError(err, "Erro ao gerar código."));
+      toast.error(extractApiError(err, "Não consegui gerar o código agora. Tente em alguns instantes."));
     } finally {
       setGenerating(false);
     }
@@ -140,7 +140,7 @@ export function TelegramPairingCard() {
       toast.success("Código copiado!");
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Não foi possível copiar.");
+      toast.error("Não consegui copiar agora.");
     }
   };
 
@@ -152,7 +152,7 @@ export function TelegramPairingCard() {
       setTelegramId(null);
       toast.success("Telegram desvinculado.");
     } catch (err) {
-      toast.error(extractApiError(err, "Erro ao desvincular."));
+      toast.error(extractApiError(err, "Não consegui desvincular agora. Tente novamente."));
     } finally {
       setUnpairing(false);
     }

@@ -45,7 +45,7 @@ export default function RegisterPage() {
             setSubmitError(
                 err instanceof Error
                     ? err.message
-                    : "Erro ao criar conta. Tente novamente."
+                    : "Não consegui criar a conta agora. Tente novamente."
             );
         } finally {
             setLoading(false);
