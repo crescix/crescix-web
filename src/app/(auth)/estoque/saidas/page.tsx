@@ -33,9 +33,9 @@ import { extractApiError } from "@/lib/utils/api-errors";
 import { useToast } from "@/components/ui/toast";
 
 const inputClass =
-  "w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:outline-none focus:border-green-500/50 text-sm transition-colors";
+  "w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:outline-none focus:border-brand/50 text-sm transition-colors";
 const selectClass =
-  "w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-green-500/50 text-sm transition-colors cursor-pointer";
+  "w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-brand/50 text-sm transition-colors cursor-pointer";
 
 function Field({
   label,
@@ -192,20 +192,20 @@ export default function SaidasEstoque() {
     <div className="w-full min-h-screen bg-secondary p-4 md:p-8 flex flex-col items-center">
       <div className="w-full max-w-6xl space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => router.back()}
-              className="p-2 rounded-xl text-white/50 hover:bg-white/10 border border-transparent hover:border-white/10 transition-all"
+              className="p-2 rounded-lg text-white/50 hover:bg-white/5 hover:text-white transition-colors"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
             <div>
-              <p className="text-white/40 text-xs font-medium uppercase tracking-widest mb-1">
-                Estoque
-              </p>
-              <h1 className="text-3xl font-black text-white tracking-tighter">
-                Saídas
+              <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+                Saídas do estoque
               </h1>
+              <p className="text-sm text-white/45 mt-0.5">
+                Vendas, consumo interno, perdas e ajustes que reduzem quantidade.
+              </p>
             </div>
           </div>
           <button
@@ -215,9 +215,9 @@ export default function SaidasEstoque() {
               setSubmitError(null);
               setModalForm(true);
             }}
-            className="flex items-center gap-2 px-5 h-10 rounded-xl bg-green-500 hover:bg-green-400 text-white text-sm font-bold transition-all active:scale-95"
+            className="inline-flex items-center gap-2 px-5 h-10 rounded-lg bg-brand hover:bg-brand-strong text-white text-sm font-semibold glow-brand glow-brand-hover transition-base"
           >
-            <Plus className="h-4 w-4" /> Nova Saída
+            <Plus className="h-4 w-4" /> Nova saída
           </button>
         </div>
 
@@ -355,13 +355,22 @@ export default function SaidasEstoque() {
               <span className="text-sm">Carregando...</span>
             </div>
           ) : saidas.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <div className="flex flex-col items-center justify-center py-14 md:py-16 gap-2.5 text-center px-4">
               <PackageMinus className="h-8 w-8 text-white/15" />
-              <p className="text-white/30 text-sm">
-                {hasFiltros
-                  ? "Nenhuma saída encontrada com esses filtros"
-                  : "Nenhuma saída registrada ainda"}
-              </p>
+              {hasFiltros ? (
+                <p className="text-white/40 text-sm">
+                  Nada encontrado com os filtros atuais.
+                </p>
+              ) : (
+                <>
+                  <h3 className="text-base font-semibold text-white">
+                    Nenhuma saída registrada ainda
+                  </h3>
+                  <p className="text-sm text-white/45 max-w-sm">
+                    Vendas, perdas, consumo interno e ajustes que tiram quantidade do estoque entram aqui.
+                  </p>
+                </>
+              )}
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -549,7 +558,7 @@ export default function SaidasEstoque() {
                   }
                   placeholder="NF-e, cliente, anotações..."
                   rows={3}
-                  className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:outline-none focus:border-green-500/50 text-sm transition-colors resize-none"
+                  className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:outline-none focus:border-brand/50 text-sm transition-colors resize-none"
                 />
               </Field>
             </div>
@@ -584,12 +593,12 @@ export default function SaidasEstoque() {
               </div>
             </div>
             <h2 className="text-white font-bold text-lg">Excluir saída?</h2>
-            <p className="text-white/50 text-sm">
-              Deseja excluir a saída de{" "}
+            <p className="text-white/55 text-sm">
+              A saída de{" "}
               <span className="text-white font-semibold">
                 {modalExcluir.produto?.nome ?? "produto"}
-              </span>
-              ? Esta ação não pode ser desfeita.
+              </span>{" "}
+              vai sumir e o saldo do produto recalcula. Essa ação não tem volta.
             </p>
             <div className="flex gap-3 pt-2">
               <button
