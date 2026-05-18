@@ -51,20 +51,38 @@ export function OnboardingCard({ totalLancamentos, mounted }: OnboardingCardProp
     const [pareado, setPareado] = useState<boolean | null>(null);
     const [dismissed, setDismissed] = useState(false);
 
-    // Carrega estado do pareamento Telegram (lazy, paralelo aos KPIs).
+    // Carrega estado do pareamento Telegram e re-busca quando o tab volta
+    // ao foco. Cobre o caminho: usuário sai pra /perfil (ou outra aba/celular)
+    // pra parear, conclui, volta pra esta aba → a checklist atualiza sozinha
+    // sem precisar de reload manual.
     useEffect(() => {
         let cancelled = false;
-        getTelegramStatus()
-            .then((s) => {
-                if (!cancelled) setPareado(s.paired);
-            })
-            .catch(() => {
-                // Se o endpoint falhar (ex.: API offline), assumimos não pareado
-                // e mostramos o card. Pior caso o usuário vê uma sugestão a mais.
-                if (!cancelled) setPareado(false);
-            });
+
+        const buscar = () => {
+            getTelegramStatus()
+                .then((s) => {
+                    if (!cancelled) setPareado(s.paired);
+                })
+                .catch(() => {
+                    // Endpoint falhou (ex.: API offline). Só assume "não pareado"
+                    // na PRIMEIRA tentativa — se já tinha estado válido, mantém
+                    // pra não fazer o card piscar aparecendo/sumindo.
+                    if (!cancelled) {
+                        setPareado((atual) => (atual === null ? false : atual));
+                    }
+                });
+        };
+
+        buscar();
+
+        const onVisible = () => {
+            if (document.visibilityState === "visible") buscar();
+        };
+        document.addEventListener("visibilitychange", onVisible);
+
         return () => {
             cancelled = true;
+            document.removeEventListener("visibilitychange", onVisible);
         };
     }, []);
 

@@ -77,6 +77,46 @@ export function TelegramPairingCard() {
     return () => clearInterval(interval);
   }, [expiresAt]);
 
+  // ── Polling do status enquanto aguarda pareamento ─────────────────────────
+  // Quando o usuário gera um código, ele vai pro celular pra colar no bot.
+  // Sem polling, o web fica "preso" no estado "código aguardando" até a
+  // página ser recarregada. Polling a cada 3s pra detectar o sucesso e
+  // transicionar a UI em tempo real (toast + estado "vinculado").
+  //
+  // 3s × 5min de TTL do código = 100 requests no pior caso, bem abaixo do
+  // rate limit global da API (200/min). Para sozinho quando o código
+  // expira (effect dependente de `code`) ou quando o pareamento conclui.
+  useEffect(() => {
+    if (!code || paired) return;
+    let cancelled = false;
+
+    const verificar = async () => {
+      try {
+        const status = await getTelegramStatus();
+        if (cancelled) return;
+        if (status.paired) {
+          setPaired(true);
+          setTelegramId(status.telegramId);
+          // Limpa o estado "código aguardando" — o JSX bifurca pelo
+          // `paired` agora e mostra o card de sucesso.
+          setCode(null);
+          setExpiresAt(null);
+          setRemaining(0);
+          toast.success("Telegram vinculado! Agora é só falar com o bot.");
+        }
+      } catch {
+        // Silencioso. Erro transitório no polling não polui a UI. Se for
+        // permanente o usuário ainda pode tentar reload manualmente.
+      }
+    };
+
+    const interval = setInterval(verificar, 3000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [code, paired, toast]);
+
   const handleGenerate = async () => {
     setGenerating(true);
     try {
