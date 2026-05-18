@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Plus, Search, Calendar, Printer, Pencil, Trash2,
+  Plus, Search, Printer, Pencil, Trash2,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, FileText,
   Loader2, AlertCircle, AlertTriangle, X,
 } from "lucide-react";
@@ -23,6 +23,11 @@ import { Badge } from "@/components/ui/badge";
 import { extractApiError } from "@/lib/utils/api-errors";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import {
+  PeriodoPresets,
+  resolveRange,
+  type PeriodoPreset,
+} from "@/components/ui/periodo-presets";
+import {
   Table, TableBody, TableCell,
   TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -42,9 +47,15 @@ export default function PedidosPage() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [periodo, setPeriodo] = useState<PeriodoPreset>("tudo");
   const [dateStart, setDateStart] = useState("");
   const [dateEnd, setDateEnd] = useState("");
   const [statusFilter, setStatusFilter] = useState<"" | StatusPedido>("");
+
+  const { from: rangeFrom, to: rangeTo } = useMemo(
+    () => resolveRange(periodo, dateStart, dateEnd),
+    [periodo, dateStart, dateEnd]
+  );
 
   const [excluindo, setExcluindo] = useState<Pedido | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -82,11 +93,11 @@ export default function PedidosPage() {
     () =>
       data.filter((p) => {
         const pedidoDate = p.data.split("T")[0];
-        const matchStart = dateStart === "" || pedidoDate >= dateStart;
-        const matchEnd = dateEnd === "" || pedidoDate <= dateEnd;
+        const matchStart = rangeFrom === "" || pedidoDate >= rangeFrom;
+        const matchEnd = rangeTo === "" || pedidoDate <= rangeTo;
         return matchStart && matchEnd;
       }),
-    [data, dateStart, dateEnd]
+    [data, rangeFrom, rangeTo]
   );
 
   const totalPages = Math.max(1, Math.ceil(filteredData.length / ITEMS_PER_PAGE));
@@ -117,11 +128,11 @@ export default function PedidosPage() {
 
   const resetFilters = () => {
     setSearchTerm(""); setStatusFilter("");
-    setDateStart(""); setDateEnd("");
+    setPeriodo("tudo"); setDateStart(""); setDateEnd("");
     setCurrentPage(1);
   };
 
-  const hasFilters = searchTerm || statusFilter || dateStart || dateEnd;
+  const hasFilters = searchTerm || statusFilter || periodo !== "tudo";
 
   return (
     <div className="w-full min-h-screen bg-secondary p-4 md:p-8 flex flex-col items-center">
@@ -165,58 +176,51 @@ export default function PedidosPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 bg-primary p-4 rounded-2xl border border-white/5">
-          <div className="md:col-span-1 space-y-1.5">
-            <label className="text-white/50 text-xs font-medium block">Cliente / Nº pedido</label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30" />
-              <Input
-                placeholder="Buscar..."
-                value={searchTerm}
-                onChange={handleSearchChange}
-                className="pl-8 bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-green-500/50 h-9 text-sm"
-              />
+        <div className="bg-primary p-4 rounded-2xl border border-white/5 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-white/50 text-xs font-medium block">Cliente / Nº pedido</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30" />
+                <Input
+                  placeholder="Buscar..."
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  className="pl-8 bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-green-500/50 h-9 text-sm"
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="space-y-1.5">
-            <label className="text-white/50 text-xs font-medium block">Data início</label>
-            <div className="relative">
-              <Input
-                type="date"
-                value={dateStart}
-                onChange={(e) => { setDateStart(e.target.value); setCurrentPage(1); }}
-                className="bg-white/5 border-white/10 text-white focus:border-green-500/50 h-9 text-sm pr-9"
-              />
-              <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30 pointer-events-none" />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-white/50 text-xs font-medium block">Data fim</label>
-            <div className="relative">
-              <Input
-                type="date"
-                value={dateEnd}
-                onChange={(e) => { setDateEnd(e.target.value); setCurrentPage(1); }}
-                className="bg-white/5 border-white/10 text-white focus:border-green-500/50 h-9 text-sm pr-9"
-              />
-              <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30 pointer-events-none" />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-white/50 text-xs font-medium block">Status</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => { setStatusFilter(e.target.value as "" | StatusPedido); setCurrentPage(1); }}
-              className="w-full bg-white/5 border border-white/10 text-white focus:border-green-500/50 h-9 px-3 rounded-md focus:outline-none text-sm"
+            <div className="space-y-1.5">
+              <label className="text-white/50 text-xs font-medium block">Status</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => { setStatusFilter(e.target.value as "" | StatusPedido); setCurrentPage(1); }}
+                className="w-full bg-white/5 border border-white/10 text-white focus:border-green-500/50 h-9 px-3 rounded-md focus:outline-none text-sm"
             >
-              <option value="">Todos</option>
-              {STATUS_PEDIDO_OPTIONS.map((s) => (
-                <option key={s} value={s}>{STATUS_PEDIDO_LABEL[s]}</option>
-              ))}
-            </select>
+                <option value="">Todos</option>
+                {STATUS_PEDIDO_OPTIONS.map((s) => (
+                  <option key={s} value={s}>{STATUS_PEDIDO_LABEL[s]}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="pt-1">
+            <label className="text-white/50 text-xs font-medium block mb-2">
+              Data
+            </label>
+            <PeriodoPresets
+              preset={periodo}
+              dateStart={dateStart}
+              dateEnd={dateEnd}
+              onPresetChange={(p) => { setPeriodo(p); setCurrentPage(1); }}
+              onCustomDateChange={(field, value) => {
+                if (field === "start") setDateStart(value);
+                else setDateEnd(value);
+                setCurrentPage(1);
+              }}
+            />
           </div>
         </div>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Plus, Search, Calendar, FileText, AlertCircle, X, Loader2,
+  Plus, Search, FileText, AlertCircle, X,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
 } from "lucide-react";
 import { useState, useMemo, useEffect, useCallback } from "react";
@@ -21,6 +21,11 @@ import { Input } from "@/components/ui/input";
 import { extractApiError } from "@/lib/utils/api-errors";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import {
+  PeriodoPresets,
+  resolveRange,
+  type PeriodoPreset,
+} from "@/components/ui/periodo-presets";
+import {
   Table, TableBody, TableCell,
   TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -33,9 +38,15 @@ export default function OrcamentosPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [periodo, setPeriodo] = useState<PeriodoPreset>("tudo");
   const [dateStart, setDateStart] = useState("");
   const [dateEnd, setDateEnd] = useState("");
   const [statusFilter, setStatusFilter] = useState<"" | StatusOrcamento>("");
+
+  const { from: rangeFrom, to: rangeTo } = useMemo(
+    () => resolveRange(periodo, dateStart, dateEnd),
+    [periodo, dateStart, dateEnd]
+  );
 
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -76,11 +87,11 @@ export default function OrcamentosPage() {
     () =>
       data.filter((orc) => {
         const orcDate = orc.data.split("T")[0];
-        const matchStart = dateStart === "" || orcDate >= dateStart;
-        const matchEnd = dateEnd === "" || orcDate <= dateEnd;
+        const matchStart = rangeFrom === "" || orcDate >= rangeFrom;
+        const matchEnd = rangeTo === "" || orcDate <= rangeTo;
         return matchStart && matchEnd;
       }),
-    [data, dateStart, dateEnd]
+    [data, rangeFrom, rangeTo]
   );
 
   const totalPages = Math.max(1, Math.ceil(filteredData.length / ITEMS_PER_PAGE));
@@ -112,11 +123,11 @@ export default function OrcamentosPage() {
 
   const resetFilters = () => {
     setSearchTerm(""); setStatusFilter("");
-    setDateStart(""); setDateEnd("");
+    setPeriodo("tudo"); setDateStart(""); setDateEnd("");
     setCurrentPage(1);
   };
 
-  const hasFilters = searchTerm || statusFilter || dateStart || dateEnd;
+  const hasFilters = searchTerm || statusFilter || periodo !== "tudo";
 
   return (
     <div className="w-full min-h-screen bg-secondary p-4 md:p-8 flex flex-col items-center">
@@ -160,58 +171,51 @@ export default function OrcamentosPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 bg-primary p-4 rounded-2xl border border-white/5">
-          <div className="md:col-span-1 space-y-1.5">
-            <label className="text-white/50 text-xs font-medium block">Cliente / Nº orçamento</label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30" />
-              <Input
-                placeholder="Buscar..."
-                value={searchTerm}
-                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                className="pl-8 bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-green-500/50 h-9 text-sm"
-              />
+        <div className="bg-primary p-4 rounded-2xl border border-white/5 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-white/50 text-xs font-medium block">Cliente / Nº orçamento</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30" />
+                <Input
+                  placeholder="Buscar..."
+                  value={searchTerm}
+                  onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                  className="pl-8 bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-green-500/50 h-9 text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-white/50 text-xs font-medium block">Status</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => { setStatusFilter(e.target.value as "" | StatusOrcamento); setCurrentPage(1); }}
+                className="w-full bg-white/5 border border-white/10 text-white focus:border-green-500/50 h-9 px-3 rounded-md focus:outline-none text-sm"
+              >
+                <option value="">Todos</option>
+                {STATUS_ORCAMENTO_OPTIONS.map((s) => (
+                  <option key={s} value={s}>{STATUS_ORCAMENTO_LABEL[s]}</option>
+                ))}
+              </select>
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-white/50 text-xs font-medium block">Data início</label>
-            <div className="relative">
-              <Input
-                type="date"
-                value={dateStart}
-                onChange={(e) => { setDateStart(e.target.value); setCurrentPage(1); }}
-                className="bg-white/5 border-white/10 text-white focus:border-green-500/50 h-9 text-sm pr-9"
-              />
-              <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30 pointer-events-none" />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-white/50 text-xs font-medium block">Data fim</label>
-            <div className="relative">
-              <Input
-                type="date"
-                value={dateEnd}
-                onChange={(e) => { setDateEnd(e.target.value); setCurrentPage(1); }}
-                className="bg-white/5 border-white/10 text-white focus:border-green-500/50 h-9 text-sm pr-9"
-              />
-              <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30 pointer-events-none" />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-white/50 text-xs font-medium block">Status</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => { setStatusFilter(e.target.value as "" | StatusOrcamento); setCurrentPage(1); }}
-              className="w-full bg-white/5 border border-white/10 text-white focus:border-green-500/50 h-9 px-3 rounded-md focus:outline-none text-sm"
-            >
-              <option value="">Todos</option>
-              {STATUS_ORCAMENTO_OPTIONS.map((s) => (
-                <option key={s} value={s}>{STATUS_ORCAMENTO_LABEL[s]}</option>
-              ))}
-            </select>
+          <div className="pt-1">
+            <label className="text-white/50 text-xs font-medium block mb-2">
+              Data
+            </label>
+            <PeriodoPresets
+              preset={periodo}
+              dateStart={dateStart}
+              dateEnd={dateEnd}
+              onPresetChange={(p) => { setPeriodo(p); setCurrentPage(1); }}
+              onCustomDateChange={(field, value) => {
+                if (field === "start") setDateStart(value);
+                else setDateEnd(value);
+                setCurrentPage(1);
+              }}
+            />
           </div>
         </div>
 
