@@ -2,125 +2,115 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Mail, ArrowLeft, Loader2, CheckCircle2 } from "lucide-react";
+import { Mail, ArrowLeft, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { forgotPassword } from "@/services/password-reset";
 import { extractApiError } from "@/lib/utils/api-errors";
+import { AuthShell } from "@/components/auth/auth-shell";
+import { AuthField } from "@/components/auth/auth-field";
 
 export default function EsqueciSenhaPage() {
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [sent, setSent] = useState(false);
+    const [email, setEmail] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [sent, setSent] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
-    try {
-      await forgotPassword(email);
-      setSent(true);
-    } catch (err) {
-      setError(extractApiError(err, "Erro ao processar a solicitação."));
-    } finally {
-      setLoading(false);
-    }
-  };
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError(null);
+        setLoading(true);
+        try {
+            await forgotPassword(email);
+            setSent(true);
+        } catch (err) {
+            setError(extractApiError(err, "Erro ao processar a solicitação."));
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  return (
-    <div className="flex flex-col md:flex-row w-full max-w-[1000px] min-h-[600px] bg-white rounded-none md:rounded-3xl overflow-hidden shadow-2xl">
-      <div className="flex flex-1 bg-primary md:p-12 flex-col items-center justify-center text-white relative p-6">
-        <h1 className="text-5xl font-black tracking-tighter">
-          <span>CRESC</span>
-          <span className="text-cyan opacity-80">IX</span>
-        </h1>
-        <p className="font-medium">Crescendo o seu negócio</p>
-        <h2 className="text-3xl md:text-4xl font-bold mt-8 mb-2 text-center">
-          Recuperar acesso
-        </h2>
-        <p className="text-white/70 text-center text-sm max-w-sm">
-          Vamos enviar um link de redefinição para o seu e-mail.
-        </p>
-      </div>
+    return (
+        <AuthShell
+            title="Recuperar acesso"
+            subtitle="Informe o e-mail cadastrado e enviaremos um link para criar uma nova senha."
+            footerText="Lembrou a senha?"
+            footerLinkText="Entrar"
+            footerLinkHref="/login"
+            leftHeadline="Recupere o acesso em 1 minuto."
+            leftSubheadline="Link de redefinição por e-mail, válido por 30 minutos."
+        >
+            <div className="space-y-5">
+                <Link
+                    href="/login"
+                    className="inline-flex items-center gap-1.5 text-xs text-white/50 hover:text-brand transition-colors"
+                >
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                    Voltar pro login
+                </Link>
 
-      <div className="flex-[1.2] flex flex-col p-8 md:p-16 bg-gray-100 justify-center">
-        <div className="w-full max-w-sm mx-auto space-y-8">
-          <Link
-            href="/login"
-            className="inline-flex items-center gap-2 text-sm text-primary md:text-gray-600 hover:underline"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar pro login
-          </Link>
-
-          <div className="space-y-2">
-            <h3 className="text-3xl font-bold text-primary md:text-gray-800">
-              Esqueci minha senha
-            </h3>
-            <p className="text-sm text-gray-600">
-              Informe o e-mail cadastrado e enviaremos um link para criar uma
-              nova senha.
-            </p>
-          </div>
-
-          {sent ? (
-            <div className="flex items-start gap-3 bg-green-50 border border-green-200 rounded-xl p-4 text-green-700">
-              <CheckCircle2 className="h-5 w-5 flex-shrink-0 mt-0.5" />
-              <div className="text-sm">
-                <p className="font-semibold">Verifique seu e-mail.</p>
-                <p className="mt-1 text-green-700/80">
-                  Se <span className="font-medium">{email}</span> estiver
-                  cadastrado, você receberá um link de redefinição em
-                  instantes. O link expira em 30 minutos.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <form className="space-y-6" onSubmit={handleSubmit}>
-              <div className="relative">
-                <Mail className="absolute left-0 bottom-2 h-5 w-5 text-primary md:text-gray-500" />
-                <Input
-                  type="email"
-                  placeholder="Seu e-mail cadastrado"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="pl-8 border-t-0 border-x-0 border-b-2 border-primary md:border-gray-300 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-primary transition-colors text-primary"
-                />
-              </div>
-
-              {error && (
-                <p className="text-sm text-red-500 text-center font-medium">
-                  {error}
-                </p>
-              )}
-
-              <Button
-                type="submit"
-                disabled={loading || !email}
-                className="w-full bg-primary hover:bg-primary/90 text-white h-12 rounded-full text-lg font-semibold shadow-lg disabled:opacity-60"
-              >
-                {loading ? (
-                  <span className="inline-flex items-center gap-2">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    Enviando...
-                  </span>
+                {sent ? (
+                    <div className="flex items-start gap-3 bg-brand/10 border border-brand/30 rounded-lg p-4 text-brand">
+                        <CheckCircle2 className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                        <div className="text-sm">
+                            <p className="font-semibold text-white">
+                                Verifique seu e-mail.
+                            </p>
+                            <p className="mt-1 text-white/70">
+                                Se{" "}
+                                <span className="font-medium text-white">
+                                    {email}
+                                </span>{" "}
+                                estiver cadastrado, você receberá um link de
+                                redefinição em instantes. O link expira em 30
+                                minutos.
+                            </p>
+                        </div>
+                    </div>
                 ) : (
-                  "Enviar link"
-                )}
-              </Button>
-            </form>
-          )}
+                    <form className="space-y-5" onSubmit={handleSubmit}>
+                        <AuthField
+                            icon={Mail}
+                            type="email"
+                            placeholder="Seu e-mail cadastrado"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            autoComplete="email"
+                            aria-label="E-mail"
+                        />
 
-          <p className="text-center text-sm text-primary md:text-gray-600">
-            Lembrou a senha?{" "}
-            <Link href="/login" className="font-bold underline">
-              Entrar
-            </Link>
-          </p>
-        </div>
-      </div>
-    </div>
-  );
+                        {error && (
+                            <div className="flex items-start gap-2 bg-red-500/10 border border-red-400/30 rounded-lg p-3 text-red-300 text-sm">
+                                <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                                <span>{error}</span>
+                            </div>
+                        )}
+
+                        <Button
+                            type="submit"
+                            disabled={loading || !email}
+                            className="
+                                w-full h-12
+                                bg-brand hover:bg-brand-strong
+                                text-white font-semibold
+                                rounded-lg
+                                glow-brand glow-brand-hover
+                                transition-base
+                                disabled:opacity-60 disabled:cursor-not-allowed
+                            "
+                        >
+                            {loading ? (
+                                <span className="inline-flex items-center gap-2">
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    Enviando...
+                                </span>
+                            ) : (
+                                "Enviar link"
+                            )}
+                        </Button>
+                    </form>
+                )}
+            </div>
+        </AuthShell>
+    );
 }
