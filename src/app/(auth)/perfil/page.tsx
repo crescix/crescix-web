@@ -17,6 +17,7 @@ import {
 } from "@/lib/data/perfil";
 import { useAuth } from "@/context/auth-context";
 import { maskPhone } from "@/lib/utils/masks";
+import { useUnsavedChanges } from "@/lib/hooks/use-unsaved-changes";
 import { TelegramPairingCard } from "./_components/telegram-pairing";
 
 const schema = z.object({
@@ -50,6 +51,8 @@ export default function PerfilPage() {
       nome: "", email: "", telefone: "", tipo_comercio: "",
     },
   });
+
+  useUnsavedChanges(isDirty);
 
   // Hidrata o form com dados existentes do perfil (ou do auth)
   useEffect(() => {

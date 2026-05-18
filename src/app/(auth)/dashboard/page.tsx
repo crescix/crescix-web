@@ -287,9 +287,7 @@ export default function DashboardPage() {
             </div>
             <div className="h-56 w-full">
               {!mounted ? (
-                <div className="h-full flex items-center justify-center text-white/30 text-sm">
-                  Carregando...
-                </div>
+                <div className="h-full w-full rounded-xl bg-white/5 animate-pulse" />
               ) : grafico.length === 0 ? (
                 <div className="h-full flex items-center justify-center text-white/30 text-sm">
                   Sem dados realizados no período
@@ -464,7 +462,21 @@ export default function DashboardPage() {
           </div>
 
           {!mounted ? (
-            <div className="py-12 text-center text-white/30 text-sm">Carregando...</div>
+            <div className="divide-y divide-white/5">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="px-6 py-4 flex items-center gap-4">
+                  <div className="w-9 h-9 rounded-xl bg-white/5 animate-pulse flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 rounded-md bg-white/5 animate-pulse w-2/3" />
+                    <div className="h-2.5 rounded-md bg-white/5 animate-pulse w-1/3" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="h-3 rounded-md bg-white/5 animate-pulse w-20 ml-auto" />
+                    <div className="h-2.5 rounded-md bg-white/5 animate-pulse w-16 ml-auto" />
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : ultimas.length === 0 ? (
             <div className="py-12 text-center">
               <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-3">
