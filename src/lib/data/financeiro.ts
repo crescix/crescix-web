@@ -261,12 +261,12 @@ export function buildTransacoesFluxo(
     });
   }
 
-  // Vendas — pedidos faturados/pendentes entram como entrada no fluxo.
-  // FATURADO = Realizada; PENDENTE = Prevista; demais (ORCAMENTO/CANCELADO)
-  // são ignorados.
+  // Vendas — apenas pedidos PENDENTE entram como entrada Prevista no fluxo.
+  // Pedidos FATURADO ja sao representados automaticamente por uma Conta a
+  // Receber (criada pelo backend em ensureContaReceberFromPedido), entao
+  // incluir aqui causaria double-count. ORCAMENTO/CANCELADO sao ignorados.
   for (const ped of sources.pedidos ?? []) {
-    if (ped.status === "ORCAMENTO" || ped.status === "CANCELADO") continue;
-    const realizada = ped.status === "FATURADO";
+    if (ped.status !== "PENDENTE") continue;
     out.push({
       id: `ped-${ped.id}`,
       data: ped.data.split("T")[0],
@@ -275,7 +275,7 @@ export function buildTransacoesFluxo(
       contraparte: ped.clienteNome,
       valor: Number(ped.valorTotal),
       tipo: "entrada",
-      natureza: realizada ? "Realizada" : "Prevista",
+      natureza: "Prevista",
       origem: "Venda",
     });
   }
