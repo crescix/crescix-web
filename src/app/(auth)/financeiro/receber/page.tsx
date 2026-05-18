@@ -43,6 +43,7 @@ import {
   resolveRange,
   type PeriodoPreset,
 } from "@/components/ui/periodo-presets";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import {
   Table,
   TableBody,
@@ -394,14 +395,7 @@ export default function ContasReceberPage() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-16">
-                    <div className="flex items-center justify-center gap-2 text-white/60">
-                      <Loader2 className="w-4 h-4 animate-spin text-green-400" />
-                      <span className="text-sm">Carregando...</span>
-                    </div>
-                  </TableCell>
-                </TableRow>
+                <TableSkeleton columns={7} />
               ) : paginatedData.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-16">

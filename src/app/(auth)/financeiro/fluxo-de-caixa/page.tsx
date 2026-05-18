@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import axios from "axios";
 import {
   ArrowUpRight, ArrowDownRight, Wallet, TrendingUp, TrendingDown,
-  Calendar, Search, FileText, Clock, AlertCircle, Loader2, RefreshCw, X,
+  Search, FileText, Clock, AlertCircle, RefreshCw, X,
 } from "lucide-react";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis,
@@ -32,7 +32,11 @@ import { ORIGEM_LABEL } from "@/lib/data/financeiro";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { extractApiError } from "@/lib/utils/api-errors";
 
-type PeriodoPreset = "hoje" | "7d" | "30d" | "mes" | "tudo" | "custom";
+import {
+  PeriodoPresets,
+  resolveRange,
+  type PeriodoPreset,
+} from "@/components/ui/periodo-presets";
 
 export default function FluxoDeCaixaPage() {
   const [transacoes, setTransacoes] = useState<TransacaoFluxo[]>([]);
@@ -78,28 +82,8 @@ export default function FluxoDeCaixaPage() {
   }, []);
 
   const periodoRange = useMemo(() => {
-    const hoje = new Date();
-    const todayISO = hoje.toISOString().slice(0, 10);
-
-    const subDays = (n: number) => {
-      const d = new Date();
-      d.setDate(d.getDate() - n);
-      return d.toISOString().slice(0, 10);
-    };
-
-    switch (periodo) {
-      case "hoje": return { start: todayISO, end: todayISO };
-      case "7d":   return { start: subDays(7), end: todayISO };
-      case "30d":  return { start: subDays(30), end: todayISO };
-      case "mes": {
-        const y = hoje.getFullYear();
-        const m = String(hoje.getMonth() + 1).padStart(2, "0");
-        return { start: `${y}-${m}-01`, end: todayISO };
-      }
-      case "custom": return { start: dateStart, end: dateEnd };
-      case "tudo":
-      default:       return { start: "", end: "" };
-    }
+    const { from, to } = resolveRange(periodo, dateStart, dateEnd);
+    return { start: from, end: to };
   }, [periodo, dateStart, dateEnd]);
 
   const filtered = useMemo(() => {
@@ -306,34 +290,20 @@ export default function FluxoDeCaixaPage() {
         </div>
 
         {/* Filtros */}
-        <div className="bg-primary p-4 rounded-2xl border border-white/5 space-y-3">
-          {/* Linha 1: Período preset */}
-          <div className="flex flex-wrap gap-2">
-            {([
-              { label: "Hoje",      value: "hoje" },
-              { label: "7 dias",    value: "7d" },
-              { label: "30 dias",   value: "30d" },
-              { label: "Este mês",  value: "mes" },
-              { label: "Tudo",      value: "tudo" },
-              { label: "Personalizado", value: "custom" },
-            ] as { label: string; value: PeriodoPreset }[]).map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => setPeriodo(opt.value)}
-                className={`px-3 h-8 rounded-lg text-xs font-medium transition-colors border ${
-                  periodo === opt.value
-                    ? "bg-green-500/15 text-green-400 border-green-500/30"
-                    : "bg-white/5 text-white/60 border-white/10 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
+        <div className="bg-primary p-4 rounded-2xl border border-white/5 space-y-4">
+          <PeriodoPresets
+            preset={periodo}
+            dateStart={dateStart}
+            dateEnd={dateEnd}
+            onPresetChange={setPeriodo}
+            onCustomDateChange={(field, value) => {
+              if (field === "start") setDateStart(value);
+              else setDateEnd(value);
+            }}
+          />
 
-          {/* Linha 2: Filtros adicionais */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-            <div className="md:col-span-2 space-y-1.5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="space-y-1.5">
               <label className="text-white/50 text-xs font-medium block">Buscar</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30" />
@@ -345,35 +315,6 @@ export default function FluxoDeCaixaPage() {
                 />
               </div>
             </div>
-
-            {periodo === "custom" && (
-              <>
-                <div className="space-y-1.5">
-                  <label className="text-white/50 text-xs font-medium block">De</label>
-                  <div className="relative">
-                    <Input
-                      type="date"
-                      value={dateStart}
-                      onChange={(e) => setDateStart(e.target.value)}
-                      className="bg-white/5 border-white/10 text-white focus:border-green-500/50 h-9 text-sm pr-9"
-                    />
-                    <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30 pointer-events-none" />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-white/50 text-xs font-medium block">Até</label>
-                  <div className="relative">
-                    <Input
-                      type="date"
-                      value={dateEnd}
-                      onChange={(e) => setDateEnd(e.target.value)}
-                      className="bg-white/5 border-white/10 text-white focus:border-green-500/50 h-9 text-sm pr-9"
-                    />
-                    <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30 pointer-events-none" />
-                  </div>
-                </div>
-              </>
-            )}
 
             <div className="space-y-1.5">
               <label className="text-white/50 text-xs font-medium block">Tipo</label>
