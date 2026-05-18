@@ -33,7 +33,7 @@ import {
 } from "@/services/contas-pagar";
 import type { CategoriaPagar, StatusConta } from "@/services/api/enums";
 import { ContaPagarItem } from "@/components/financeiro/conta-pagar-item";
-import { ModalExclusaoConta } from "@/components/financeiro/modal-exclusao-conta";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import {
   PeriodoPresets,
@@ -500,14 +500,33 @@ export default function ContasPagarPage() {
         conta={contaEdit}
       />
 
-      <ModalExclusaoConta
-        isOpen={deleteOpen}
-        onOpenChange={(open) => {
-          if (!isDeleting) setDeleteOpen(open);
-        }}
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={(open) => !open && setDeleteOpen(false)}
         onConfirm={handleDeleteConfirm}
-        conta={contaAlvo}
-        isDeleting={isDeleting}
+        isConfirming={isDeleting}
+        title="Excluir conta a pagar?"
+        description="Essa conta vai sumir da lista e dos relatórios. Se já foi paga, o fluxo de caixa do período também muda."
+        preview={
+          contaAlvo
+            ? [
+                { label: "Descrição", value: contaAlvo.descricao },
+                {
+                  label: "Categoria",
+                  value: CATEGORIA_PAGAR_LABEL[contaAlvo.categoria] ?? contaAlvo.categoria,
+                },
+                { label: "Valor", value: formatBRL(contaAlvo.valor) },
+                {
+                  label: "Vencimento",
+                  value: (
+                    <span className="text-white/80 text-sm">
+                      {contaAlvo.vencimento.split("T")[0]}
+                    </span>
+                  ),
+                },
+              ]
+            : undefined
+        }
       />
     </div>
   );
