@@ -15,11 +15,12 @@ import {
 import { listOrcamentos, deleteOrcamento } from "@/services/orcamentos";
 import type { StatusOrcamento } from "@/services/api/enums";
 import { OrcamentoItem } from "@/components/vendas/orcamento-item";
-import { ModalExclusaoOrcamento } from "@/components/vendas/modal-exclusao-orcamento";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { extractApiError } from "@/lib/utils/api-errors";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { isoToDisplay } from "@/lib/data/orcamentos";
 import {
   PeriodoPresets,
   resolveRange,
@@ -320,12 +321,40 @@ export default function OrcamentosPage() {
 
       </div>
 
-      <ModalExclusaoOrcamento
-        isOpen={modalOpen}
-        onOpenChange={(open) => { if (!isDeleting) setModalOpen(open); }}
+      <ConfirmDialog
+        open={modalOpen}
+        onOpenChange={(open) => !open && setModalOpen(false)}
         onConfirm={handleDeleteConfirm}
-        orcamento={orcamentoAlvo}
-        isDeleting={isDeleting}
+        isConfirming={isDeleting}
+        title="Excluir orçamento?"
+        description="Esse orçamento vai sumir da lista. Se já virou pedido, o pedido continua intacto."
+        preview={
+          orcamentoAlvo
+            ? [
+                {
+                  label: "Número",
+                  value: (
+                    <span className="font-mono font-medium">
+                      {orcamentoAlvo.numero}
+                    </span>
+                  ),
+                },
+                { label: "Cliente", value: orcamentoAlvo.clienteNome },
+                {
+                  label: "Valor",
+                  value: `R$ ${Number(orcamentoAlvo.valorTotal).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`,
+                },
+                {
+                  label: "Validade",
+                  value: (
+                    <span className="text-white/80 text-sm">
+                      {isoToDisplay(orcamentoAlvo.validade)}
+                    </span>
+                  ),
+                },
+              ]
+            : undefined
+        }
       />
     </div>
   );

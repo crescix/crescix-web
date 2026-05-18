@@ -33,7 +33,7 @@ import {
 } from "@/services/contas-receber";
 import type { CategoriaReceber, StatusConta } from "@/services/api/enums";
 import { ContaReceberItem } from "@/components/financeiro/conta-receber-item";
-import { ModalExclusaoConta } from "@/components/financeiro/modal-exclusao-conta";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ContaReceberForm } from "./_components/conta-receber-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -502,15 +502,33 @@ export default function ContasReceberPage() {
         conta={contaEdit}
       />
 
-      <ModalExclusaoConta
-        isOpen={deleteOpen}
-        onOpenChange={(open) => {
-          if (!isDeleting) setDeleteOpen(open);
-        }}
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={(open) => !open && setDeleteOpen(false)}
         onConfirm={handleDeleteConfirm}
-        conta={contaAlvo}
-        tipo="receber"
-        isDeleting={isDeleting}
+        isConfirming={isDeleting}
+        title="Excluir conta a receber?"
+        description="Essa conta vai sumir da lista e dos relatórios. Se já foi recebida, o fluxo de caixa do período também muda."
+        preview={
+          contaAlvo
+            ? [
+                { label: "Descrição", value: contaAlvo.descricao },
+                {
+                  label: "Categoria",
+                  value: CATEGORIA_RECEBER_LABEL[contaAlvo.categoria] ?? contaAlvo.categoria,
+                },
+                { label: "Valor", value: formatBRL(contaAlvo.valor) },
+                {
+                  label: "Vencimento",
+                  value: (
+                    <span className="text-white/80 text-sm">
+                      {contaAlvo.vencimento.split("T")[0]}
+                    </span>
+                  ),
+                },
+              ]
+            : undefined
+        }
       />
     </div>
   );

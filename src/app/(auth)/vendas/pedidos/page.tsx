@@ -3,8 +3,9 @@
 import {
   Plus, Search, Printer, Pencil, Trash2,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, FileText,
-  Loader2, AlertCircle, AlertTriangle, X,
+  AlertCircle, X,
 } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
 import axios from "axios";
@@ -362,31 +363,22 @@ export default function PedidosPage() {
 
       </div>
 
-      {/* Modal exclusão */}
-      {excluindo && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => !isDeleting && setExcluindo(null)}>
-          <div onClick={(e) => e.stopPropagation()} className="bg-primary border border-red-500/30 text-white w-full max-w-sm rounded-2xl p-6 space-y-4 shadow-2xl">
-            <div className="flex flex-col items-center gap-3 text-center">
-              <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
-                <AlertTriangle className="h-6 w-6 text-red-400" />
-              </div>
-              <h2 className="text-white font-bold text-lg">Excluir pedido?</h2>
-              <p className="text-white/60 text-sm">
-                O pedido <span className="text-white font-semibold">{excluindo.numero}</span> vai sumir da lista e dos relatórios. Essa ação não tem volta.
-              </p>
-            </div>
-            <div className="flex gap-3 pt-2">
-              <Button type="button" variant="ghost" onClick={() => setExcluindo(null)} disabled={isDeleting} className="flex-1 border border-white/10 text-white hover:bg-white/10">
-                Cancelar
-              </Button>
-              <Button type="button" variant="destructive" onClick={confirmarExclusao} disabled={isDeleting} className="flex-1">
-                {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
-                {isDeleting ? "Excluindo..." : "Sim, excluir"}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={!!excluindo}
+        onOpenChange={(open) => !open && setExcluindo(null)}
+        onConfirm={confirmarExclusao}
+        isConfirming={isDeleting}
+        title="Excluir pedido?"
+        description={
+          <>
+            O pedido{" "}
+            <span className="font-semibold text-white">
+              {excluindo?.numero}
+            </span>{" "}
+            vai sumir da lista e dos relatórios. Essa ação não tem volta.
+          </>
+        }
+      />
     </div>
   );
 }

@@ -5,7 +5,7 @@ import Link from "next/link";
 import axios from "axios";
 import {
   Plus, Search, X, Pencil, Trash2, AlertCircle, Users,
-  Loader2, AlertTriangle, Save,
+  Loader2, Save,
 } from "lucide-react";
 import {
   listClientes,
@@ -17,6 +17,7 @@ import {
 import { maskCPF, maskPhone } from "@/lib/utils/masks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { extractApiError } from "@/lib/utils/api-errors";
 
 const inputClass =
@@ -87,14 +88,19 @@ export default function ClientesPage() {
         />
       )}
 
-      {excluindo && (
-        <ModalExcluir
-          cliente={excluindo}
-          isDeleting={isDeleting}
-          onConfirm={confirmarExclusao}
-          onCancel={() => setExcluindo(null)}
-        />
-      )}
+      <ConfirmDialog
+        open={!!excluindo}
+        onOpenChange={(open) => !open && setExcluindo(null)}
+        onConfirm={confirmarExclusao}
+        isConfirming={isDeleting}
+        title="Excluir cliente?"
+        description={
+          <>
+            <span className="font-semibold text-white">{excluindo?.nome}</span>{" "}
+            vai sumir da lista e dos pedidos. Essa ação não tem volta.
+          </>
+        }
+      />
 
       <div className="w-full min-h-screen bg-secondary p-4 md:p-8 flex flex-col items-center">
         <div className="w-full max-w-6xl space-y-6">
@@ -384,36 +390,3 @@ function ModalEditar({
   );
 }
 
-function ModalExcluir({
-  cliente, isDeleting, onConfirm, onCancel,
-}: {
-  cliente: Cliente;
-  isDeleting: boolean;
-  onConfirm: () => void;
-  onCancel: () => void;
-}) {
-  return (
-    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={onCancel}>
-      <div onClick={(e) => e.stopPropagation()} className="bg-primary border border-red-500/30 text-white w-full max-w-sm rounded-2xl p-6 space-y-4 shadow-2xl">
-        <div className="flex flex-col items-center gap-3 text-center">
-          <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
-            <AlertTriangle className="h-6 w-6 text-red-400" />
-          </div>
-          <h2 className="text-white font-bold text-lg">Excluir cliente?</h2>
-          <p className="text-white/60 text-sm">
-            Deseja excluir <span className="text-white font-semibold">{cliente.nome}</span>? Esta ação não poderá ser desfeita.
-          </p>
-        </div>
-        <div className="flex gap-3 pt-2">
-          <Button type="button" variant="ghost" onClick={onCancel} disabled={isDeleting} className="flex-1 border border-white/10 text-white hover:bg-white/10">
-            Cancelar
-          </Button>
-          <Button type="button" variant="destructive" onClick={onConfirm} disabled={isDeleting} className="flex-1">
-            {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
-            {isDeleting ? "Excluindo..." : "Sim, excluir"}
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}

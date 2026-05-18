@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
   Plus, Search, Building2, Pencil, Trash2,
-  ChevronDown, ChevronUp, AlertTriangle, X, Loader2, AlertCircle,
+  ChevronDown, ChevronUp, X, Loader2, AlertCircle,
 } from "lucide-react";
 import axios from "axios";
 import {
@@ -17,98 +17,7 @@ import {
 } from "@/services/fornecedores";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-// ─────────────────────────────────────────────────────────────────────────────
-// MODAL DE EXCLUSÃO
-// ─────────────────────────────────────────────────────────────────────────────
-function ModalExclusao({
-  fornecedor,
-  onConfirm,
-  onCancel,
-  isDeleting,
-}: {
-  fornecedor: Fornecedor;
-  onConfirm: () => void;
-  onCancel: () => void;
-  isDeleting: boolean;
-}) {
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
-      onClick={onCancel}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="relative bg-primary border border-white/10 text-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden"
-      >
-        <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
-          <div className="flex items-center gap-3">
-            <div className="bg-red-500/10 rounded-xl p-2.5">
-              <AlertTriangle className="w-5 h-5 text-red-400" />
-            </div>
-            <div>
-              <h2 className="text-base font-bold text-white">Excluir fornecedor?</h2>
-              <p className="text-xs text-white/40 mt-0.5">Essa ação não tem volta.</p>
-            </div>
-          </div>
-          <button
-            onClick={onCancel}
-            disabled={isDeleting}
-            className="text-white/50 hover:text-white transition-colors disabled:opacity-40"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="p-6 space-y-4">
-          <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-3 text-sm">
-            <div className="grid grid-cols-[110px_1fr] gap-3">
-              <span className="text-xs text-white/50 font-bold uppercase">Razão Social</span>
-              <span className="text-white font-medium">{fornecedor.razaoSocial}</span>
-            </div>
-            <div className="grid grid-cols-[110px_1fr] gap-3">
-              <span className="text-xs text-white/50 font-bold uppercase">CNPJ</span>
-              <span className="text-white/80 font-mono">{fornecedor.cnpj}</span>
-            </div>
-            <div className="grid grid-cols-[110px_1fr] gap-3">
-              <span className="text-xs text-white/50 font-bold uppercase">Endereço</span>
-              <span className="text-white/80">{fornecedor.endereco}</span>
-            </div>
-          </div>
-
-          <p className="text-sm text-white/60">
-            Vai sumir da lista e dos relatórios. Tem certeza?
-          </p>
-        </div>
-
-        <div className="border-t border-white/10 bg-white/5 px-6 py-5 flex gap-3 justify-end">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={onCancel}
-            disabled={isDeleting}
-            className="border border-white/10 text-white hover:bg-white/10"
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={onConfirm}
-            disabled={isDeleting}
-          >
-            {isDeleting ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Trash2 className="mr-2 h-4 w-4" />
-            )}
-            {isDeleting ? "Excluindo..." : "Sim, Excluir"}
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PÁGINA PRINCIPAL
@@ -196,14 +105,30 @@ export default function FornecedoresPage() {
 
   return (
     <>
-      {fornecedorParaExcluir && (
-        <ModalExclusao
-          fornecedor={fornecedorParaExcluir}
-          onConfirm={handleConfirmarExclusao}
-          onCancel={() => setFornecedorParaExcluir(null)}
-          isDeleting={isDeleting}
-        />
-      )}
+      <ConfirmDialog
+        open={!!fornecedorParaExcluir}
+        onOpenChange={(open) => !open && setFornecedorParaExcluir(null)}
+        onConfirm={handleConfirmarExclusao}
+        isConfirming={isDeleting}
+        title="Excluir fornecedor?"
+        description="Vai sumir da lista e dos relatórios. Tem certeza?"
+        preview={
+          fornecedorParaExcluir
+            ? [
+                { label: "Nome", value: fornecedorParaExcluir.razaoSocial },
+                {
+                  label: "CNPJ",
+                  value: (
+                    <span className="font-mono text-white/80">
+                      {fornecedorParaExcluir.cnpj}
+                    </span>
+                  ),
+                },
+                { label: "Endereço", value: fornecedorParaExcluir.endereco },
+              ]
+            : undefined
+        }
+      />
 
       <div className="w-full min-h-screen bg-secondary p-4 md:p-8 flex flex-col items-center">
         <div className="w-full max-w-6xl space-y-6">

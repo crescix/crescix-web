@@ -31,6 +31,7 @@ import {
 import { listProdutos, type Produto } from "@/services/produtos";
 import { extractApiError } from "@/lib/utils/api-errors";
 import { useToast } from "@/components/ui/toast";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 const inputClass =
   "w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:outline-none focus:border-brand/50 text-sm transition-colors";
@@ -584,42 +585,22 @@ export default function SaidasEstoque() {
         </div>
       )}
 
-      {modalExcluir && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-primary w-full max-w-sm rounded-2xl border border-red-500/30 p-6 space-y-4 text-center">
-            <div className="flex justify-center">
-              <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
-                <AlertCircle className="h-6 w-6 text-red-400" />
-              </div>
-            </div>
-            <h2 className="text-white font-bold text-lg">Excluir saída?</h2>
-            <p className="text-white/55 text-sm">
-              A saída de{" "}
-              <span className="text-white font-semibold">
-                {modalExcluir.produto?.nome ?? "produto"}
-              </span>{" "}
-              vai sumir e o saldo do produto recalcula. Essa ação não tem volta.
-            </p>
-            <div className="flex gap-3 pt-2">
-              <button
-                onClick={() => !isDeleting && setModalExcluir(null)}
-                disabled={isDeleting}
-                className="flex-1 h-10 rounded-xl bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 text-sm font-semibold transition-all active:scale-95 disabled:opacity-50"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={confirmarExclusao}
-                disabled={isDeleting}
-                className="flex-1 h-10 rounded-xl bg-red-500 hover:bg-red-400 text-white text-sm font-bold transition-all active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
-              >
-                {isDeleting && <Loader2 className="h-4 w-4 animate-spin" />}
-                {isDeleting ? "Excluindo..." : "Sim, excluir"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={!!modalExcluir}
+        onOpenChange={(open) => !open && setModalExcluir(null)}
+        onConfirm={confirmarExclusao}
+        isConfirming={isDeleting}
+        title="Excluir saída?"
+        description={
+          <>
+            A saída de{" "}
+            <span className="font-semibold text-white">
+              {modalExcluir?.produto?.nome ?? "produto"}
+            </span>{" "}
+            vai sumir e o saldo do produto recalcula. Essa ação não tem volta.
+          </>
+        }
+      />
 
     </div>
   );
