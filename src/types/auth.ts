@@ -27,6 +27,12 @@ export interface UserProfile {
     phone?: string | null;
     tipoComercio?: TipoComercio | null;
     fotoUrl?: string | null;
+    /**
+     * Saldo em caixa quando o usuário começou a usar o sistema.
+     * Soma como ponto de partida no fluxo de caixa e no card de saldo
+     * do dashboard. Default 0 — usuário que não preencher fica neutro.
+     */
+    saldoInicial?: number;
     createdAt?: string;
     updatedAt?: string;
 }
@@ -56,4 +62,10 @@ export interface AuthContextData {
     signIn: (credentials: SignInCredentials) => Promise<void>;
     signUp: (credentials: SignUpCredentials) => Promise<void>;
     signOut: (options?: { redirect?: boolean }) => void;
+    /**
+     * Aplica um patch parcial sobre o usuário do contexto. Usado por
+     * componentes que mexem no perfil (ex.: edição de saldo inicial)
+     * pra propagar a mudança sem recarregar a página.
+     */
+    updateUser: (patch: Partial<UserProfile>) => void;
 }

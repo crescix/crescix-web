@@ -109,6 +109,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (redirect) router.push("/login");
   }
 
+  // ─── Update user (after PATCH /auth/me) ──────────────────────────────────
+  // Permite componentes que mexem no perfil (ex.: edição de saldo inicial)
+  // propagarem a mudança sem precisar recarregar a página. Aceita o
+  // payload completo retornado pela API ou um patch parcial.
+  function updateUser(patch: Partial<UserProfile>) {
+    setUser((current) => {
+      if (!current) return current;
+      const merged = { ...current, ...patch };
+      localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(merged));
+      return merged;
+    });
+  }
+
   const contextValue: AuthContextData = {
     user,
     isAuthenticated,
@@ -116,6 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signIn,
     signOut,
     signUp,
+    updateUser,
   };
 
   return (

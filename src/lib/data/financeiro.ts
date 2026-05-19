@@ -304,7 +304,18 @@ export function buildTransacoesFluxo(
   return out;
 }
 
-export function calcResumoFluxo(transacoes: TransacaoFluxo[]): ResumoFluxo {
+/**
+ * Calcula o resumo agregado do fluxo de caixa.
+ *
+ * `saldoInicial` (opcional) representa o caixa do usuário ANTES do
+ * sistema entrar em cena — entra como base no saldo realizado e no
+ * projetado, mas não conta como "entrada" (não infla a métrica de
+ * receita do período). Default 0 pra manter compatibilidade.
+ */
+export function calcResumoFluxo(
+  transacoes: TransacaoFluxo[],
+  saldoInicial = 0
+): ResumoFluxo {
   const resumo: ResumoFluxo = {
     entradas: 0,
     saidas: 0,
@@ -322,9 +333,10 @@ export function calcResumoFluxo(transacoes: TransacaoFluxo[]): ResumoFluxo {
       else resumo.saidasPrevistas += t.valor;
     }
   }
-  resumo.saldo = resumo.entradas - resumo.saidas;
+  resumo.saldo = saldoInicial + resumo.entradas - resumo.saidas;
   resumo.saldoProjetado =
-    resumo.entradas + resumo.entradasPrevistas
+    saldoInicial
+    + resumo.entradas + resumo.entradasPrevistas
     - (resumo.saidas + resumo.saidasPrevistas);
   return resumo;
 }
