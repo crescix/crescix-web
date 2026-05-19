@@ -41,7 +41,7 @@ export default function EditarFornecedor() {
         const message =
           axios.isAxiosError(err) && err.response?.status === 404
             ? "Fornecedor não encontrado."
-            : "Erro ao carregar o fornecedor.";
+            : "Não consegui carregar o fornecedor agora.";
         setLoadError(message);
       })
       .finally(() => {

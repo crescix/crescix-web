@@ -66,7 +66,7 @@ export default function OrcamentosPage() {
         });
         setData(result.data);
       } catch (err) {
-        setError(extractApiError(err, "Não foi possível carregar os orçamentos."));
+        setError(extractApiError(err, "Não consegui carregar a lista agora."));
       }
     },
     []
@@ -116,7 +116,7 @@ export default function OrcamentosPage() {
       setOrcamentoAlvo(null);
       setModalOpen(false);
     } catch (err) {
-      setError(extractApiError(err, "Erro ao excluir o orçamento."));
+      setError(extractApiError(err, "Não consegui excluir agora. Tente novamente."));
     } finally {
       setIsDeleting(false);
     }

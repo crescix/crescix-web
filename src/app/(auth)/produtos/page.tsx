@@ -46,7 +46,7 @@ export default function ProdutosPage() {
       });
       setLista(result.data);
     } catch (err) {
-      setError(extractApiError(err, "Não foi possível carregar os produtos."));
+      setError(extractApiError(err, "Não consegui carregar a lista agora."));
     }
   }, []);
 
@@ -70,7 +70,7 @@ export default function ProdutosPage() {
       setLista((prev) => prev.filter((p) => p.id !== excluindo.id));
       setExcluindo(null);
     } catch (err) {
-      setError(extractApiError(err, "Erro ao excluir o produto."));
+      setError(extractApiError(err, "Não consegui excluir agora. Tente novamente."));
     } finally {
       setIsDeleting(false);
     }
@@ -270,7 +270,7 @@ function ModalEditar({
       });
       onSaved(updated);
     } catch (e2) {
-      setErr(extractApiError(e2, "Erro ao salvar o produto."));
+      setErr(extractApiError(e2, "Não consegui salvar agora. Tente novamente."));
       setSaving(false);
     }
   }

@@ -55,7 +55,7 @@ function RedefinirSenhaForm() {
             localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(user));
             setSuccess(true);
         } catch (err) {
-            setError(extractApiError(err, "Erro ao redefinir a senha."));
+            setError(extractApiError(err, "Não consegui redefinir agora. Confere se o link ainda vale e tenta de novo."));
         } finally {
             setLoading(false);
         }

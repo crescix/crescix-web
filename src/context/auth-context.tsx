@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       router.push("/dashboard");
     } catch (err) {
       throw new Error(
-        extractApiError(err, "Erro ao criar conta. Tente novamente.")
+        extractApiError(err, "Não consegui criar a conta agora. Tente novamente.")
       );
     }
   }

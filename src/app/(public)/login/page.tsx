@@ -32,7 +32,7 @@ export default function LoginPage() {
             setError(
                 err instanceof Error
                     ? err.message
-                    : "Email ou senha inválidos."
+                    : "E-mail ou senha incorretos."
             );
         } finally {
             setLoading(false);

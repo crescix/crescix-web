@@ -126,7 +126,7 @@ export default function EntradasEstoque() {
       setProdutos(prodRes.data);
       setFornecedores(fornRes.data);
     } catch (err) {
-      setLoadError(extractApiError(err, "Erro ao carregar entradas."));
+      setLoadError(extractApiError(err, "Não consegui carregar as entradas agora."));
     } finally {
       setLoading(false);
     }
@@ -167,7 +167,7 @@ export default function EntradasEstoque() {
       toast.success("Entrada registrada com sucesso!");
       fetchData();
     } catch (err) {
-      setSubmitError(extractApiError(err, "Erro ao registrar entrada."));
+      setSubmitError(extractApiError(err, "Não consegui registrar a entrada agora."));
     } finally {
       setSubmitting(false);
     }
@@ -182,7 +182,7 @@ export default function EntradasEstoque() {
       toast.success("Entrada excluída com sucesso!");
       fetchData();
     } catch (err) {
-      setLoadError(extractApiError(err, "Erro ao excluir entrada."));
+      setLoadError(extractApiError(err, "Não consegui excluir agora. Tente novamente."));
     } finally {
       setIsDeleting(false);
     }

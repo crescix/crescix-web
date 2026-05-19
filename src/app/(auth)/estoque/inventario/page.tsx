@@ -114,7 +114,7 @@ export default function Inventario() {
       setMovimentos(movRes.data);
       setProdutos(prodRes.data);
     } catch (err) {
-      setLoadError(extractApiError(err, "Erro ao carregar inventário."));
+      setLoadError(extractApiError(err, "Não consegui carregar o inventário agora."));
     } finally {
       setLoading(false);
     }
@@ -224,7 +224,7 @@ export default function Inventario() {
       toast.success(`Ajuste de "${produtoAlvo.produtoNome}" registrado!`);
       fetchData();
     } catch (err) {
-      setSubmitError(extractApiError(err, "Erro ao salvar ajuste."));
+      setSubmitError(extractApiError(err, "Não consegui salvar o ajuste agora."));
     } finally {
       setSubmitting(false);
     }

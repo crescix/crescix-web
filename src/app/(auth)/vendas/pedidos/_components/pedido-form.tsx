@@ -161,7 +161,7 @@ export function PedidoForm({ mode, pedidoId }: PedidoFormProps) {
         const message =
           mode === "editar" && axios.isAxiosError(err) && err.response?.status === 404
             ? "Pedido não encontrado."
-            : extractApiError(err, "Erro ao carregar dados do pedido.");
+            : extractApiError(err, "Não consegui carregar o pedido agora.");
         setLoadError(message);
       })
       .finally(() => {
@@ -272,7 +272,7 @@ export function PedidoForm({ mode, pedidoId }: PedidoFormProps) {
       setSubmitError(
         extractApiError(
           err,
-          mode === "novo" ? "Erro ao criar o pedido." : "Erro ao salvar as alterações."
+          mode === "novo" ? "Não consegui criar o pedido agora." : "Não consegui salvar as alterações agora."
         )
       );
     } finally {

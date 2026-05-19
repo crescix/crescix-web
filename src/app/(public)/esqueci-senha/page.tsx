@@ -23,7 +23,7 @@ export default function EsqueciSenhaPage() {
             await forgotPassword(email);
             setSent(true);
         } catch (err) {
-            setError(extractApiError(err, "Erro ao processar a solicitação."));
+            setError(extractApiError(err, "Não consegui processar agora. Tente novamente."));
         } finally {
             setLoading(false);
         }

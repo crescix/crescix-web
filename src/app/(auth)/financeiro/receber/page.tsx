@@ -103,7 +103,7 @@ export default function ContasReceberPage() {
       });
       setData(res.data);
     } catch (err) {
-      setLoadError(extractApiError(err, "Erro ao carregar contas a receber."));
+      setLoadError(extractApiError(err, "Não consegui carregar as contas a receber agora."));
     } finally {
       setLoading(false);
     }
@@ -176,7 +176,7 @@ export default function ContasReceberPage() {
       setDeleteOpen(false);
       fetchData();
     } catch (err) {
-      setLoadError(extractApiError(err, "Erro ao excluir conta."));
+      setLoadError(extractApiError(err, "Não consegui excluir agora. Tente novamente."));
     } finally {
       setIsDeleting(false);
     }
@@ -191,7 +191,7 @@ export default function ContasReceberPage() {
       });
       fetchData();
     } catch (err) {
-      setLoadError(extractApiError(err, "Erro ao marcar como recebido."));
+      setLoadError(extractApiError(err, "Não consegui marcar como recebido agora."));
     } finally {
       setMarkingReceivedId(null);
     }

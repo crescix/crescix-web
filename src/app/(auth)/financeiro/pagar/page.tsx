@@ -101,7 +101,7 @@ export default function ContasPagarPage() {
       });
       setData(res.data);
     } catch (err) {
-      setLoadError(extractApiError(err, "Erro ao carregar contas a pagar."));
+      setLoadError(extractApiError(err, "Não consegui carregar as contas a pagar agora."));
     } finally {
       setLoading(false);
     }
@@ -174,7 +174,7 @@ export default function ContasPagarPage() {
       setDeleteOpen(false);
       fetchData();
     } catch (err) {
-      setLoadError(extractApiError(err, "Erro ao excluir conta."));
+      setLoadError(extractApiError(err, "Não consegui excluir agora. Tente novamente."));
     } finally {
       setIsDeleting(false);
     }
@@ -189,7 +189,7 @@ export default function ContasPagarPage() {
       });
       fetchData();
     } catch (err) {
-      setLoadError(extractApiError(err, "Erro ao marcar como pago."));
+      setLoadError(extractApiError(err, "Não consegui marcar como pago agora."));
     } finally {
       setMarkingPaidId(null);
     }

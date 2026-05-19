@@ -45,7 +45,7 @@ export default function FornecedoresPage() {
       const message =
         axios.isAxiosError(err) && err.response?.data?.message
           ? err.response.data.message
-          : "Não foi possível carregar os fornecedores.";
+          : "Não consegui carregar a lista agora.";
       setError(message);
     }
   }, []);
@@ -96,7 +96,7 @@ export default function FornecedoresPage() {
       const message =
         axios.isAxiosError(err) && err.response?.data?.message
           ? err.response.data.message
-          : "Erro ao excluir o fornecedor.";
+          : "Não consegui excluir agora. Tente novamente.";
       setError(message);
     } finally {
       setIsDeleting(false);

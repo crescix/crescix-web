@@ -45,7 +45,7 @@ export default function ClientesPage() {
       });
       setLista(result.data);
     } catch (err) {
-      setError(extractApiError(err, "Não foi possível carregar os clientes."));
+      setError(extractApiError(err, "Não consegui carregar a lista agora."));
     }
   }, []);
 
@@ -69,7 +69,7 @@ export default function ClientesPage() {
       setLista((prev) => prev.filter((c) => c.id !== excluindo.id));
       setExcluindo(null);
     } catch (err) {
-      setError(extractApiError(err, "Erro ao excluir o cliente."));
+      setError(extractApiError(err, "Não consegui excluir agora. Tente novamente."));
     } finally {
       setIsDeleting(false);
     }
@@ -295,7 +295,7 @@ function ModalEditar({
       });
       onSaved(updated);
     } catch (e2) {
-      setErr(extractApiError(e2, "Erro ao salvar o cliente."));
+      setErr(extractApiError(e2, "Não consegui salvar agora. Tente novamente."));
       setSaving(false);
     }
   }
