@@ -37,8 +37,10 @@ import {
   resolveRange,
   type PeriodoPreset,
 } from "@/components/ui/periodo-presets";
+import { useAuth } from "@/context/auth-context";
 
 export default function FluxoDeCaixaPage() {
+  const { user } = useAuth();
   const [transacoes, setTransacoes] = useState<TransacaoFluxo[]>([]);
   const [mounted, setMounted] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -104,7 +106,14 @@ export default function FluxoDeCaixaPage() {
     });
   }, [transacoes, periodoRange, tipoFilter, naturezaFilter, searchTerm]);
 
-  const resumo = useMemo(() => calcResumoFluxo(filtered), [filtered]);
+  // Inclui saldo inicial do usuário como ponto de partida do saldo
+  // realizado/projetado. Sem isso, mesmo após preencher no perfil,
+  // o card "Saldo do período" mostraria só entradas − saídas e ignoraria
+  // o caixa anterior.
+  const resumo = useMemo(
+    () => calcResumoFluxo(filtered, user?.saldoInicial ?? 0),
+    [filtered, user?.saldoInicial]
+  );
   const grafico = useMemo(() => agruparPorDia(filtered), [filtered]);
 
   const resetFilters = () => {

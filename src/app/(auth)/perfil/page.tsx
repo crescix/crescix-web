@@ -19,6 +19,7 @@ import { useAuth } from "@/context/auth-context";
 import { maskPhone } from "@/lib/utils/masks";
 import { useUnsavedChanges } from "@/lib/hooks/use-unsaved-changes";
 import { TelegramPairingCard } from "./_components/telegram-pairing";
+import { SaldoInicialCard } from "./_components/saldo-inicial-card";
 
 const schema = z.object({
   nome: z.string().min(2, "Nome obrigatório (mín. 2 caracteres)"),
@@ -261,6 +262,9 @@ export default function PerfilPage() {
             </Button>
           </div>
         </form>
+
+        {/* Saldo inicial em caixa */}
+        <SaldoInicialCard />
 
         {/* Integração com Telegram */}
         <TelegramPairingCard />
