@@ -97,11 +97,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   // ─── Sign Out ────────────────────────────────────────────────────────────
-  function signOut() {
+  // `redirect: false` é útil quando a chamada vem de uma página pública
+  // (cadastro, esqueci-senha) só pra limpar sessão pendente — sem isso,
+  // o cadastro entra em loop: monta → signOut → push("/login") → monta
+  // /login → mas o usuário queria estar em /cadastro.
+  function signOut(options: { redirect?: boolean } = {}) {
+    const { redirect = true } = options;
     localStorage.removeItem(STORAGE_TOKEN_KEY);
     localStorage.removeItem(STORAGE_USER_KEY);
     setUser(null);
-    router.push("/login");
+    if (redirect) router.push("/login");
   }
 
   const contextValue: AuthContextData = {
