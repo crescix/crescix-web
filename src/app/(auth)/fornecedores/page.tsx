@@ -280,14 +280,14 @@ export default function FornecedoresPage() {
                                 <div className="flex items-center justify-end gap-1">
                                   <Link
                                     href={`/fornecedores/editar/${f.id}`}
-                                    title="Editar"
+                                    title="Editar" aria-label="Editar"
                                     className="p-2 rounded-lg text-white/40 hover:text-green-400 hover:bg-green-500/10 transition-colors"
                                   >
                                     <Pencil className="w-4 h-4" />
                                   </Link>
                                   <button
                                     onClick={() => setFornecedorParaExcluir(f)}
-                                    title="Excluir"
+                                    title="Excluir" aria-label="Excluir"
                                     className="p-2 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                                   >
                                     <Trash2 className="w-4 h-4" />

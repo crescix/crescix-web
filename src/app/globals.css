@@ -220,6 +220,50 @@
     background-color: var(--bg-elevated);
     color: var(--brand);
   }
+
+  /* ─── Focus visible global ─────────────────────────────────────────────── */
+  /* Tailwind 4 não aplica ring/outline default em todos elementos focáveis —
+     muitas vezes esquecemos `focus-visible:ring-*` num botão custom e ele
+     fica sem indicação visual de foco (problemão pra navegação por teclado
+     e screen readers). Esse fallback garante que TODO elemento focável
+     tenha ao menos uma borda verde visível.
+     `:focus:not(:focus-visible)` desliga o ring quando o foco veio do mouse
+     (evita o "anel chato" depois de clicar num botão). */
+  :where(button, a, input, select, textarea, [role="button"], [tabindex]):focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  /* Elementos com ring/outline próprios podem opt-out via .no-default-focus */
+  .no-default-focus:focus-visible {
+    outline: none;
+  }
+
+  /* ─── Scroll suave ──────────────────────────────────────────────────────── */
+  /* Respeita usuários com prefers-reduced-motion. */
+  html {
+    scroll-behavior: smooth;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+}
+
+/* ─── Screen reader only ───────────────────────────────────────────────────── */
+/* Pra textos que só queremos pra leitores de tela (não visualmente). Útil
+   pra labels acessíveis em botões só-com-ícone. */
+@layer utilities {
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
 }
 
 @layer utilities {

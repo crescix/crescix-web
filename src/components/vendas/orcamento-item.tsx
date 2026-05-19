@@ -45,7 +45,7 @@ export function OrcamentoItem({ data, onDelete }: OrcamentoItemProps) {
           {/* Converter em pedido */}
           <Link href={`/vendas/pedidos/novo?orcamento=${data.id}`}>
             <button
-              title="Converter em pedido"
+              title="Converter em pedido" aria-label="Converter em pedido"
               className="p-2 hover:bg-white/10 rounded-lg transition-colors group"
             >
               <Copy className="h-4 w-4 text-white/40 group-hover:text-green-400 transition-colors" />
@@ -55,7 +55,7 @@ export function OrcamentoItem({ data, onDelete }: OrcamentoItemProps) {
           {/* Editar */}
           <Link href={`/vendas/orcamentos/${data.id}/editar`}>
             <button
-              title="Editar orçamento"
+              title="Editar orçamento" aria-label="Editar orçamento"
               className="p-2 hover:bg-white/10 rounded-lg transition-colors group"
             >
               <Pencil className="h-4 w-4 text-white/40 group-hover:text-green-400 transition-colors" />
@@ -64,7 +64,7 @@ export function OrcamentoItem({ data, onDelete }: OrcamentoItemProps) {
 
           {/* Excluir */}
           <button
-            title="Excluir orçamento"
+            title="Excluir orçamento" aria-label="Excluir orçamento"
             onClick={() => onDelete(data)}
             className="p-2 hover:bg-red-500/10 rounded-lg transition-colors group"
           >
