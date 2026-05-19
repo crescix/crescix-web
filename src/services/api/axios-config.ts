@@ -3,8 +3,36 @@ import axios from "axios";
 const STORAGE_TOKEN_KEY = "@Crescix:token";
 const STORAGE_USER_KEY = "@Crescix:user";
 
+/**
+ * URL base da crescix-api. Em dev cai pra localhost; em produção,
+ * exigimos a env var setada — sem isso, o app silenciosamente tentaria
+ * chamar localhost:3333 do navegador do usuário, o pior tipo de falha
+ * (nada funciona, sem erro óbvio).
+ *
+ * A checagem roda no client (typeof window !== "undefined") porque
+ * NEXT_PUBLIC_* é embutido em build time. Se a build foi feita sem a
+ * env var, o usuário vê um erro claro na primeira request em vez de
+ * timeouts misteriosos.
+ */
+const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+if (
+  typeof window !== "undefined" &&
+  !NEXT_PUBLIC_API_URL &&
+  process.env.NODE_ENV === "production"
+) {
+  // Loga no console — vai aparecer no DevTools do usuário. Não conseguimos
+  // mostrar tela de erro aqui (root layout do Next já renderizou), mas
+  // pelo menos o motivo do colapso fica visível pra quem investigar.
+  console.error(
+    "[crescix-web] NEXT_PUBLIC_API_URL não está configurada. " +
+      "O app não vai conseguir conversar com a crescix-api. " +
+      "Defina essa variável no deploy (ex.: https://api.crescix.com.br)."
+  );
+}
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3333",
+  baseURL: NEXT_PUBLIC_API_URL || "http://localhost:3333",
   headers: {
     "Content-Type": "application/json",
   },
