@@ -211,14 +211,14 @@ export default function ProdutosPage() {
                           <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={() => setEditando(p)}
-                              title="Editar"
+                              title="Editar" aria-label="Editar"
                               className="p-2 rounded-lg text-white/40 hover:text-green-400 hover:bg-green-500/10 transition-colors"
                             >
                               <Pencil className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => setExcluindo(p)}
-                              title="Excluir"
+                              title="Excluir" aria-label="Excluir"
                               className="p-2 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                             >
                               <Trash2 className="w-4 h-4" />

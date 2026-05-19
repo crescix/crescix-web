@@ -300,7 +300,7 @@ export default function PedidosPage() {
                     <TableCell>
                       <div className="flex items-center justify-center gap-1">
                         <button
-                          title="Imprimir pedido"
+                          title="Imprimir pedido" aria-label="Imprimir pedido"
                           className="p-2 hover:bg-white/10 rounded-lg transition-colors group"
                           onClick={() => window.print()}
                         >
@@ -308,14 +308,14 @@ export default function PedidosPage() {
                         </button>
                         <Link href={`/vendas/pedidos/${pedido.id}/editar`}>
                           <button
-                            title="Editar pedido"
+                            title="Editar pedido" aria-label="Editar pedido"
                             className="p-2 hover:bg-white/10 rounded-lg transition-colors group"
                           >
                             <Pencil className="h-4 w-4 text-white/40 group-hover:text-green-400 transition-colors" />
                           </button>
                         </Link>
                         <button
-                          title="Excluir pedido"
+                          title="Excluir pedido" aria-label="Excluir pedido"
                           onClick={() => setExcluindo(pedido)}
                           className="p-2 hover:bg-red-500/10 rounded-lg transition-colors group"
                         >

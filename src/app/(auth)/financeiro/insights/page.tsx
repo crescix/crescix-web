@@ -183,8 +183,8 @@ export default function InsightsPage() {
     };
 
     return (
-        <div className="w-full min-h-screen bg-secondary p-4 md:p-8 flex flex-col items-center">
-            <div className="w-full max-w-6xl space-y-6">
+        <div className="w-full min-h-screen bg-secondary p-3 sm:p-4 md:p-8 flex flex-col items-center">
+            <div className="w-full max-w-6xl space-y-4 sm:space-y-6">
 
                 {/* ── Cabeçalho ──────────────────────────────────────────── */}
                 <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -369,15 +369,15 @@ function Conteudo({ data, mesLabel }: { data: SugestoesResponse; mesLabel: strin
 
             {/* ── Resumo executivo (IA) ───────────────────────────────── */}
             {insights.resumoExecutivo && (
-                <section className="relative overflow-hidden bg-gradient-to-br from-brand/10 via-brand/5 to-transparent border border-brand/25 rounded-3xl p-6 md:p-8">
+                <section className="relative overflow-hidden bg-gradient-to-br from-brand/10 via-brand/5 to-transparent border border-brand/25 rounded-3xl p-4 sm:p-6 md:p-8">
                     <div className="absolute -top-12 -right-12 w-48 h-48 bg-brand/10 rounded-full blur-3xl pointer-events-none" />
                     <div className="relative flex items-start gap-3">
                         <Sparkles className="h-5 w-5 text-brand flex-shrink-0 mt-1" />
-                        <div>
+                        <div className="min-w-0">
                             <p className="text-[10px] uppercase tracking-widest text-brand font-semibold mb-1.5">
                                 Resumo do mês — {mesLabel}
                             </p>
-                            <p className="text-white text-base md:text-lg leading-relaxed">
+                            <p className="text-white text-sm sm:text-base md:text-lg leading-relaxed">
                                 {insights.resumoExecutivo}
                             </p>
                         </div>
@@ -540,7 +540,7 @@ function Conteudo({ data, mesLabel }: { data: SugestoesResponse; mesLabel: strin
             </div>
 
             {/* ── Rodapé: cache info ──────────────────────────────────── */}
-            <footer className="flex items-center justify-between text-xs text-white/35 px-1 pt-2">
+            <footer className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs text-white/35 px-1 pt-2">
                 <span>
                     {cache.hit ? "Análise do cache " : "Análise gerada agora "}
                     em <span className="text-white/55">{fmtDataHora(cache.geradoEm)}</span>
@@ -593,7 +593,7 @@ function KpiVariacao({
     return (
         <div
             className={`
-                bg-primary border rounded-2xl p-5
+                bg-primary border rounded-2xl p-4 sm:p-5 min-w-0
                 ${destaque ? "border-brand/30 bg-gradient-to-br from-brand/5 to-transparent" : "border-white/10"}
             `}
         >
@@ -607,14 +607,14 @@ function KpiVariacao({
                     </div>
                 )}
             </div>
-            <p className={`text-2xl md:text-3xl font-bold ${corValor}`}>
+            <p className={`text-xl sm:text-2xl md:text-3xl font-bold ${corValor} truncate`}>
                 {fmtBRL(valor)}
             </p>
-            <div className={`mt-2 inline-flex items-center gap-1 text-xs ${corVariacao}`}>
-                <Icon className="h-3.5 w-3.5" />
+            <div className={`mt-2 flex flex-wrap items-center gap-x-1 gap-y-0.5 text-xs ${corVariacao}`}>
+                <Icon className="h-3.5 w-3.5 flex-shrink-0" />
                 <span className="font-semibold">{fmtPct(variacao)}</span>
-                <span className="text-white/40 ml-1">
-                    vs {fmtBRL(valorPrev).replace("R$ ", "R$ ")}
+                <span className="text-white/40">
+                    vs {fmtBRL(valorPrev)}
                 </span>
             </div>
         </div>
@@ -635,7 +635,7 @@ function Painel({
     children: React.ReactNode;
 }) {
     return (
-        <section className="bg-primary border border-white/10 rounded-2xl p-5">
+        <section className="bg-primary border border-white/10 rounded-2xl p-4 sm:p-5">
             <header className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
                     {icon}
