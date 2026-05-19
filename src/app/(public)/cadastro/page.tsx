@@ -53,8 +53,11 @@ export default function RegisterPage() {
     };
 
     // Garante que ao chegar na tela de cadastro o usuário está deslogado
+    // (cenário: alguém logado clica em "Cadastre-se" pra criar conta nova).
+    // `redirect: false` evita loop monta → signOut → push("/login") → o
+    // usuário queria estar AQUI, em /cadastro.
     useEffect(() => {
-        signOut();
+        signOut({ redirect: false });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 

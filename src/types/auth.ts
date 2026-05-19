@@ -55,5 +55,5 @@ export interface AuthContextData {
     isAuthenticating: boolean;
     signIn: (credentials: SignInCredentials) => Promise<void>;
     signUp: (credentials: SignUpCredentials) => Promise<void>;
-    signOut: () => void;
+    signOut: (options?: { redirect?: boolean }) => void;
 }
