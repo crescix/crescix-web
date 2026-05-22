@@ -19,6 +19,7 @@ import { useAuth } from "@/context/auth-context";
 import { maskPhone } from "@/lib/utils/masks";
 import { useUnsavedChanges } from "@/lib/hooks/use-unsaved-changes";
 import { TelegramPairingCard } from "./_components/telegram-pairing";
+import { WhatsappPairingCard } from "./_components/whatsapp-pairing";
 import { SaldoInicialCard } from "./_components/saldo-inicial-card";
 
 const schema = z.object({
@@ -268,6 +269,7 @@ export default function PerfilPage() {
 
         {/* Integração com Telegram */}
         <TelegramPairingCard />
+        <WhatsappPairingCard />
 
       </div>
     </div>
