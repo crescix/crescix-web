@@ -77,6 +77,21 @@ api.interceptors.response.use(
       }
     }
 
+    // ─── 402 Payment Required → assinatura expirada ──────────────────
+    // O middleware requireActiveSubscription na API devolve 402 em
+    // tentativas de escrita quando o usuário está EXPIRED/CANCELED.
+    // Em vez de mostrar toast genérico, mandamos pra /assinatura.
+    // Mantemos a rejeição da promise pra que o caller ainda possa
+    // tratar (ex.: parar o spinner).
+    if (status === 402 && !isAuthEndpoint) {
+      if (
+        window.location.pathname !== "/assinatura" &&
+        window.location.pathname !== "/login"
+      ) {
+        window.location.href = "/assinatura";
+      }
+    }
+
     return Promise.reject(error);
   }
 );
