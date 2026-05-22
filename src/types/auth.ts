@@ -20,6 +20,16 @@ export type TipoComercio =
     | "SERVICOS"
     | "OUTRO";
 
+export type SubscriptionStatus = "TRIAL" | "ACTIVE" | "EXPIRED" | "CANCELED";
+
+export interface SubscriptionInfo {
+    status: SubscriptionStatus;
+    trialEndsAt: string | null;
+    subscriptionEndsAt: string | null;
+    /** Dias inteiros restantes (0 quando já venceu). */
+    daysRemaining: number;
+}
+
 export interface UserProfile {
     id: string;
     email: string;
@@ -33,6 +43,12 @@ export interface UserProfile {
      * do dashboard. Default 0 — usuário que não preencher fica neutro.
      */
     saldoInicial?: number;
+    /**
+     * Bloco de assinatura exposto pela API em /auth/me, /auth/login e
+     * /auth/signup. O `status` é calculado dinamicamente no backend
+     * comparando as datas — confie nele em vez de recalcular no cliente.
+     */
+    subscription?: SubscriptionInfo;
     createdAt?: string;
     updatedAt?: string;
 }
