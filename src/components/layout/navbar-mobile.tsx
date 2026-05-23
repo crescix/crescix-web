@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { X, LogOut, User as UserIcon } from "lucide-react";
+import { X, LogOut, User as UserIcon, CreditCard } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { getIniciais } from "@/lib/data/perfil";
 import type { MenuItem } from "./navbar-menu";
@@ -118,6 +118,14 @@ export function NavbarMobile({ isOpen, onClose, menu, perfil }: NavbarMobileProp
             >
               <UserIcon className="w-4 h-4 text-white/40" />
               Meu Perfil
+            </Link>
+            <Link
+              href="/assinatura"
+              onClick={onClose}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white text-sm transition-colors"
+            >
+              <CreditCard className="w-4 h-4 text-white/40" />
+              Assinatura
             </Link>
             <button
               onClick={() => { onClose(); signOut(); }}
