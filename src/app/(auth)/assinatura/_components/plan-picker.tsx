@@ -101,16 +101,16 @@ function PlanCard({
   return (
     <div
       className={
-        "relative flex flex-col rounded-2xl border p-6 transition " +
+        "flex flex-col rounded-2xl border p-6 transition " +
         (highlight
-          ? "border-brand-green/40 bg-brand-green/5 shadow-[0_0_40px_-15px_rgba(34,197,94,0.4)]"
+          ? "border-green-500/40 bg-green-500/5 shadow-[0_0_40px_-15px_rgba(34,197,94,0.4)]"
           : "border-white/10 bg-white/5 hover:border-white/20")
       }
     >
       {badge && (
-        <div className="absolute -top-3 left-6 rounded-full bg-brand-green px-3 py-1 text-xs font-semibold text-black">
+        <span className="inline-block self-start rounded-full bg-green-500 px-3 py-1 text-xs font-semibold text-black mb-3 max-w-full truncate">
           {badge}
-        </div>
+        </span>
       )}
 
       <h3 className="text-lg font-semibold text-white">{title}</h3>
@@ -126,7 +126,7 @@ function PlanCard({
       <ul className="mt-5 flex-1 space-y-2">
         {features.map((f) => (
           <li key={f} className="flex items-start gap-2 text-sm text-white/80">
-            <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-green" />
+            <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />
             <span>{f}</span>
           </li>
         ))}
