@@ -148,24 +148,24 @@ export function PixCheckoutCard({
         </div>
       </div>
 
-      <div className="mt-6 grid gap-6 md:grid-cols-[auto,1fr] md:items-start">
-        {/* QR Code */}
+      <div className="mt-6 flex flex-col md:flex-row gap-6 md:items-start">
         {/* QR Code gerado no client a partir do texto copia-e-cola.
-            Mais confiável que o qrCodeBase64 do MP (que às vezes vem
-            vazio ou com formato inesperado em sandbox). Como o qrCode
-            é o EMV padronizado do BACEN, qualquer banco lê. */}
-        <div className="mx-auto rounded-xl bg-white p-3 md:mx-0">
+            Mais confiável que o qrCodeBase64 do MP. Como o qrCode é o
+            EMV padronizado do BACEN, qualquer banco lê.
+            shrink-0 + tamanho fixo pro card branco não esticar. */}
+        <div className="shrink-0 self-center md:self-start rounded-xl bg-white p-3 w-fit">
           <QRCodeSVG
             value={pix.qrCode}
-            size={224}
+            size={208}
             level="M"
             marginSize={0}
-            className="h-56 w-56 md:h-64 md:w-64"
+            className="block"
           />
         </div>
 
-        {/* Instruções + copia-e-cola */}
-        <div className="space-y-4">
+        {/* min-w-0 é o que permite o truncate do copia-e-cola funcionar
+            dentro do flex — sem isso o code estica o container. */}
+        <div className="flex-1 min-w-0 space-y-4">
           <div>
             <h3 className="text-sm font-semibold text-white">Como pagar</h3>
             <ol className="mt-2 space-y-1 text-sm text-white/70">
@@ -180,8 +180,8 @@ export function PixCheckoutCard({
             <label className="text-xs uppercase tracking-wider text-white/40">
               PIX Copia e Cola
             </label>
-            <div className="mt-1 flex gap-2">
-              <code className="flex-1 truncate rounded-lg border border-white/10 bg-black/30 px-3 py-2 font-mono text-xs text-white/80">
+            <div className="mt-1 flex gap-2 min-w-0">
+              <code className="flex-1 min-w-0 truncate rounded-lg border border-white/10 bg-black/30 px-3 py-2 font-mono text-xs text-white/80">
                 {pix.qrCode}
               </code>
               <Button
