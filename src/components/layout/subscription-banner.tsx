@@ -36,8 +36,9 @@ export function SubscriptionBanner() {
   // ACTIVE — tudo certo, nada a mostrar
   if (status === "ACTIVE") return null;
 
-  // TRIAL com folga — só polui o app
-  if (status === "TRIAL" && daysRemaining > 5) return null;
+  // Em TRIAL o banner aparece em todos os dias — o cliente precisa
+  // saber desde o primeiro acesso que está num período limitado. A
+  // urgência visual aumenta conforme o trial encerra.
 
   const isExpired = status === "EXPIRED" || status === "CANCELED";
 
