@@ -4,12 +4,13 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { ChevronDown, Menu, Bell } from "lucide-react";
+import { ChevronDown, Menu } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { getPerfil } from "@/lib/data/perfil";
 import { NAVBAR_MENU } from "./navbar-menu";
 import { NavbarAvatar } from "./navbar-avatar";
 import { NavbarMobile } from "./navbar-mobile";
+import { NavbarNotifications } from "./navbar-notifications";
 
 export function Navbar() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -141,14 +142,8 @@ export function Navbar() {
               {/* Spacer pra empurrar avatar pra direita */}
               <div className="flex-1" />
 
-              {/* Notificações (placeholder) */}
-              <button
-                className="hidden md:flex relative w-10 h-10 items-center justify-center rounded-full border border-white/10 hover:border-white/20 hover:bg-white/5 transition-base"
-                title="Notificações"
-              >
-                <Bell className="w-4 h-4 text-white/60" />
-                <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-green-500 ring-2 ring-[#0B1622]" />
-              </button>
+              {/* Notificações: sino com dropdown de contas vencendo */}
+              <NavbarNotifications />
 
               {/* Avatar (desktop) */}
               <div className="hidden md:block">
