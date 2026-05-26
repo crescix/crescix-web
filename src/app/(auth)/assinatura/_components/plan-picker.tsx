@@ -132,11 +132,18 @@ function PlanCard({
         ))}
       </ul>
 
+      {/* Cores explícitas em vez de variant pra não depender do tema do
+          shadcn (a default estava saindo cinza claro contra o card claro
+          do plano destacado, quase invisível). */}
       <Button
         onClick={onClick}
         disabled={disabled}
-        className="mt-6 w-full"
-        variant={highlight ? "default" : "outline"}
+        className={
+          "mt-6 w-full font-semibold " +
+          (highlight
+            ? "bg-green-500 hover:bg-green-400 text-[#0B1622] disabled:bg-green-500/50 disabled:text-[#0B1622]/60"
+            : "bg-white/10 hover:bg-white/15 text-white border border-white/15")
+        }
       >
         {loading ? (
           <>
