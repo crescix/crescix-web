@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Check, Copy, Loader2, QrCode, RefreshCcw } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
 import {
   CriarPixResponse,
@@ -149,11 +150,16 @@ export function PixCheckoutCard({
 
       <div className="mt-6 grid gap-6 md:grid-cols-[auto,1fr] md:items-start">
         {/* QR Code */}
+        {/* QR Code gerado no client a partir do texto copia-e-cola.
+            Mais confiável que o qrCodeBase64 do MP (que às vezes vem
+            vazio ou com formato inesperado em sandbox). Como o qrCode
+            é o EMV padronizado do BACEN, qualquer banco lê. */}
         <div className="mx-auto rounded-xl bg-white p-3 md:mx-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={"data:image/png;base64," + pix.qrCodeBase64}
-            alt="QR Code PIX"
+          <QRCodeSVG
+            value={pix.qrCode}
+            size={224}
+            level="M"
+            marginSize={0}
             className="h-56 w-56 md:h-64 md:w-64"
           />
         </div>
