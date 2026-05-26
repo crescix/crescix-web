@@ -19,6 +19,7 @@ import {
   AuthResponse,
   SignInCredentials,
   SignUpCredentials,
+  SignUpResponse,
   UserProfile,
 } from "@/types/auth";
 
@@ -79,16 +80,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   // ─── Sign Up ─────────────────────────────────────────────────────────────
-  // O backend retorna { token, user } já no signup → faz auto-login.
-  async function signUp(data: SignUpCredentials) {
+  // O backend cria a conta mas NÃO retorna token — exige que o cliente
+  // confirme o e-mail antes de logar. Não auto-logamos aqui. A tela
+  // /cadastro recebe a resposta e redireciona pra /login mostrando
+  // instruções de "verifique seu e-mail".
+  async function signUp(data: SignUpCredentials): Promise<SignUpResponse> {
     try {
-      const response = await api.post<AuthResponse>("/auth/signup", data);
-      const { token, user: userData } = response.data;
-
-      localStorage.setItem(STORAGE_TOKEN_KEY, token);
-      localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(userData));
-      setUser(userData);
-      router.push("/dashboard");
+      const response = await api.post<SignUpResponse>("/auth/signup", data);
+      return response.data;
     } catch (err) {
       throw new Error(
         extractApiError(err, "Não consegui criar a conta agora. Tente novamente.")
