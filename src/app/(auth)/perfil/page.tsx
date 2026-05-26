@@ -269,7 +269,11 @@ export default function PerfilPage() {
 
         {/* Integração com Telegram */}
         <TelegramPairingCard />
-        <WhatsappPairingCard />
+        {/* Integração com WhatsApp temporariamente desativada — instância
+            Z-API expirou e não vamos renovar até voltar o canal. Pra
+            reativar: descomentar a linha abaixo, renovar a instância no
+            Z-API e despausar o serviço crescix-bot-whatsapp no Render. */}
+        {/* <WhatsappPairingCard /> */}
 
       </div>
     </div>
