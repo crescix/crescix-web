@@ -267,6 +267,22 @@
 }
 
 @layer utilities {
+  /* Fix Xiaomi/MIUI: alguns WebViews Android (Xiaomi HyperOS/MIUI, Samsung
+     antigos) travam o scroll do conteúdo embaixo de elementos `position:
+     fixed` quando esses elementos têm `backdrop-filter`. O paint do blur
+     fica acoplado ao layer da página, o que gera jank/stutter no scroll.
+     Forçar uma layer de composição separada (translateZ(0) + isolation)
+     desacopla o efeito do conteúdo principal e elimina o problema na
+     maioria dos casos. Aplica só em mobile pra não onerar desktop. */
+  @media (max-width: 768px) {
+    .glass,
+    .glass-strong,
+    [class*="backdrop-blur"] {
+      transform: translateZ(0);
+      isolation: isolate;
+    }
+  }
+
   /* Glassmorphism — navbar e overlays */
   .glass {
     background: var(--bg-glass);

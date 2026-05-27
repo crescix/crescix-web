@@ -45,9 +45,11 @@ export function NavbarMobile({ isOpen, onClose, menu, perfil }: NavbarMobileProp
 
   return (
     <>
-      {/* Overlay */}
+      {/* Overlay — sem backdrop-blur de propósito: em WebViews Xiaomi/MIUI
+          o blur sobre conteúdo scrollável trava o scroll por baixo. A
+          opacidade maior compensa o efeito visual de "escurecer o fundo". */}
       <div
-        className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 md:hidden animate-fade-in"
+        className="fixed inset-0 bg-black/80 z-40 md:hidden animate-fade-in"
         onClick={onClose}
       />
 
