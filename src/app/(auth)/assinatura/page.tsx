@@ -15,6 +15,7 @@ import {
 } from "@/services/assinatura";
 import { PlanPicker } from "./_components/plan-picker";
 import { PixCheckoutCard } from "./_components/pix-checkout-card";
+import { PaymentHistory } from "./_components/payment-history";
 
 /**
  * Tela /assinatura — central de pagamentos da CrescIX.
@@ -164,6 +165,10 @@ export default function AssinaturaPage() {
           onPick={handlePick}
           pickingPlan={pickingPlan}
         />
+      </div>
+
+      <div className="mt-8">
+        <PaymentHistory />
       </div>
 
       <div className="mt-10 rounded-2xl border border-white/10 bg-white/5 p-6">
