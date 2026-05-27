@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Mail, Lock, User, Phone, Loader2, AlertCircle, ArrowRight } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,6 +14,7 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { AuthField } from "@/components/auth/auth-field";
 
 export default function RegisterPage() {
+    const router = useRouter();
     const { signUp, signOut } = useAuth();
     const [submitError, setSubmitError] = useState("");
     const [loading, setLoading] = useState(false);
@@ -34,20 +36,24 @@ export default function RegisterPage() {
         setSubmitError("");
         setLoading(true);
         try {
-            await signUp({
+            const result = await signUp({
                 name: data.name,
                 email: data.email,
                 phone: data.phone,
                 password: data.password,
             });
-            // signUp redireciona para /dashboard em sucesso
+            // signUp não loga mais — backend exige confirmação de e-mail.
+            // Manda pra /login com query params pra mostrar o aviso "verifique
+            // seu e-mail" sem precisar de toast global.
+            router.push(
+                `/login?registered=1&email=${encodeURIComponent(result.email)}`
+            );
         } catch (err) {
             setSubmitError(
                 err instanceof Error
                     ? err.message
                     : "Não consegui criar a conta agora. Tente novamente."
             );
-        } finally {
             setLoading(false);
         }
     };

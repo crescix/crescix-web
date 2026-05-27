@@ -34,6 +34,12 @@ export interface UserProfile {
     id: string;
     email: string;
     name: string;
+    /**
+     * Se o cliente já clicou no link de confirmação enviado por e-mail.
+     * Cliente pode usar o app sem confirmar, mas vê banner pedindo.
+     * Default false em novos cadastros.
+     */
+    emailVerified?: boolean;
     phone?: string | null;
     tipoComercio?: TipoComercio | null;
     fotoUrl?: string | null;
@@ -71,12 +77,23 @@ export interface AuthResponse {
     user: UserProfile;
 }
 
+/**
+ * Resposta do POST /auth/signup. **Não inclui token JWT** — o backend
+ * agora exige que o cliente confirme o e-mail antes de autenticar.
+ * O front recebe essa resposta e redireciona pra /login com instruções.
+ */
+export interface SignUpResponse {
+    message: string;
+    requiresVerification: boolean;
+    email: string;
+}
+
 export interface AuthContextData {
     user: UserProfile | null;
     isAuthenticated: boolean;
     isAuthenticating: boolean;
     signIn: (credentials: SignInCredentials) => Promise<void>;
-    signUp: (credentials: SignUpCredentials) => Promise<void>;
+    signUp: (credentials: SignUpCredentials) => Promise<SignUpResponse>;
     signOut: (options?: { redirect?: boolean }) => void;
     /**
      * Aplica um patch parcial sobre o usuário do contexto. Usado por
