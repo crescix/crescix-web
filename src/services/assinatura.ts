@@ -91,6 +91,22 @@ export async function getPaymentStatus(
   return data;
 }
 
+/**
+ * Lista o histórico de pagamentos do usuário autenticado. Backend
+ * retorna os 50 mais recentes em ordem decrescente — cobre anos de
+ * plano mensal sem precisar paginar.
+ *
+ * Tela /assinatura usa pra mostrar tudo o que o cliente já pagou +
+ * status de cada cobrança (PAID confirmado, PENDING em aberto,
+ * FAILED rejeitado).
+ */
+export async function listPayments(): Promise<PaymentStatusResponse[]> {
+  const { data } = await api.get<{ data: PaymentStatusResponse[] }>(
+    "/assinatura/payments"
+  );
+  return data.data;
+}
+
 // ─── Labels e helpers de display ─────────────────────────────────────────────
 
 export const SUBSCRIPTION_STATUS_LABEL: Record<SubscriptionStatus, string> = {
