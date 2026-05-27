@@ -8,7 +8,7 @@ import { ArrowLeft, FileText } from "lucide-react";
  * responsabilidade, foro.
  */
 
-const UPDATED_AT = "18 de maio de 2026";
+const UPDATED_AT = "26 de maio de 2026";
 
 export const metadata = {
     title: "Termos de Uso — CrescIX",
@@ -138,13 +138,61 @@ export default function TermosPage() {
                         </p>
                     </Section>
 
-                    <Section titulo="5. Pagamento">
-                        <p>
-                            Durante a fase atual (beta), o uso da CrescIX é
-                            gratuito. Quando passarmos a cobrar, avisaremos
-                            com pelo menos 30 dias de antecedência por e-mail,
-                            e você poderá optar por encerrar a conta sem
-                            qualquer custo.
+                    <Section titulo="5. Planos e pagamento">
+                        <p className="mb-3">
+                            A CrescIX oferece um <strong className="text-white">período
+                            de teste gratuito de 14 dias</strong> a partir do
+                            cadastro. Durante o teste você usa todos os recursos
+                            sem custo. Depois disso, pra continuar criando novos
+                            registros (vendas, compras, contas, etc.) é necessário
+                            assinar um plano.
+                        </p>
+                        <Ul>
+                            <li>
+                                <strong>Planos disponíveis:</strong> mensal e
+                                anual. Os valores vigentes ficam sempre visíveis
+                                na tela &quot;Assinatura&quot; do app antes da contratação.
+                            </li>
+                            <li>
+                                <strong>Forma de pagamento:</strong> PIX, processado
+                                pela Mercado Pago. Você paga uma única vez pelo
+                                período contratado — não há débito automático nem
+                                cobrança recorrente.
+                            </li>
+                            <li>
+                                <strong>Sem auto-renovação:</strong> quando o
+                                período da sua assinatura estiver acabando, te
+                                avisamos por e-mail e dentro do app. Se você não
+                                renovar, a assinatura simplesmente expira.
+                            </li>
+                            <li>
+                                <strong>Cancelamento:</strong> você pode parar de
+                                renovar a qualquer momento, sem multa. O tempo
+                                que você já pagou segue valendo até a data final
+                                contratada.
+                            </li>
+                            <li>
+                                <strong>Após o vencimento:</strong> você continua
+                                acessando e consultando todos os seus dados
+                                históricos, mas perde a capacidade de criar
+                                novos registros até renovar.
+                            </li>
+                        </Ul>
+                        <p className="mt-4">
+                            <strong className="text-white">Direito de arrependimento (CDC art. 49):</strong>{" "}
+                            por se tratar de contratação à distância, você pode
+                            desistir em até 7 dias a partir do pagamento e
+                            receber o reembolso integral. Solicite por e-mail
+                            pra <a href="mailto:suporte@crescix.com.br" className="text-brand hover:text-brand-strong">suporte@crescix.com.br</a>.
+                            Fora desse prazo, não fazemos reembolso proporcional
+                            do tempo restante.
+                        </p>
+                        <p className="mt-3">
+                            <strong className="text-white">Alterações de preço:</strong>{" "}
+                            quando reajustarmos os valores, avisamos por e-mail
+                            e no app com pelo menos 30 dias de antecedência.
+                            O novo preço só vale pra próximas contratações ou
+                            renovações — o que você já pagou não é afetado.
                         </p>
                     </Section>
 
@@ -187,10 +235,11 @@ export default function TermosPage() {
                                 infraestrutura podem acontecer.
                             </li>
                             <li>
-                                Nossa responsabilidade financeira fica
-                                limitada ao valor que você pagou pelo serviço
-                                nos 12 meses anteriores ao incidente (no beta
-                                gratuito, esse limite é zero).
+                                Nossa responsabilidade financeira, em qualquer
+                                hipótese, fica limitada ao valor total que você
+                                pagou à CrescIX nos 12 meses anteriores ao
+                                incidente. Durante o período de teste gratuito,
+                                esse limite é zero.
                             </li>
                         </Ul>
                     </Section>
