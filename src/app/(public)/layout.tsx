@@ -37,6 +37,13 @@ export default function PublicLayout({
             Termos de uso
           </Link>
           <span aria-hidden="true" className="text-white/15">·</span>
+          <Link
+            href="/status"
+            className="hover:text-white/70 transition-colors"
+          >
+            Status
+          </Link>
+          <span aria-hidden="true" className="text-white/15">·</span>
           <a
             href="mailto:privacidade@crescix.com.br"
             className="hover:text-white/70 transition-colors"
