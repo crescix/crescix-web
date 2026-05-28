@@ -13,12 +13,24 @@ export interface PlanInfo {
   valor: number;
 }
 
+/**
+ * Info da assinatura recorrente quando o usuário tem cartão ativo.
+ * Null quando não tem (só PIX ou nada).
+ */
+export interface RecurringSubscriptionInfo {
+  method: "credit_card";
+  cardBrand: string | null;
+  cardLastFour: string | null;
+  preapprovalStatus: string | null;
+}
+
 export interface SubscriptionStatusResponse {
   status: SubscriptionStatus;
   trialEndsAt: string | null;
   subscriptionEndsAt: string | null;
   daysRemaining: number;
   trialDurationDays: number;
+  recurring: RecurringSubscriptionInfo | null;
   plans: {
     MENSAL: PlanInfo;
     ANUAL: PlanInfo;
@@ -35,12 +47,29 @@ export interface CriarPixResponse {
   expiresAt: string;     // ISO
 }
 
+export interface CriarCartaoResponse {
+  paymentId: string;
+  preapprovalId: string;
+  status: "PAID" | "PENDING";
+  plan: SubscriptionPlan;
+  valor: number;
+  frequencyMonths: number;
+}
+
+export interface CancelarAssinaturaResponse {
+  status: "cancelled" | "no_active_subscription";
+  subscriptionEndsAt: string | null;
+}
+
 export interface PaymentStatusResponse {
   id: string;
   status: PaymentStatus;
   plan: SubscriptionPlan;
   valor: number;
   metodo: string | null;
+  installments?: number | null;
+  cardBrand?: string | null;
+  cardLastFour?: string | null;
   paidAt: string | null;
   createdAt: string;
 }
@@ -49,8 +78,8 @@ export interface PaymentStatusResponse {
 
 /**
  * Status atual da assinatura do usuário autenticado. Inclui status
- * calculado dinamicamente (não confia no cache), dias restantes e a
- * lista de planos disponíveis.
+ * calculado dinamicamente (não confia no cache), dias restantes, info
+ * de assinatura recorrente (cartão) se houver, e a lista de planos.
  */
 export async function getAssinaturaStatus(): Promise<SubscriptionStatusResponse> {
   const { data } = await api.get<SubscriptionStatusResponse>(
@@ -72,6 +101,52 @@ export async function criarPixAssinatura(
   const { data } = await api.post<CriarPixResponse>(
     "/assinatura/pix/criar",
     { plan }
+  );
+  return data;
+}
+
+/**
+ * Cria uma assinatura recorrente via cartão de crédito.
+ *
+ * IMPORTANTE: o `cardToken` deve ter sido gerado no browser pelo SDK
+ * do Mercado Pago (`@mercadopago/sdk-react`). Nunca enviar dados do
+ * cartão (número, CVV, validade) direto — eles **não passam por aqui**.
+ *
+ * Quando bem-sucedido:
+ *   - Status PAID: primeira cobrança aprovada na hora; o user já tem
+ *     subscriptionEndsAt estendido e mpPreapprovalId salvo.
+ *   - Status PENDING: MP aceitou a preapproval mas ainda não confirmou
+ *     a primeira cobrança. Webhook vai chegar em alguns segundos.
+ *
+ * Erros comuns (status 402 do backend):
+ *   - Cartão recusado pelo emissor
+ *   - Saldo insuficiente
+ *   - Dados de cartão inválidos
+ *   - Preapproval API não habilitada na conta MP (em produção)
+ */
+export async function criarPagamentoCartao(opts: {
+  plan: SubscriptionPlan;
+  cardToken: string;
+  payerEmail: string;
+  identification?: { type: "CPF" | "CNPJ"; number: string };
+}): Promise<CriarCartaoResponse> {
+  const { data } = await api.post<CriarCartaoResponse>(
+    "/assinatura/cartao/criar",
+    opts
+  );
+  return data;
+}
+
+/**
+ * Cancela a assinatura recorrente de cartão. O tempo já pago continua
+ * valendo até `subscriptionEndsAt` — não há reembolso.
+ *
+ * Idempotente: se não tem nada pra cancelar, retorna status
+ * `"no_active_subscription"` sem erro.
+ */
+export async function cancelarAssinatura(): Promise<CancelarAssinaturaResponse> {
+  const { data } = await api.post<CancelarAssinaturaResponse>(
+    "/assinatura/cancelar"
   );
   return data;
 }
@@ -101,10 +176,10 @@ export async function getPaymentStatus(
  * FAILED rejeitado).
  */
 export async function listPayments(): Promise<PaymentStatusResponse[]> {
-  const { data } = await api.get<{ data: PaymentStatusResponse[] }>(
+  const { data } = await api.get<PaymentStatusResponse[]>(
     "/assinatura/payments"
   );
-  return data.data;
+  return data;
 }
 
 // ─── Labels e helpers de display ─────────────────────────────────────────────
@@ -138,4 +213,27 @@ export function formatBRL(valor: number): string {
     style: "currency",
     currency: "BRL",
   });
+}
+
+// ─── Feature flag ────────────────────────────────────────────────────────────
+
+/**
+ * Cartão de crédito é uma feature flag controlada por env. Vale `true`
+ * por padrão. Setar `NEXT_PUBLIC_CREDIT_CARD_ENABLED=false` no Vercel
+ * pra esconder a aba "Cartão" sem precisar de deploy de código (útil
+ * enquanto a Preapproval API não está habilitada na conta do MP).
+ */
+export function isCreditCardEnabled(): boolean {
+  const flag = process.env.NEXT_PUBLIC_CREDIT_CARD_ENABLED;
+  // Default ON — só desliga se explicitamente "false".
+  return flag !== "false";
+}
+
+/**
+ * Public key do Mercado Pago — usada pelo SDK no browser pra tokenizar
+ * cartões. NÃO É segredo (sai no bundle do front, está no painel
+ * publicamente da conta MP). Sem ela, a aba cartão não funciona.
+ */
+export function getMercadoPagoPublicKey(): string | undefined {
+  return process.env.NEXT_PUBLIC_MP_PUBLIC_KEY;
 }
