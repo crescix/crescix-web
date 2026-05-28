@@ -8,7 +8,7 @@ import { ArrowLeft, FileText } from "lucide-react";
  * responsabilidade, foro.
  */
 
-const UPDATED_AT = "26 de maio de 2026";
+const UPDATED_AT = "27 de maio de 2026";
 
 export const metadata = {
     title: "Termos de Uso — CrescIX",
@@ -145,7 +145,8 @@ export default function TermosPage() {
                             cadastro. Durante o teste você usa todos os recursos
                             sem custo. Depois disso, pra continuar criando novos
                             registros (vendas, compras, contas, etc.) é necessário
-                            assinar um plano.
+                            assinar um plano. Toda cobrança é processada pela{" "}
+                            <strong className="text-white">Mercado Pago</strong>.
                         </p>
                         <Ul>
                             <li>
@@ -153,37 +154,89 @@ export default function TermosPage() {
                                 anual. Os valores vigentes ficam sempre visíveis
                                 na tela &quot;Assinatura&quot; do app antes da contratação.
                             </li>
+                        </Ul>
+
+                        <h3 className="mt-5 mb-2 text-base font-semibold text-white">
+                            5.1. PIX (pagamento único)
+                        </h3>
+                        <Ul>
                             <li>
-                                <strong>Forma de pagamento:</strong> PIX, processado
-                                pela Mercado Pago. Você paga uma única vez pelo
-                                período contratado — não há débito automático nem
-                                cobrança recorrente.
+                                Você paga 1× via PIX pelo período contratado
+                                (30 dias no mensal, 365 dias no anual).
                             </li>
                             <li>
                                 <strong>Sem auto-renovação:</strong> quando o
-                                período da sua assinatura estiver acabando, te
-                                avisamos por e-mail e dentro do app. Se você não
-                                renovar, a assinatura simplesmente expira.
+                                período estiver acabando, a gente te avisa por
+                                e-mail. Se você não pagar de novo, a assinatura
+                                simplesmente expira.
+                            </li>
+                        </Ul>
+
+                        <h3 className="mt-5 mb-2 text-base font-semibold text-white">
+                            5.2. Cartão de crédito (renovação automática)
+                        </h3>
+                        <Ul>
+                            <li>
+                                A primeira cobrança é feita no momento da
+                                contratação, no valor do plano escolhido.
                             </li>
                             <li>
-                                <strong>Cancelamento:</strong> você pode parar de
-                                renovar a qualquer momento, sem multa. O tempo
-                                que você já pagou segue valendo até a data final
-                                contratada.
+                                <strong className="text-white">
+                                    Renovação automática:
+                                </strong>{" "}
+                                a partir daí, o Mercado Pago cobra o mesmo cartão
+                                automaticamente todo mês (plano mensal) ou todo
+                                ano (plano anual) até você cancelar.
                             </li>
+                            <li>
+                                Os dados do cartão (número, validade, CVV) são
+                                tokenizados pelo Mercado Pago direto no seu
+                                navegador. <strong className="text-white">A CrescIX nunca tem acesso aos dados do seu cartão</strong>{" "}
+                                — só guardamos a bandeira e os 4 últimos dígitos
+                                pra exibir &quot;Cartão Visa final 1234&quot;.
+                            </li>
+                            <li>
+                                Se a cobrança recorrente falhar (cartão vencido,
+                                limite insuficiente, etc.), o Mercado Pago tenta
+                                novamente nos dias seguintes. Após algumas
+                                tentativas frustradas, a assinatura é
+                                automaticamente suspensa.
+                            </li>
+                            <li>
+                                <strong className="text-white">Cancelamento:</strong>{" "}
+                                pelo próprio app, na tela &quot;Assinatura&quot;.
+                                A renovação para imediatamente; o tempo que
+                                você já pagou segue valendo até o fim do
+                                período corrente.
+                            </li>
+                        </Ul>
+
+                        <h3 className="mt-5 mb-2 text-base font-semibold text-white">
+                            5.3. Regras gerais
+                        </h3>
+                        <Ul>
                             <li>
                                 <strong>Após o vencimento:</strong> você continua
                                 acessando e consultando todos os seus dados
                                 históricos, mas perde a capacidade de criar
                                 novos registros até renovar.
                             </li>
+                            <li>
+                                <strong>Cancelamento sem multa:</strong> tanto no
+                                PIX quanto no cartão, você pode interromper
+                                quando quiser sem penalidade. Não há reembolso
+                                proporcional do tempo restante.
+                            </li>
                         </Ul>
+
                         <p className="mt-4">
                             <strong className="text-white">Direito de arrependimento (CDC art. 49):</strong>{" "}
                             por se tratar de contratação à distância, você pode
-                            desistir em até 7 dias a partir do pagamento e
-                            receber o reembolso integral. Solicite por e-mail
-                            pra <a href="mailto:suporte@crescix.com.br" className="text-brand hover:text-brand-strong">suporte@crescix.com.br</a>.
+                            desistir em até 7 dias a partir do primeiro pagamento
+                            e receber o reembolso integral. No caso de cartão
+                            recorrente, esse prazo conta a partir da primeira
+                            cobrança. Solicite por e-mail pra{" "}
+                            <a href="mailto:suporte@crescix.com.br" className="text-brand hover:text-brand-strong">suporte@crescix.com.br</a>.
                             Fora desse prazo, não fazemos reembolso proporcional
                             do tempo restante.
                         </p>
@@ -191,8 +244,10 @@ export default function TermosPage() {
                             <strong className="text-white">Alterações de preço:</strong>{" "}
                             quando reajustarmos os valores, avisamos por e-mail
                             e no app com pelo menos 30 dias de antecedência.
-                            O novo preço só vale pra próximas contratações ou
-                            renovações — o que você já pagou não é afetado.
+                            No PIX, o novo preço vale só pra próximas
+                            contratações. No cartão recorrente, você pode
+                            cancelar antes da próxima cobrança se não concordar
+                            com o novo valor.
                         </p>
                     </Section>
 
