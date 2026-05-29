@@ -1,0 +1,86 @@
+#!/usr/bin/env sh
+# =============================================================================
+# Pre-commit hook do crescix-web — proteção contra commit de secrets.
+# =============================================================================
+# Roda automaticamente em todo `git commit` via Husky. Tem 2 verificações:
+#
+#   1) Bloqueia arquivos .env, .env.local, .env.production, etc. — qualquer
+#      arquivo cujo nome começa com .env e NÃO termina em .example.
+#
+#   2) Faz grep no diff staged procurando padrões de chaves de API conhecidas
+#      (OpenAI, Resend, AWS, Google, GitHub, Mercado Pago, Slack). Bloqueia
+#      o commit se achar alguma coisa que pareça secret.
+#
+# Pra bypass em emergência (verifique antes!):
+#   git commit --no-verify
+#
+# Defesa em profundidade junto com:
+#   - GitHub Secret Scanning + Push Protection (ativos no servidor)
+#   - .gitignore (já bloqueia .env padrão)
+# Esse hook é o catch local antes do push.
+# =============================================================================
+
+# Lista arquivos novos/modificados que vão entrar no commit.
+staged_files=$(git diff --cached --name-only --diff-filter=ACM)
+
+# --- Verificação 1: arquivos .env -------------------------------------------
+forbidden_envs=$(echo "$staged_files" | grep -E '(^|/)\.env([._-]|$)' | grep -vE '\.example$' || true)
+
+if [ -n "$forbidden_envs" ]; then
+  echo ""
+  echo "❌ Commit BLOQUEADO — arquivos de ambiente detectados:"
+  echo ""
+  echo "$forbidden_envs" | sed 's/^/   • /'
+  echo ""
+  echo "   Esses arquivos não devem ser versionados."
+  echo "   Use .env.example pra template (sem segredos reais) e mantenha"
+  echo "   o .env real no .gitignore."
+  echo ""
+  exit 1
+fi
+
+# --- Verificação 2: padrões de chaves de API no diff -------------------------
+# Pega só linhas adicionadas (começam com "+" mas não "+++" que é cabeçalho).
+diff_added=$(git diff --cached --no-color -U0 | grep -E '^\+[^+]' || true)
+
+if [ -z "$diff_added" ]; then
+  exit 0
+fi
+
+# Padrões procurados (regex POSIX-extended):
+#   sk-...        → OpenAI
+#   re_...        → Resend
+#   AKIA...       → AWS Access Key
+#   AIza...       → Google API Key
+#   ghp_.../gho_  → GitHub Personal/OAuth Token
+#   xox[baprs]-   → Slack
+#   APP_USR-...   → Mercado Pago produção
+#   TEST-N-S      → Mercado Pago sandbox
+secret_pattern='(sk-[a-zA-Z0-9_-]{20,}|re_[a-zA-Z0-9_-]{20,}|AKIA[0-9A-Z]{16}|AIza[0-9A-Za-z_-]{35}|ghp_[a-zA-Z0-9_-]{30,}|gho_[a-zA-Z0-9_-]{30,}|xox[baprs]-[a-zA-Z0-9-]{20,}|APP_USR-[a-zA-Z0-9_-]{20,}|TEST-[0-9]{10,}-[a-zA-Z0-9_-]{6,})'
+
+hits=$(echo "$diff_added" | grep -nE "$secret_pattern" || true)
+
+if [ -n "$hits" ]; then
+  echo ""
+  echo "⚠️  Commit BLOQUEADO — padrão de chave de API detectado:"
+  echo ""
+  echo "$hits" | head -10 | sed 's/^/   /'
+  echo ""
+  echo "   Prefixos procurados:"
+  echo "     • sk-       → OpenAI"
+  echo "     • re_       → Resend"
+  echo "     • AKIA      → AWS Access Key"
+  echo "     • AIza      → Google Cloud"
+  echo "     • ghp_/gho_ → GitHub Personal/OAuth Token"
+  echo "     • xox[…]-   → Slack"
+  echo "     • APP_USR-  → Mercado Pago produção"
+  echo "     • TEST-     → Mercado Pago sandbox"
+  echo ""
+  echo "   Se for falso positivo (ex.: doc, snapshot de teste), passe:"
+  echo "     git commit --no-verify"
+  echo "   Mas confirme PRIMEIRO que o valor não é uma chave real."
+  echo ""
+  exit 1
+fi
+
+exit 0

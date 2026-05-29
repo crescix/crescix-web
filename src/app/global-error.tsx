@@ -11,6 +11,7 @@
  */
 
 import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
 
 export default function GlobalError({
   error,
@@ -20,9 +21,9 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Em produção, esse seria o ponto de mandar pro Sentry/Datadog.
-    // Por enquanto, console.error é suficiente — em desenvolvimento
-    // o stack já aparece na tela do Next overlay.
+    // Reporta pro Sentry sempre — se o DSN não estiver setado, o SDK
+    // já está em no-op então isso vira ruído zero em dev.
+    Sentry.captureException(error);
     console.error("[global-error]", error);
   }, [error]);
 

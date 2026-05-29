@@ -11,7 +11,7 @@ import { ArrowLeft, Shield } from "lucide-react";
  * mudar significativamente).
  */
 
-const UPDATED_AT = "18 de maio de 2026";
+const UPDATED_AT = "27 de maio de 2026";
 
 export const metadata = {
     title: "Política de Privacidade — CrescIX",
@@ -91,16 +91,37 @@ export default function PrivacidadePage() {
                                 mesmo cadastra ou registra via bot Telegram.
                             </li>
                             <li>
-                                <strong>Telegram (opcional):</strong> se você
-                                vincular sua conta ao bot, guardamos o seu
-                                identificador de chat do Telegram pra ligar as
-                                mensagens à sua conta.
+                                <strong>Telegram/WhatsApp (opcional):</strong> se
+                                você vincular sua conta a um dos bots, guardamos
+                                o identificador de chat correspondente pra
+                                ligar as mensagens à sua conta.
                             </li>
                             <li>
                                 <strong>Áudios enviados ao bot:</strong>{" "}
                                 processados pela OpenAI (Whisper) pra
                                 transcrição. O áudio em si não é guardado — só
                                 o texto resultante.
+                            </li>
+                            <li>
+                                <strong>Pagamentos:</strong> ao assinar um plano,
+                                a Mercado Pago processa a cobrança via PIX ou
+                                cartão de crédito. Guardamos apenas:
+                                <ul className="mt-2 ml-5 list-[circle] space-y-1 text-white/70">
+                                    <li>Status da transação (pago, pendente, falhou)</li>
+                                    <li>Identificador do pagamento e da assinatura no Mercado Pago</li>
+                                    <li>
+                                        No caso de cartão: a bandeira (Visa, Master,
+                                        etc.) e os <strong className="text-white">4 últimos dígitos</strong>{" "}
+                                        — só pra exibir &quot;Cartão Visa final 1234&quot;
+                                        na sua tela
+                                    </li>
+                                </ul>
+                                <p className="mt-2">
+                                    <strong className="text-white">A CrescIX nunca tem acesso ao número completo do cartão, à validade ou ao CVV.</strong>{" "}
+                                    Esses dados são tokenizados pelo Mercado Pago direto no
+                                    seu navegador antes de qualquer envio. Também não
+                                    armazenamos chave PIX nem dados de conta bancária.
+                                </p>
                             </li>
                             <li>
                                 <strong>Logs técnicos:</strong> endereço IP e
@@ -181,7 +202,37 @@ export default function PrivacidadePage() {
                                 <strong>OpenAI</strong> — transcrição de áudios
                                 do bot e geração de análises. Não recebem seus
                                 dados de contato, só o conteúdo necessário pra
-                                processar o pedido.
+                                processar o pedido. Conforme política da OpenAI,
+                                esses dados não são usados pra treinar modelos.
+                            </li>
+                            <li>
+                                <strong>Mercado Pago</strong> — processamento de
+                                pagamentos via PIX e cartão de crédito. Recebem:
+                                <ul className="mt-2 ml-5 list-[circle] space-y-1 text-white/70">
+                                    <li>Nome, e-mail e CPF/CNPJ do titular</li>
+                                    <li>Valor e plano contratado</li>
+                                    <li>
+                                        Se optar por cartão: número, validade e
+                                        CVV — diretamente do seu navegador, sem
+                                        passar pela CrescIX
+                                    </li>
+                                </ul>
+                                <p className="mt-2">
+                                    Quando você escolhe pagar com cartão e ativar
+                                    a renovação automática, o Mercado Pago{" "}
+                                    <strong className="text-white">guarda seu cartão tokenizado em sistemas próprios</strong>{" "}
+                                    pra poder cobrar nas renovações futuras. Essa
+                                    guarda segue a política do Mercado Pago, com
+                                    certificação PCI-DSS. Cancelar a assinatura
+                                    no nosso app remove a autorização de cobrança.
+                                </p>
+                            </li>
+                            <li>
+                                <strong>Resend</strong> — envio de e-mails
+                                transacionais (confirmação de cadastro,
+                                redefinição de senha, comprovante de pagamento,
+                                avisos sobre a assinatura). Recebem apenas o
+                                seu nome, e-mail e o conteúdo da mensagem.
                             </li>
                             <li>
                                 <strong>Provedores de infraestrutura</strong>{" "}
@@ -189,9 +240,18 @@ export default function PrivacidadePage() {
                                 criptografados, sob acordos de proteção.
                             </li>
                             <li>
-                                <strong>Telegram</strong> — quando você opta
-                                por usar o bot, o Telegram processa as
-                                mensagens conforme a própria política deles.
+                                <strong>Telegram / WhatsApp</strong> — quando
+                                você opta por usar os bots, essas plataformas
+                                processam as mensagens conforme as próprias
+                                políticas delas.
+                            </li>
+                            <li>
+                                <strong>Sentry</strong> — quando configurado,
+                                recebe relatórios de erro técnico do app
+                                (mensagem do erro, stack trace, rota acessada)
+                                pra que a gente consiga corrigir bugs. Não
+                                enviamos dados financeiros nem conteúdo dos
+                                seus registros — apenas metadados de execução.
                             </li>
                         </Ul>
                         <p className="mt-4">
@@ -275,11 +335,22 @@ export default function PrivacidadePage() {
                             <li>
                                 <strong>Após exclusão:</strong> apagamos seus
                                 dados em até 30 dias, exceto quando há
-                                obrigação legal de retenção (ex.: registros
-                                fiscais).
+                                obrigação legal de retenção.
+                            </li>
+                            <li>
+                                <strong>Registros de pagamento:</strong> mantidos
+                                por 5 anos após a transação, conforme exigência
+                                fiscal e o Código Civil (art. 206, § 5º, I) pra
+                                eventual prestação de contas. São anonimizados
+                                sempre que possível.
                             </li>
                             <li>
                                 <strong>Logs técnicos:</strong> até 90 dias.
+                            </li>
+                            <li>
+                                <strong>Relatórios de erro (Sentry):</strong>{" "}
+                                retidos conforme política do provedor (geralmente
+                                30 a 90 dias) e usados só pra diagnóstico.
                             </li>
                         </Ul>
                     </Section>
